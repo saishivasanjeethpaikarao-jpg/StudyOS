@@ -30,6 +30,8 @@ import { releasesRouter } from "./routes/releases.js";
 import { taskSeriesRouter } from "./routes/task-series.js";
 import { ideasRouter } from "./routes/ideas.js";
 import { ideaSubtasksRouter } from "./routes/idea-subtasks.js";
+import { subjectsRouter } from "./routes/subjects.js";
+import { assignmentsRouter } from "./routes/assignments.js";
 import { webhooksRouter } from "./routes/webhooks.js";
 import { oauthRouter } from "./routes/oauth.js";
 import { wellKnownRouter } from "./routes/well-known.js";
@@ -169,6 +171,8 @@ app.get("/", (c) => {
       calendarEvents: "/calendar-events",
       releases: "/releases",
       ideas: "/ideas",
+      subjects: "/subjects",
+      assignments: "/assignments",
       mcp: "/mcp",
       oauth: "/oauth",
     },
@@ -194,6 +198,8 @@ app.route("/releases", releasesRouter);
 app.route("/task-series", taskSeriesRouter);
 app.route("/ideas", ideasRouter);
 app.route("/ideas", ideaSubtasksRouter); // /ideas/:ideaId/subtasks
+app.route("/subjects", subjectsRouter);
+app.route("/assignments", assignmentsRouter);
 // Public — no auth (provider webhooks). Identity verified by per-
 // channel state stored when we registered the watch.
 app.route("/webhooks", webhooksRouter);

@@ -72,6 +72,14 @@ export type ApiKeyScope =
   | 'time-blocks:write'
   /** Read-only access to events synced from Google, Outlook and iCloud calendars */
   | 'calendar:read'
+  /** Read-only access to academic subjects */
+  | 'subjects:read'
+  /** Full access to academic subjects */
+  | 'subjects:write'
+  /** Read-only access to assignments */
+  | 'assignments:read'
+  /** Full access to assignments */
+  | 'assignments:write'
   /** Read-only access to user profile */
   | 'user:read'
   /** Full access to user profile (update) */

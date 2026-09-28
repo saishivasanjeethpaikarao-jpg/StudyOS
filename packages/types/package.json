@@ -16,6 +16,14 @@
       "import": "./src/task.ts",
       "types": "./src/task.ts"
     },
+    "./subject": {
+      "import": "./src/subject.ts",
+      "types": "./src/subject.ts"
+    },
+    "./assignment": {
+      "import": "./src/assignment.ts",
+      "types": "./src/assignment.ts"
+    },
     "./time-block": {
       "import": "./src/time-block.ts",
       "types": "./src/time-block.ts"

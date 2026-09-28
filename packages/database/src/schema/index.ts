@@ -8,6 +8,30 @@ export {
 export type { User, NewUser, UserPreferences } from "./users";
 
 export {
+  subjects,
+  subjectsRelations,
+  insertSubjectSchema,
+  selectSubjectSchema,
+  updateSubjectSchema,
+} from "./subjects";
+export type { Subject, NewSubject, UpdateSubject } from "./subjects";
+
+export {
+  assignments,
+  assignmentsRelations,
+  insertAssignmentSchema,
+  selectAssignmentSchema,
+  updateAssignmentSchema,
+  ASSIGNMENT_STATUSES,
+} from "./assignments";
+export type {
+  Assignment,
+  NewAssignment,
+  UpdateAssignment,
+  AssignmentStatus,
+} from "./assignments";
+
+export {
   tasks,
   tasksRelations,
   insertTaskSchema,

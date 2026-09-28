@@ -8,3 +8,5 @@ export * from './time-blocks.js';
 export * from './api-keys.js';
 export * from './uploads.js';
 export * from './ideas.js';
+export * from './subjects.js';
+export * from './assignments.js';

@@ -30,6 +30,8 @@ export const users = pgTable('users', {
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   tasks: many(tasks),
+  subjects: many(subjects),
+  assignments: many(assignments),
   timeBlocks: many(timeBlocks),
   apiKeys: many(apiKeys),
   notificationPreferences: one(notificationPreferences),
@@ -42,6 +44,8 @@ export const usersRelations = relations(users, ({ many, one }) => ({
 
 // Import types for relations (will be defined in their respective files)
 import { tasks } from './tasks';
+import { subjects } from './subjects';
+import { assignments } from './assignments';
 import { timeBlocks } from './time-blocks';
 import { apiKeys } from './api-keys';
 import { notificationPreferences } from './notification-preferences';

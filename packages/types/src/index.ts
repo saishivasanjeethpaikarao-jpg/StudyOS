@@ -53,6 +53,21 @@ export type {
   TaskWithMeta,
 } from "./task.js";
 
+// StudyOS academic domain types
+export type {
+  Subject,
+  CreateSubjectInput,
+  UpdateSubjectInput,
+  SubjectFilterInput,
+} from "./subject.js";
+export type {
+  Assignment,
+  AssignmentStatus,
+  CreateAssignmentInput,
+  UpdateAssignmentInput,
+  AssignmentFilterInput,
+} from "./assignment.js";
+
 // Task Series (Recurring Tasks) types
 export type {
   TaskSeries,

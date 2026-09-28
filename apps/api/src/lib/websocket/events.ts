@@ -45,6 +45,13 @@ export type WebSocketEventType =
   | "idea:updated"
   | "idea:deleted"
   | "idea:reordered"
+  // StudyOS academic domain events
+  | "subject:created"
+  | "subject:updated"
+  | "subject:deleted"
+  | "assignment:created"
+  | "assignment:updated"
+  | "assignment:deleted"
   // Connection events
   | "connected";
 
@@ -79,6 +86,14 @@ export interface TaskReorderedEvent {
 export interface TimeBlockEvent {
   timeBlockId: string;
   date: string;
+}
+
+export interface SubjectEvent {
+  subjectId: string;
+}
+
+export interface AssignmentEvent {
+  assignmentId: string;
 }
 
 /**

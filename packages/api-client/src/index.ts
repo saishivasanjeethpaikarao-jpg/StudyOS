@@ -59,6 +59,21 @@ export { createAuthApi, type AuthApi };
 import { createTasksApi, type TasksApi, type TasksListResponse } from "./tasks.js";
 export { createTasksApi, type TasksApi, type TasksListResponse };
 
+// StudyOS academic domain APIs
+import { createSubjectsApi, type SubjectsApi } from "./subjects.js";
+import {
+  createAssignmentsApi,
+  type AssignmentsApi,
+  type AssignmentsListResponse,
+} from "./assignments.js";
+export {
+  createSubjectsApi,
+  type SubjectsApi,
+  createAssignmentsApi,
+  type AssignmentsApi,
+  type AssignmentsListResponse,
+};
+
 // Subtasks API
 import { createSubtasksApi, type SubtasksApi } from "./subtasks.js";
 export { createSubtasksApi, type SubtasksApi };
@@ -119,6 +134,16 @@ export type {
   ReorderTasksInput,
   TaskFilterInput,
   TaskStats,
+  // StudyOS academic domain types
+  Subject,
+  CreateSubjectInput,
+  UpdateSubjectInput,
+  SubjectFilterInput,
+  Assignment,
+  AssignmentStatus,
+  CreateAssignmentInput,
+  UpdateAssignmentInput,
+  AssignmentFilterInput,
   // Subtask types
   Subtask,
   CreateSubtaskInput,
@@ -188,6 +213,10 @@ export function createApi(config: ApiClientConfig) {
     auth: createAuthApi(client),
     /** Tasks API methods */
     tasks: createTasksApi(client),
+    /** Academic subjects owned by the signed-in user */
+    subjects: createSubjectsApi(client),
+    /** First-class academic assignments owned by the signed-in user */
+    assignments: createAssignmentsApi(client),
     /** Subtasks API methods */
     subtasks: createSubtasksApi(client),
     /** Time blocks API methods */
