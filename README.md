@@ -288,6 +288,8 @@ Scopes: `tasks:read` `tasks:write` `time-blocks:read` `time-blocks:write` `ideas
 
 **Cloud:** create an account at [opensunsama.com](https://opensunsama.com), then [connect your AI](#-connect-claude-or-chatgpt-in-30-seconds).
 
+> **StudyOS developers:** this repository is being transformed incrementally while preserving the inherited Open Sunsama foundation. Use the local workflow in [`docs/STUDYOS_DEVELOPMENT.md`](docs/STUDYOS_DEVELOPMENT.md); it does not require access to the upstream Railway project.
+
 **Self-host with Docker:**
 
 ```bash
@@ -303,7 +305,7 @@ Open http://localhost:3000 and create your account. The API creates the database
 
 <br />
 
-Prerequisites: [Bun](https://bun.sh) 1.4.2 (run `mise install` when using mise) and PostgreSQL 15+ (Homebrew's `postgresql@17`, or a hosted database such as Neon or Supabase). S3-compatible storage is optional, for file uploads.
+Prerequisites for StudyOS development: [Bun](https://bun.sh) 1.4.2 and Docker with Compose. The inherited upstream workflow can also use another PostgreSQL 15+ database by setting `DEV_DATABASE_URL` explicitly. S3-compatible storage is optional for file uploads.
 
 ```bash
 git clone https://github.com/ShadowWalker2014/open-sunsama.git
@@ -311,10 +313,15 @@ cd open-sunsama
 mise install
 bun install
 
-# API on :3001 and web app on :3000. Tables are created on start;
+# StudyOS local PostgreSQL 16 on localhost:5431
+docker compose up -d postgres
+
+# API on :3001 and web app on :3000. Existing migrations apply on start;
 # Redis, email, background jobs and OAuth stay off.
-DEV_DATABASE_URL=postgresql://localhost:5432/opensunsama bun run dev:local
+bun run dev:local
 ```
+
+`DEV_DATABASE_URL` remains available as an explicit override. Authorized upstream maintainers can explicitly opt into the inherited Railway development database with `DEV_DATABASE_SOURCE=railway`; it is not selected automatically.
 
 To run with integrations turned on, copy `apps/api/.env.example` to `apps/api/.env`, fill it in, and use `bun run dev`.
 

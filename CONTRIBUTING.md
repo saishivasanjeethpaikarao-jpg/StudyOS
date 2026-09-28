@@ -44,8 +44,10 @@ Looking for a place to start? Check out issues labeled:
 ### Prerequisites
 
 - [Bun](https://bun.sh/) 1.4.2 (run `mise install` when using mise)
-- PostgreSQL 15+ (Homebrew's `postgresql@17`, or a hosted database such as Neon or Supabase)
+- Docker with Compose for the supported StudyOS PostgreSQL 16 development service
 - Git
+
+StudyOS contributors should also read [`docs/STUDYOS_DEVELOPMENT.md`](docs/STUDYOS_DEVELOPMENT.md). The upstream Open Sunsama workflow may use another PostgreSQL 15+ database by setting `DEV_DATABASE_URL` explicitly.
 
 ### Setup
 
@@ -65,10 +67,15 @@ mise install
 # 5. Install dependencies
 bun install
 
-# 6. Start the API (:3001) and web app (:3000) against your PostgreSQL.
-#    Tables are created on start. Redis, email, background jobs and OAuth stay off.
-DEV_DATABASE_URL=postgresql://localhost:5432/opensunsama bun run dev:local
+# 6. Start the development-only PostgreSQL 16 service on localhost:5431
+docker compose up -d postgres
+
+# 7. Start the API (:3001) and web app (:3000).
+#    Existing migrations apply on start. Redis, email, background jobs and OAuth stay off.
+bun run dev:local
 ```
+
+The local database is the default. Set `DEV_DATABASE_URL` only when intentionally using another development database. Railway access is retained for authorized upstream maintainers through the explicit `DEV_DATABASE_SOURCE=railway` opt-in.
 
 ### Project Structure
 

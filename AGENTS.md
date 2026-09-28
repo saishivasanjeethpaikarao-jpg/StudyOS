@@ -1,4 +1,4 @@
-# AGENTS.md - Open Sunsama
+# AGENTS.md - StudyOS / Open Sunsama foundation
 
 AI-agent-friendly task management + time blocking app. TypeScript monorepo with Bun, Turborepo, PostgreSQL, Drizzle ORM.
 
@@ -13,19 +13,23 @@ AI-agent-friendly task management + time blocking app. TypeScript monorepo with 
 
 **Login credentials:** `.env.local` in project root (gitignored, real user account - NEVER commit).
 
-### Local dev and testing: no Docker
+### StudyOS local development
 
-**Never use Docker to develop or test.** No `docker run`, no `docker compose`, no local Postgres or Redis containers. The Docker VM slows the laptop and fills the disk. Run plain dev servers against the shared dev database instead:
+StudyOS uses the repository's Docker Compose PostgreSQL 16 service for a reproducible local database. Docker does not start automatically.
 
-- **`bun run dev:local`** starts the API on :3001 and the web app on :3000. They use `dev-postgres`, the only service in Railway's `development` environment, and migrations run on start. Set `API_PORT` and `WEB_PORT` to run several worktrees side by side.
+- **`docker compose up -d postgres`** starts PostgreSQL on `127.0.0.1:5431` with the development-only defaults from `docker-compose.yml`.
+- **`bun run dev:local`** starts the API on :3001 and the web app on :3000. It uses the local Compose database by default and applies the existing migrations on API start. Set `API_PORT` and `WEB_PORT` to run several worktrees side by side.
 - **In the browser pane,** use `preview_start` with the `.claude/launch.json` configs: `api` + `web` (3001/3000), or `api-demo` + `web-demo` (3101/3107) for demo recordings.
 - **Never start a local API from `apps/api/.env`.** That file points at the production database and Redis. `scripts/dev-local.mjs` passes every variable explicitly, blanks Redis, email, background jobs, S3 and OAuth, and refuses the production database.
-- **The dev database is shared and disposable.** Register throwaway users (`<name>-e2e@example.com`) through the API instead of touching real accounts. It runs Postgres 18; production runs 17.
-- **`docker-compose.yml` and the Dockerfiles exist for self-hosters.** Check changes to them in CI or on Railway, not with a local Docker.
+- **The local database is development-only.** Do not put production data or credentials in it. Stop it with `docker compose stop postgres`; do not delete its volume unless data loss is intentional.
+- **Override only when intentional.** `DEV_DATABASE_URL` selects another development database explicitly. Authorized upstream maintainers may use `DEV_DATABASE_SOURCE=railway`; Railway is never the default StudyOS database.
+- **Read `docs/STUDYOS_DEVELOPMENT.md`** for the supported workspace, branch and startup procedure.
+
+The inherited Open Sunsama Railway workflow remains available for authorized upstream maintainers and deployment maintenance. It is not the normal StudyOS development path and must be selected explicitly.
 
 **MCP Tool:** Use `open-sunsama` MCP server to create/update tasks, time blocks, subtasks programmatically.
 
-### Shipping a change (agents)
+### Upstream Open Sunsama shipping workflow (not the StudyOS local baseline)
 
 - **Review and merge your own PR.** Read your full diff for bugs, fix what you find, wait for CI (`gh pr checks <N> --watch`), then merge it yourself.
 - **CI is required on main.** `.github/workflows/ci.yml` runs two checks on every PR, and a ruleset blocks merging until both pass:
