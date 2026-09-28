@@ -115,7 +115,7 @@ export function generateDailySummaryContent(
     ]),
     createDivider(),
     ...taskSections,
-    createButton('Open Sunsama', `${frontendUrl}/app`, themeColor),
+    createButton('Open StudyOS', `${frontendUrl}/app`, themeColor),
   ].join('\n');
 }
 

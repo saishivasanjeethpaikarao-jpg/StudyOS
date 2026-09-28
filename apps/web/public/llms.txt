@@ -1,10 +1,10 @@
-# Open Sunsama
+# StudyOS
 
-> Open Sunsama is an open-source daily planner for time blocking and focused work. Plan tasks on a kanban board, block time on a calendar, work in focus mode, and control it all from any AI agent (Claude, ChatGPT, Cursor, Claude Code or any MCP client). It runs on the web, macOS, Windows, Linux and mobile, and you can self-host it.
+> StudyOS is a student-first planner for time blocking, focused work, and study execution. It builds incrementally on an inherited open-source planning foundation and runs on web, desktop, and mobile clients.
 
 ## Product
 
-- [Home](https://opensunsama.com/): What Open Sunsama is and how daily planning works in it
+- [Home](https://opensunsama.com/): What StudyOS is and how daily planning works in it
 - [Download](https://opensunsama.com/download): Desktop apps for macOS, Windows and Linux
 - [Open-source task manager](https://opensunsama.com/open-source-task-manager): Why it is open source and how to self-host it
 
@@ -21,18 +21,18 @@
 
 - [Getting started](https://opensunsama.com/docs/getting-started): Set up your account and plan your first day
 - [MCP overview](https://opensunsama.com/docs/mcp/overview): Connect Claude, ChatGPT, Cursor and other agents with one URL and OAuth
-- [Connect Claude](https://opensunsama.com/docs/mcp/claude): Add Open Sunsama as a Claude connector
-- [Connect ChatGPT](https://opensunsama.com/docs/mcp/chatgpt): Add Open Sunsama to ChatGPT
+- [Connect Claude](https://opensunsama.com/docs/mcp/claude): Add StudyOS as a Claude connector
+- [Connect ChatGPT](https://opensunsama.com/docs/mcp/chatgpt): Add StudyOS to ChatGPT
 - [REST API: tasks](https://opensunsama.com/docs/api/tasks): Create and update tasks from code
 - [Self-hosting with Docker](https://opensunsama.com/docs/self-hosting/docker): Run your own instance
 
 ## Comparisons
 
-- [Sunsama alternative](https://opensunsama.com/alternative/sunsama): How Open Sunsama compares with Sunsama
-- [Motion alternative](https://opensunsama.com/alternative/motion): How Open Sunsama compares with Motion
-- [Reclaim alternative](https://opensunsama.com/alternative/reclaim): How Open Sunsama compares with Reclaim
-- [Akiflow alternative](https://opensunsama.com/alternative/akiflow): How Open Sunsama compares with Akiflow
-- [Todoist alternative](https://opensunsama.com/alternative/todoist): How Open Sunsama compares with Todoist
+- [Sunsama alternative](https://opensunsama.com/alternative/sunsama): How StudyOS compares with Sunsama
+- [Motion alternative](https://opensunsama.com/alternative/motion): How StudyOS compares with Motion
+- [Reclaim alternative](https://opensunsama.com/alternative/reclaim): How StudyOS compares with Reclaim
+- [Akiflow alternative](https://opensunsama.com/alternative/akiflow): How StudyOS compares with Akiflow
+- [Todoist alternative](https://opensunsama.com/alternative/todoist): How StudyOS compares with Todoist
 
 ## Guides
 

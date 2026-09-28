@@ -28,8 +28,8 @@ export default function DocsPage() {
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground font-sans antialiased flex flex-col">
       <SEOHead
-        title="Documentation | Open Sunsama"
-        description="Comprehensive documentation for Open Sunsama. Learn about the REST API, MCP tools for AI agents, self-hosting, and more."
+        title="Documentation | StudyOS"
+        description="Comprehensive documentation for StudyOS. Learn about the REST API, optional integrations, self-hosting, and more."
         canonicalUrl="/docs"
       />
 
@@ -45,10 +45,10 @@ export default function DocsPage() {
         <section className="py-16 md:py-24">
           <div className="container px-4 mx-auto max-w-4xl text-center">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-              Open Sunsama Documentation
+              StudyOS Documentation
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Learn how to integrate with Open Sunsama's REST API, connect AI
+              Learn how to integrate with StudyOS's REST API, connect AI
               agents using MCP tools, self-host your own instance, and more.
             </p>
             <div className="flex flex-wrap justify-center gap-3">

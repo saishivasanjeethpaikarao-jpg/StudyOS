@@ -49,7 +49,7 @@ export default function LoginScreen() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Open Sunsama</Text>
+            <Text style={styles.title}>StudyOS</Text>
             <Text style={styles.subtitle}>Sign in to your account</Text>
           </View>
 

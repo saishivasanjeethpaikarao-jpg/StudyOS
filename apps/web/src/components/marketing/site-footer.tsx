@@ -57,8 +57,8 @@ export function SiteFooter() {
       <div className="container mx-auto grid max-w-6xl gap-10 px-4 sm:grid-cols-2 md:grid-cols-[1.3fr_repeat(4,1fr)]">
         <div className="sm:col-span-2 md:col-span-1">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/open-sunsama-logo.png" alt="Open Sunsama" className="h-7 w-7 rounded-lg object-cover" />
-            <span className="text-[14px] font-semibold">Open Sunsama</span>
+            <img src="/open-sunsama-logo.png" alt="StudyOS" className="h-7 w-7 rounded-lg object-cover" />
+            <span className="text-[14px] font-semibold">StudyOS</span>
           </Link>
           <p className="mt-3 max-w-[240px] text-[13px] leading-relaxed text-muted-foreground">
             The open-source daily planner you can control from any AI agent.
@@ -89,7 +89,7 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="container mx-auto mt-12 flex max-w-6xl flex-col items-center justify-between gap-2 border-t border-border/50 px-4 pt-6 text-[12px] text-muted-foreground sm:flex-row">
-        <span>© {new Date().getFullYear()} Open Sunsama</span>
+        <span>StudyOS · Built on the Open Sunsama foundation</span>
         <span className="flex items-center gap-1.5">
           <Command className="h-3 w-3" />
           Built in the open

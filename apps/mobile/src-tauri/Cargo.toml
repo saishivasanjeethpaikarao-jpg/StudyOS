@@ -1,7 +1,7 @@
 [package]
 name = "open-sunsama-mobile"
 version = "0.0.0"
-description = "Open Sunsama Mobile App"
+description = "StudyOS Mobile App"
 authors = ["Open Sunsama"]
 edition = "2021"
 

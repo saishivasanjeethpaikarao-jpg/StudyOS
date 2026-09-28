@@ -25,10 +25,10 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
         <Link to="/" className="mb-8 flex items-center gap-2">
           <img
             src="/open-sunsama-logo.png"
-            alt="Open Sunsama"
+            alt="StudyOS"
             className="h-8 w-8 rounded-xl object-cover"
           />
-          <span className="text-[15px] font-semibold">Open Sunsama</span>
+          <span className="text-[15px] font-semibold">StudyOS</span>
         </Link>
 
         {/* Card */}

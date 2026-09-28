@@ -15,7 +15,7 @@ const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_RANGE_DAYS = 31;
 
 export const CALENDAR_SCOPE_MISSING =
-  "This connection can't read calendar events. To include meetings, disconnect Open Sunsama in your AI app and connect it again, then allow calendar access (the calendar:read permission). API keys need the calendar:read scope.";
+  "This connection can't read calendar events. To include meetings, disconnect StudyOS in your AI app and connect it again, then allow calendar access (the calendar:read permission). API keys need the calendar:read scope.";
 
 function addDays(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`);
@@ -226,7 +226,7 @@ Declined and tentative events are marked. Cancelled events are left out.`,
         if (count === 0) {
           const scope = input.calendars?.length ? " in the selected calendars" : "";
           return successResponse(
-            `No calendar events for ${rangeLabel}${scope}. (Only calendars connected and turned on in Open Sunsama are included.)`
+            `No calendar events for ${rangeLabel}${scope}. (Only calendars connected and turned on in StudyOS are included.)`
           );
         }
         return successResponse(lines.join("\n"));

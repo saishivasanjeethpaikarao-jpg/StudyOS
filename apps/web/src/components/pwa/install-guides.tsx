@@ -32,7 +32,7 @@ const guides: Record<Exclude<InstallPlatform, "desktop">, InstallGuide> = {
         detail: "Then tap Share. On older iPhones, tap the Share button directly.",
       },
       { text: "Tap “Add to Home Screen”", detail: "Scroll the list down if you don't see it." },
-      { text: "Tap “Add”", detail: "Open Sunsama lands on your Home Screen." },
+      { text: "Tap “Add”", detail: "StudyOS lands on your Home Screen." },
     ],
   },
   "ios-chrome": {
@@ -46,7 +46,7 @@ const guides: Record<Exclude<InstallPlatform, "desktop">, InstallGuide> = {
     steps: [
       { text: "Tap Share in the address bar", detail: "The square with an arrow, top right." },
       { text: "Tap “Add to Home Screen”", detail: "Scroll the list down if you don't see it." },
-      { text: "Tap “Add”", detail: "Open Sunsama lands on your Home Screen." },
+      { text: "Tap “Add”", detail: "StudyOS lands on your Home Screen." },
     ],
   },
   "ios-other": {
@@ -60,7 +60,7 @@ const guides: Record<Exclude<InstallPlatform, "desktop">, InstallGuide> = {
     steps: [
       { text: "Tap Share in your browser", detail: "Or open this page in Safari." },
       { text: "Tap “Add to Home Screen”" },
-      { text: "Tap “Add”", detail: "Open Sunsama lands on your Home Screen." },
+      { text: "Tap “Add”", detail: "StudyOS lands on your Home Screen." },
     ],
   },
   "android-chrome": {
@@ -74,7 +74,7 @@ const guides: Record<Exclude<InstallPlatform, "desktop">, InstallGuide> = {
     steps: [
       { text: "Tap ⋮ at the top right", detail: "The three-dot menu next to the address bar." },
       { text: "Tap “Add to Home screen”", detail: "Some phones call it “Install app”." },
-      { text: "Tap “Install”", detail: "Open Sunsama lands on your Home screen." },
+      { text: "Tap “Install”", detail: "StudyOS lands on your Home screen." },
     ],
   },
   "android-samsung": {
@@ -88,7 +88,7 @@ const guides: Record<Exclude<InstallPlatform, "desktop">, InstallGuide> = {
     steps: [
       { text: "Tap ≡ in the bottom bar" },
       { text: "Tap “Add page to” → “Home screen”" },
-      { text: "Tap “Add”", detail: "Open Sunsama lands on your Home screen." },
+      { text: "Tap “Add”", detail: "StudyOS lands on your Home screen." },
     ],
   },
   "android-firefox": {
@@ -102,7 +102,7 @@ const guides: Record<Exclude<InstallPlatform, "desktop">, InstallGuide> = {
     steps: [
       { text: "Tap ⋮ next to the address bar" },
       { text: "Tap “Add app to Home screen”" },
-      { text: "Tap “Add”", detail: "Open Sunsama lands on your Home screen." },
+      { text: "Tap “Add”", detail: "StudyOS lands on your Home screen." },
     ],
   },
   "android-other": {
@@ -116,7 +116,7 @@ const guides: Record<Exclude<InstallPlatform, "desktop">, InstallGuide> = {
     steps: [
       { text: "Open your browser's menu", detail: "Usually ⋮ or ≡ next to the address bar." },
       { text: "Tap “Add to Home screen”", detail: "Or “Install app”." },
-      { text: "Confirm", detail: "Open Sunsama lands on your Home screen." },
+      { text: "Confirm", detail: "StudyOS lands on your Home screen." },
     ],
   },
 };

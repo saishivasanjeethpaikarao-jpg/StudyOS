@@ -64,7 +64,7 @@ export async function sendPasswordResetEmail(
   const content = generatePasswordResetContent(resetUrl, userName, themeColor);
   const html = generateEmailHTML({
     title: 'Reset your password',
-    preheader: 'Reset your Open Sunsama password',
+    preheader: 'Reset your StudyOS password',
     content,
     themeColor,
     footerText: 'This link expires in 1 hour.',

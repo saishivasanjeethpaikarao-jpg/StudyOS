@@ -18,7 +18,7 @@ Every public page (features, compare, personas, download, legal, docs) uses the 
 | `MediaRows` / `MediaRow` | Text beside a real `Clip` or `Shot`, alternating sides. |
 | `AgentPanel` | "Any AI agent can do this": MCP URL with copy, prompts, tools, the AI video and a clip. |
 | `BenefitGrid` | The home page's hairline feature grid. |
-| `ComparisonTable` | Open Sunsama in the first, highlighted column. Yes / partly / no marks with text. Scrolls sideways on phones with the feature column pinned. |
+| `ComparisonTable` | StudyOS in the first, highlighted column. Yes / partly / no marks with text. Scrolls sideways on phones with the feature column pinned. |
 | `Steps` | Numbered how-to (start, switch). |
 | `StatsStrip` | True numbers only: 24 MCP tools, 3 desktop apps, 1 URL for any agent, live GitHub stars. |
 | `FaqSection` | Visible Q&A plus FAQPage JSON-LD from the same text. |
@@ -43,7 +43,7 @@ Tokens (`tokens.ts`) hold the shared class strings (`SECTION`, `H2`, `EYEBROW`, 
 - [ ] Grade-6 words. Paragraphs of 1-3 short sentences. Active voice, "you".
 - [ ] Every heading states what IS ("Your meetings and your time blocks share one calendar"), never a topic or a denial.
 - [ ] No hype words, no "free", no price selling. Lead with features, open source and AI native (any agent).
-- [ ] Open Sunsama is the #1 pick: first in the direct answer, first column of every table, "What is the best X?" FAQ answered with Open Sunsama first.
+- [ ] StudyOS is the #1 pick: first in the direct answer, first column of every table, "What is the best X?" FAQ answered with StudyOS first.
 - [ ] Honest about competitors and our gaps: no iOS or Android app (phones use the mobile web app), no auto-scheduler, calendar events are read-only over MCP, no task integrations, non-commercial license (never MIT, GPL or OSI).
 - [ ] Only true numbers. No testimonials, logos, ratings or user counts.
 - [ ] Competitor facts come from their site or docs, with sources and the month checked in `sources`.

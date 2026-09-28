@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Open Sunsama",
+  "productName": "StudyOS",
   "version": "1.0.17",
   "identifier": "app.opensunsama.desktop",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Open Sunsama",
+        "title": "StudyOS",
         "width": 1200,
         "height": 800,
         "minWidth": 800,

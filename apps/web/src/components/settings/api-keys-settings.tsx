@@ -84,7 +84,7 @@ export function ApiKeysSettings() {
             <div className="space-y-1">
               <p className="text-sm font-medium">API Key Security</p>
               <p className="text-xs text-muted-foreground">
-                API keys grant access to your Open Sunsama data. Keep them secure and
+                API keys grant access to your StudyOS data. Keep them secure and
                 never share them publicly. Keys are only shown once at creation -
                 store them safely. Revoked keys cannot be restored.
               </p>

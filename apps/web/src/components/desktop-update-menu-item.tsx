@@ -41,7 +41,7 @@ export function DesktopUpdateMenuItem() {
       if (update) {
         toast({
           title: `Version ${update.version} available`,
-          description: "A new version of Open Sunsama is ready to install.",
+          description: "A new version of StudyOS is ready to install.",
           action: (
             <ToastAction
               altText="Update now"
@@ -57,7 +57,7 @@ export function DesktopUpdateMenuItem() {
         toast({
           title: "You're up to date",
           description: version
-            ? `Open Sunsama ${version} is the latest version.`
+            ? `StudyOS ${version} is the latest version.`
             : "You're on the latest version.",
         });
       }

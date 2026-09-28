@@ -8,7 +8,7 @@ import type { MarketingFaq } from "@/content/marketing/types";
 
 const FAQS: MarketingFaq[] = [
   {
-    question: "Is Open Sunsama open source?",
+    question: "Is StudyOS open source?",
     answer:
       "Yes. The code is public on GitHub. It uses a non-commercial license: you can read it, run it and self-host it for personal use. Companies need a commercial license.",
     link: { label: "See the code on GitHub", href: "https://github.com/ShadowWalker2014/open-sunsama" },
@@ -27,7 +27,7 @@ const FAQS: MarketingFaq[] = [
   {
     question: "How is it different from Sunsama?",
     answer:
-      "Both give you a calm daily plan with a board and time blocks, and both work with AI agents. Open Sunsama's code is public, you can self-host it, and it has a public REST API. Sunsama has no public API.",
+      "Both give you a calm daily plan with a board and time blocks, and both work with AI agents. StudyOS builds on a public codebase, can be self-hosted, and has a public REST API. Sunsama has no public API.",
     link: { label: "Compare the two", href: "/alternative/sunsama" },
   },
   {
@@ -38,7 +38,7 @@ const FAQS: MarketingFaq[] = [
   {
     question: "Is there a phone app?",
     answer:
-      "Not in the app stores yet. On your phone, open Open Sunsama in the browser. It works as a mobile web app and syncs with your other devices. Desktop apps are ready for Mac, Windows and Linux.",
+      "Not in the app stores yet. On your phone, open StudyOS in the browser. It works as a mobile web app and syncs with your other devices. Desktop apps are ready for Mac, Windows and Linux.",
     link: { label: "Get the desktop app", href: "/download" },
   },
 ];

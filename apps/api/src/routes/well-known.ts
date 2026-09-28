@@ -25,7 +25,7 @@ function protectedResourceMetadata() {
     authorization_servers: [getIssuer()],
     scopes_supported: RESOURCE_SCOPES,
     bearer_methods_supported: ["header"],
-    resource_name: "Open Sunsama",
+    resource_name: "StudyOS",
     resource_documentation: MCP_DOCS_URL,
   };
 }

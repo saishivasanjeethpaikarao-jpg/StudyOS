@@ -5,22 +5,22 @@ use tauri::{
 
 pub fn create_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // App menu (macOS only)
-    let about = PredefinedMenuItem::about(app, Some("About Open Sunsama"), None)?;
+    let about = PredefinedMenuItem::about(app, Some("About StudyOS"), None)?;
     let check_updates = MenuItemBuilder::with_id("check_updates", "Check for Updates...").build(app)?;
     let separator = PredefinedMenuItem::separator(app)?;
     let settings = MenuItemBuilder::with_id("settings", "Settings...")
         .accelerator("CmdOrCtrl+,")
         .build(app)?;
     let separator2 = PredefinedMenuItem::separator(app)?;
-    let hide = PredefinedMenuItem::hide(app, Some("Hide Open Sunsama"))?;
+    let hide = PredefinedMenuItem::hide(app, Some("Hide StudyOS"))?;
     let hide_others = PredefinedMenuItem::hide_others(app, Some("Hide Others"))?;
     let show_all = PredefinedMenuItem::show_all(app, Some("Show All"))?;
     let separator3 = PredefinedMenuItem::separator(app)?;
-    let quit = PredefinedMenuItem::quit(app, Some("Quit Open Sunsama"))?;
+    let quit = PredefinedMenuItem::quit(app, Some("Quit StudyOS"))?;
 
     let app_menu = Submenu::with_items(
         app,
-        "Open Sunsama",
+        "StudyOS",
         true,
         &[
             &about,

@@ -50,7 +50,7 @@ export function DocsLayout({ children, doc, sections }: DocsLayoutProps) {
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground font-sans antialiased flex flex-col">
       <SEOHead
-        title={`${doc.title} | Open Sunsama Docs`}
+        title={`${doc.title} | StudyOS Docs`}
         description={doc.description}
         canonicalUrl={canonicalUrl}
         ogType="article"

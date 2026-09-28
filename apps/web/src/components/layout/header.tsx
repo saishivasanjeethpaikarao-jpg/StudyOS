@@ -73,11 +73,11 @@ export function Header({ className }: HeaderProps) {
           <Link to="/app" className="mr-4 flex items-center space-x-2">
             <img
               src="/open-sunsama-logo.png"
-              alt="Open Sunsama"
+              alt="StudyOS"
               className="h-6 w-6 rounded-lg object-cover"
             />
             <span className="hidden text-[13px] font-semibold sm:inline-block">
-              Open Sunsama
+              StudyOS
             </span>
           </Link>
         </div>

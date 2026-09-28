@@ -22,7 +22,7 @@ export function BlogCTA({ className }: { className?: string }) {
             <div className="relative grid items-center gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-6">
               <div className="min-w-0 px-7 pt-10 sm:px-10 sm:pt-12 lg:py-16 lg:pl-14 lg:pr-0">
                 <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[hsl(24_95%_60%)]">
-                  Try Open Sunsama
+                  Try StudyOS
                 </p>
                 <h2 className="mt-3 text-balance text-[30px] font-semibold leading-[1.08] tracking-[-0.03em] text-white md:text-[40px]">
                   Your whole day, on one board.
@@ -63,7 +63,7 @@ export function BlogCTA({ className }: { className?: string }) {
                     <div className="aspect-[16/10] w-full overflow-hidden">
                       <ThemedShot
                         name="board"
-                        alt="The Open Sunsama board: today's tasks beside a time-blocked calendar"
+                        alt="The StudyOS board: today's tasks beside a time-blocked calendar"
                       />
                     </div>
                   </BrowserFrame>

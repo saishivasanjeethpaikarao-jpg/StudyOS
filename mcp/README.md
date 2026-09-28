@@ -1,8 +1,8 @@
-# Open Sunsama MCP Server
+# StudyOS MCP Server
 
-An MCP (Model Context Protocol) server that enables AI agents like Claude, ChatGPT, Cursor, and other AI assistants to manage your tasks, time blocks, and calendar through the Open Sunsama API.
+An MCP (Model Context Protocol) server that enables AI agents like Claude, ChatGPT, Cursor, and other AI assistants to manage your tasks, time blocks, and calendar through the StudyOS API.
 
-> **Most people don't need this package.** Open Sunsama hosts the same server at
+> **Most people don't need this package.** StudyOS hosts the same server at
 > **`https://api.opensunsama.com/mcp`** with OAuth sign-in. Add that URL to Claude
 > (Settings → Customize → Connectors), ChatGPT (Developer mode → Plugins), Claude Code, or
 > Cursor, then sign in and allow access. There's no API key. See the
@@ -21,8 +21,8 @@ An MCP (Model Context Protocol) server that enables AI agents like Claude, ChatG
 
 ## Prerequisites
 
-1. An Open Sunsama account (cloud: [opensunsama.com](https://opensunsama.com) or self-hosted)
-2. An API key from your Open Sunsama account
+1. A StudyOS account (current inherited cloud endpoint: [opensunsama.com](https://opensunsama.com), or self-hosted)
+2. An API key from your StudyOS account
 3. Node.js 18+ or Bun runtime
 
 ## Installation
@@ -66,7 +66,7 @@ The fastest way: in the web app, open **Settings → MCP**, expand **Use an API 
 
 Or create one with custom scopes:
 
-1. Open the Open Sunsama web app
+1. Open the StudyOS web app
 2. Go to **Settings** → **API Keys**
 3. Click **"Generate New Key"**
 4. Select scopes:
@@ -357,7 +357,7 @@ mcp/
 ├── src/
 │   ├── index.ts          # Main entry point
 │   ├── lib/
-│   │   └── api-client.ts # HTTP client for Open Sunsama API
+│   │   └── api-client.ts # HTTP client for StudyOS API
 │   └── tools/
 │       ├── tasks.ts      # Task management tools
 │       ├── time-blocks.ts# Time block tools
@@ -400,9 +400,9 @@ bun run dev      # Watch mode for development
 
 ## License
 
-This MCP server is part of the Open Sunsama project and follows the same license terms. See the main repository LICENSE file for details.
+This MCP server is part of StudyOS and inherits the Open Sunsama foundation's license terms. See the main repository LICENSE and upstream provenance files for details.
 
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/ShadowWalker2014/open-sunsama/issues)
-- **Documentation**: [Open Sunsama Docs](https://github.com/ShadowWalker2014/open-sunsama)
+- **Documentation**: [StudyOS source and inherited documentation](https://github.com/ShadowWalker2014/open-sunsama)

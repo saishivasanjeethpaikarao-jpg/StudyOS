@@ -31,12 +31,12 @@ export function DocsSchema({
       dateModified: dateModified || new Date().toISOString().split("T")[0],
       author: {
         "@type": "Organization",
-        name: "Open Sunsama",
-        url: "https://opensunsama.com",
+        name: "Open Sunsama contributors",
+        url: "https://github.com/ShadowWalker2014/open-sunsama",
       },
       publisher: {
         "@type": "Organization",
-        name: "Open Sunsama",
+        name: "StudyOS",
         url: "https://opensunsama.com",
         logo: {
           "@type": "ImageObject",

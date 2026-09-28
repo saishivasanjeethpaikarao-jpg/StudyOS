@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Open Sunsama",
+    "name": "StudyOS",
     "slug": "open-sunsama",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,7 +20,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "app.opensunsama.mobile",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Use Face ID to unlock Open Sunsama"
+        "NSFaceIDUsageDescription": "Use Face ID to unlock StudyOS"
       }
     },
     "android": {

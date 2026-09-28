@@ -35,7 +35,7 @@ export function blogPostingJsonLd(post: BlogPostingInput) {
     },
     publisher: {
       "@type": "Organization",
-      name: "Open Sunsama",
+      name: "StudyOS",
       url: SITE_URL,
       logo: {
         "@type": "ImageObject",
@@ -99,12 +99,12 @@ export interface SoftwareApplicationInput {
   featureList?: string[];
 }
 
-/** Open Sunsama as a SoftwareApplication. No offers or ratings: we don't sell on price or invent reviews. */
+/** StudyOS as a SoftwareApplication. No offers or ratings: we don't sell on price or invent reviews. */
 export function softwareApplicationJsonLd(app: SoftwareApplicationInput) {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Open Sunsama",
+    name: "StudyOS",
     description: app.description,
     applicationCategory: "ProductivityApplication",
     operatingSystem: "Web, macOS, Windows, Linux",
@@ -112,7 +112,11 @@ export function softwareApplicationJsonLd(app: SoftwareApplicationInput) {
     downloadUrl: `${SITE_URL}/download`,
     image: `${SITE_URL}/og-image.png`,
     ...(app.featureList?.length ? { featureList: app.featureList } : {}),
-    author: { "@type": "Organization", name: "Open Sunsama", url: SITE_URL },
+    author: {
+      "@type": "Organization",
+      name: "Open Sunsama contributors",
+      url: "https://github.com/ShadowWalker2014/open-sunsama",
+    },
   };
 }
 

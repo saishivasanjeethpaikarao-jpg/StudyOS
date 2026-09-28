@@ -53,7 +53,7 @@ function Cell({ cell, primary }: { cell: ComparisonCell; primary: boolean }) {
 }
 
 /**
- * Feature-by-feature table, Open Sunsama in the first (highlighted) column.
+ * Feature-by-feature table, StudyOS in the first (highlighted) column.
  * Marks carry text for screen readers. On phones the table scrolls sideways
  * inside its own box, with the feature column pinned.
  */

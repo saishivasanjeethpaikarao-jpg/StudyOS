@@ -181,8 +181,8 @@
       "mp4": "/blog-media/ai.ec1fbee7.mp4",
       "poster": "/blog-media/ai-poster.7ef985e7.webp",
       "captions": "/blog-media/ai.f9f554f5.vtt",
-      "title": "Let Claude or ChatGPT plan your day with Open Sunsama",
-      "description": "Connect Claude, ChatGPT, Cursor or any MCP client to Open Sunsama, the open source daily planner. Add the connector URL, sign in once and allow access, then ask your agent to plan your afternoon and watch tasks and time blocks appear live.",
+      "title": "Let Claude or ChatGPT plan your day with StudyOS",
+      "description": "Connect Claude, ChatGPT, Cursor or any MCP client to StudyOS. Add the connector URL, sign in once and allow access, then ask your agent to plan your afternoon and watch tasks and time blocks appear live.",
       "uploadDate": "2026-09-24"
     },
     "tour": {
@@ -192,8 +192,8 @@
       "mp4": "/blog-media/tour.6c568d47.mp4",
       "poster": "/blog-media/tour-poster.3a1c979a.webp",
       "captions": "/blog-media/tour.ffb9b9ac.vtt",
-      "title": "Plan your whole day in one place with Open Sunsama",
-      "description": "A one-minute tour of Open Sunsama, the open source daily planner: pull tasks into today on the board, time block them on the calendar, work in focus mode, find anything with Command K, and let an AI agent like Claude plan your afternoon over MCP.",
+      "title": "Plan your whole day in one place with StudyOS",
+      "description": "A one-minute tour of StudyOS: pull tasks into today on the board, time block them on the calendar, work in focus mode, find anything with Command K, and let an AI agent like Claude plan your afternoon over MCP.",
       "uploadDate": "2026-09-24"
     }
   }

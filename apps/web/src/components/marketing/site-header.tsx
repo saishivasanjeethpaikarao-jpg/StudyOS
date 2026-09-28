@@ -120,7 +120,7 @@ function MobileMenu() {
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <div className="flex h-14 items-center gap-2 border-b border-border/60 px-5">
           <img src="/open-sunsama-logo.png" alt="" className="h-6 w-6 rounded-md object-cover" />
-          <span className="text-[14px] font-semibold">Open Sunsama</span>
+          <span className="text-[14px] font-semibold">StudyOS</span>
         </div>
         <nav className="flex-1 px-2 py-4" aria-label="Mobile">
           <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Features</p>
@@ -192,9 +192,9 @@ export function SiteHeader({
             to="/"
             className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <img src="/open-sunsama-logo.png" alt="Open Sunsama" className="h-7 w-7 rounded-lg object-cover" />
+            <img src="/open-sunsama-logo.png" alt="StudyOS" className="h-7 w-7 rounded-lg object-cover" />
             <span className={cn("whitespace-nowrap text-[14px] font-semibold tracking-tight", section && "hidden sm:inline")}>
-              Open Sunsama
+              StudyOS
             </span>
           </Link>
           {section && (

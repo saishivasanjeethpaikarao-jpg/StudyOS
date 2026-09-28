@@ -47,6 +47,10 @@ docker compose stop postgres
 - Preserve existing `@open-sunsama/*` package names, table names and API routes until an explicit compatibility migration is approved.
 - Review [`UPSTREAM_PROVENANCE.md`](UPSTREAM_PROVENANCE.md) before distribution or licensing decisions.
 
+## Branding and compatibility
+
+StudyOS is the user-facing product name. Keep inherited package names, import paths, database identifiers, migration history, application identifiers and upstream URLs unchanged until each has an explicit compatibility migration. Preserve upstream license, attribution and provenance records; a visual rebrand does not transfer authorship or distribution rights.
+
 ## Current phase boundary
 
-Phase 0 establishes a reproducible development baseline and documentation only. Phase 1 begins the StudyOS domain work—subjects, assignments, study sessions, resources, notes and Today—and must not begin without explicit approval.
+Phase 0 established the reproducible development baseline. Phase 1A introduces only the owned Subject and Assignment foundations plus safe user-facing StudyOS branding. Study sessions, resources, notes, AI providers, Telegram, Hermes integration, Android alarms, production cloud deployment and the broader navigation redesign remain deferred until explicitly approved.

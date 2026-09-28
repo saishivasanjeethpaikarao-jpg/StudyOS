@@ -52,7 +52,7 @@ export function VerdictSection({ section, verdict }: { section: SectionCopy; ver
             />
             <h3 className="relative flex items-center gap-2.5 text-[17px] font-semibold tracking-[-0.01em]">
               <img src="/open-sunsama-logo.png" alt="" width={24} height={24} className="h-6 w-6 rounded-md shadow-sm" />
-              Switch to Open Sunsama if…
+              Switch to StudyOS if…
             </h3>
             <ul className="relative mt-5 space-y-3.5">
               {verdict.switchIf.map((item) => (
@@ -109,7 +109,7 @@ export function GiveUpSection({ section, items, rival }: { section: SectionCopy;
         <Reveal delay={100} className="mt-12">
           <ul
             className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border/70 bg-card dark:border-white/[0.08]"
-            aria-label={`What ${rival} does that Open Sunsama doesn't`}
+            aria-label={`What ${rival} does that StudyOS doesn't`}
           >
             {items.map((item) => (
               <li key={item.title} className="grid gap-2 px-5 py-5 sm:grid-cols-[240px_1fr] sm:gap-8 sm:px-7 sm:py-6">

@@ -158,13 +158,13 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen overflow-x-clip bg-background font-sans text-foreground antialiased">
       <SEOHead
-        title="Blog | Open Sunsama - Productivity Tips & Time Management"
+        title="Blog | StudyOS - Productivity Tips & Time Management"
         description="Tips on productivity, time management, and building better daily habits. Learn how to plan your day effectively with time blocking and focus techniques."
         canonicalUrl="/blog"
         ogType="website"
       />
       <CollectionSchema
-        name="Open Sunsama Blog"
+        name="StudyOS Blog"
         description="Tips on productivity, time management, and building better daily habits."
         url="/blog"
         posts={filteredPosts}

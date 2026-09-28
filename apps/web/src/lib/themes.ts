@@ -1,5 +1,5 @@
 /**
- * Theme System for Open Sunsama
+ * Theme System for StudyOS
  * 8 unique color themes with light/dark variants
  */
 

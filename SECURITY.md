@@ -11,11 +11,14 @@ We release patches for security vulnerabilities in the following versions:
 
 ## Reporting a Vulnerability
 
-We take the security of Open Sunsama seriously. If you believe you have found a security vulnerability, please report it to us as described below.
+StudyOS does not yet publish an official private security-reporting address. Do not send StudyOS vulnerability reports to Open Sunsama's upstream contacts: those contacts are not StudyOS support.
+
+Until StudyOS publishes a dedicated private reporting channel, do not include vulnerability details, proof-of-concept code, secrets, or user data in a public issue. If you are already coordinating with a StudyOS maintainer, use a private channel that you have agreed on directly.
+
+For a vulnerability that also affects the inherited Open Sunsama foundation, consult the [upstream Open Sunsama repository](https://github.com/ShadowWalker2014/open-sunsama) and follow its current security policy. Any contacts listed there belong to the upstream project and should be used only for upstream issues.
 
 ### Please Do
 
-- **Email us directly** at [security@circo.so](mailto:security@circo.so)
 - **Provide details** about the vulnerability, including:
   - Type of issue (e.g., SQL injection, XSS, authentication bypass)
   - Full paths of source file(s) related to the issue
@@ -32,12 +35,6 @@ We take the security of Open Sunsama seriously. If you believe you have found a 
 - **Don't perform actions** that could negatively impact other users
 - **Don't use automated scanners** against production systems without permission
 
-## Response Timeline
-
-- **Acknowledgment**: Within 48 hours
-- **Initial assessment**: Within 1 week
-- **Resolution target**: Within 90 days (depending on severity)
-
 ## Disclosure Policy
 
 We follow a coordinated disclosure process:
@@ -50,7 +47,7 @@ We follow a coordinated disclosure process:
 
 ## Security Best Practices for Self-Hosters
 
-If you're self-hosting Open Sunsama, please ensure:
+If you're self-hosting StudyOS, please ensure:
 
 ### Environment
 
@@ -82,7 +79,7 @@ If you're self-hosting Open Sunsama, please ensure:
 
 ## Known Security Features
 
-Open Sunsama implements the following security measures:
+StudyOS implements the following security measures:
 
 - **Password Hashing**: bcrypt with appropriate work factor
 - **API Key Hashing**: SHA-256 (keys cannot be recovered)
@@ -93,18 +90,13 @@ Open Sunsama implements the following security measures:
 - **CORS**: Configurable origin restrictions
 - **Rate Limiting**: Available via reverse proxy configuration
 
-## Bug Bounty
+## Bug Bounty and Response Times
 
-We do not currently have a formal bug bounty program. However, we deeply appreciate security researchers who report vulnerabilities responsibly. We will:
+StudyOS does not currently operate a formal bug bounty program and does not publish guaranteed response or remediation times.
 
-- Acknowledge your contribution in our security advisories (with permission)
-- Provide a letter of recognition upon request
-- Consider significant findings for monetary rewards on a case-by-case basis
+## Contact Status
 
-## Contact
+- **StudyOS security contact**: Not yet published
+- **Upstream Open Sunsama issues**: Consult the upstream repository's current security policy; upstream contacts are not StudyOS contacts.
 
-- **Security issues**: [security@circo.so](mailto:security@circo.so)
-- **General inquiries**: [ceo@circo.so](mailto:ceo@circo.so)
-- **PGP Key**: Available upon request
-
-Thank you for helping keep Open Sunsama and our users safe!
+Thank you for helping keep StudyOS and our users safe!

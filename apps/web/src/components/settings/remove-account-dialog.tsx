@@ -49,7 +49,7 @@ export function RemoveAccountDialog({
         <div className="space-y-4 py-4">
           <p className="text-sm text-muted-foreground">
             Are you sure you want to disconnect this calendar account? All synced
-            events will be removed from Open Sunsama.
+            events will be removed from StudyOS.
           </p>
 
           <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3">

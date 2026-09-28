@@ -1,7 +1,7 @@
 {
   "name": "@open-sunsama/mcp",
   "version": "1.2.0",
-  "description": "MCP server for Open Sunsama - AI agent task and calendar management",
+  "description": "MCP server for StudyOS task and calendar management",
   "type": "module",
   "bin": {
     "open-sunsama-mcp": "./build/index.js"

@@ -1,5 +1,5 @@
 /**
- * Service Worker for Open Sunsama Push Notifications
+ * Service Worker for StudyOS Push Notifications
  * Handles push events and notification clicks
  */
 
@@ -22,13 +22,13 @@ self.addEventListener('push', (event) => {
   } catch {
     // If not JSON, use text as body
     payload = {
-      title: 'Open Sunsama',
+      title: 'StudyOS',
       body: event.data.text(),
     };
   }
 
   const {
-    title = 'Open Sunsama',
+    title = 'StudyOS',
     body = '',
     icon = DEFAULT_ICON,
     badge = DEFAULT_BADGE,

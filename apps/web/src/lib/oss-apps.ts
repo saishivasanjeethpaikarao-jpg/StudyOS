@@ -39,7 +39,7 @@ export interface OssScreenshot {
   /** Where the image came from, shown under it */
   source: string;
   sourceUrl?: string;
-  /** Use a shot from blog-media.json instead of /oss/ (Open Sunsama's own screens) */
+  /** Use a shot from blog-media.json instead of /oss/ (StudyOS's own screens) */
   blogShot?: string;
 }
 
@@ -98,7 +98,7 @@ export function getOssApp(id: string): OssApp | undefined {
   return OSS_APPS[id];
 }
 
-/** Table order: Open Sunsama first when included, then as written. Unknown ids are dropped. */
+/** Table order: StudyOS first when included, then as written. Unknown ids are dropped. */
 export function tableOrder(ids: string[]): OssApp[] {
   const apps = ids.map(getOssApp).filter((a): a is OssApp => Boolean(a));
   return [

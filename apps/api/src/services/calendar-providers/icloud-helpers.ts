@@ -386,7 +386,7 @@ export function buildVCalendar(input: {
   const lines: string[] = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Open Sunsama//EN',
+    'PRODID:-//StudyOS//EN',
     'CALSCALE:GREGORIAN',
     'BEGIN:VEVENT',
     `UID:${escapeICS(input.uid)}`,

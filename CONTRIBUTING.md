@@ -1,6 +1,6 @@
-# Contributing to Open Sunsama
+# Contributing to StudyOS
 
-First off, thank you for considering contributing to Open Sunsama! It's people like you that make Open Sunsama such a great tool.
+Thank you for considering contributing to StudyOS. The project is evolving incrementally from the inherited Open Sunsama foundation; preserve compatibility and attribution as described in the StudyOS development and provenance documents.
 
 ## Table of Contents
 
@@ -318,4 +318,4 @@ Don't hesitate to ask! Open a discussion or reach out to maintainers.
 
 ---
 
-Thank you for contributing to Open Sunsama!
+Thank you for contributing to StudyOS!

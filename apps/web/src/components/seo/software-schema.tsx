@@ -16,7 +16,7 @@ interface SoftwareSchemaProps {
 }
 
 export function SoftwareApplicationSchema({
-  name = "Open Sunsama",
+  name = "StudyOS",
   description,
   applicationCategory = "ProductivityApplication",
   operatingSystem = "Web, Windows, macOS, Linux",
@@ -45,8 +45,8 @@ export function SoftwareApplicationSchema({
         : undefined,
       "author": {
         "@type": "Organization",
-        "name": "Open Sunsama",
-        "url": "https://opensunsama.com"
+        "name": "Open Sunsama contributors",
+        "url": "https://github.com/ShadowWalker2014/open-sunsama"
       }
     };
     

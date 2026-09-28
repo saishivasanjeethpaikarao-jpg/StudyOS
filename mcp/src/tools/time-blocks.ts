@@ -570,7 +570,7 @@ To unlink a task, pass null as the taskId.`,
   // Get schedule for a specific day (convenience tool)
   defineTool(server,
     "get_schedule_for_day",
-    `Get the user's whole day in one call: calendar events (meetings from their connected Google, Outlook and iCloud calendars) and time blocks planned in Open Sunsama, each in its own section.
+    `Get the user's whole day in one call: calendar events (meetings from their connected Google, Outlook and iCloud calendars) and time blocks planned in StudyOS, each in its own section.
 
 This is a convenience tool that:
 - Fetches the day's calendar events and time blocks together
@@ -627,7 +627,7 @@ with the time block tools. Times are in the user's timezone.`,
           lines.push("CALENDAR EVENTS");
           lines.push(`Not included: ${events.message}`);
         }
-        lines.push("", "TIME BLOCKS (planned in Open Sunsama)");
+        lines.push("", "TIME BLOCKS (planned in StudyOS)");
         lines.push(...formatTimeBlockSection(blocks));
 
         return successResponse(lines.join("\n"));

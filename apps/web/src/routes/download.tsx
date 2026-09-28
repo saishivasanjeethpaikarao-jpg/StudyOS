@@ -336,12 +336,12 @@ export default function DownloadPage() {
           {/* App icon */}
           <img
             src="/open-sunsama-logo.png"
-            alt="Open Sunsama"
+            alt="StudyOS"
             className="mx-auto h-16 w-16 rounded-2xl object-cover mb-6"
           />
 
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mb-3">
-            Open Sunsama for Desktop
+            StudyOS for Desktop
           </h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8">
             Native performance, global hotkeys, and system integration.

@@ -37,7 +37,7 @@ function TryCard() {
         className="relative h-8 w-8 rounded-lg object-cover"
       />
       <p className="relative mt-3 text-[14px] font-semibold tracking-tight">
-        Plan your day in Open Sunsama
+        Plan your day in StudyOS
       </p>
       <p className="relative mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
         Time blocking, focus mode, and any AI agent. Open source.
@@ -79,7 +79,7 @@ export function BlogLayout({
   return (
     <div className="min-h-screen overflow-x-clip bg-background font-sans text-foreground antialiased">
       <SEOHead
-        title={`${post.title} | Open Sunsama Blog`}
+        title={`${post.title} | StudyOS Blog`}
         description={post.description}
         canonicalUrl={canonicalUrl}
         ogImage={ogImage || "/og-image.png"}

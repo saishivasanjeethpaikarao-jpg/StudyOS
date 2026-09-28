@@ -1,7 +1,7 @@
 /**
- * Open Sunsama API - Main Entry Point
+ * StudyOS API - Main Entry Point
  *
- * A Hono-based REST API for the Open Sunsama time blocking application.
+ * A Hono-based REST API for the StudyOS planning application.
  * Supports both JWT and API key authentication.
  */
 
@@ -150,7 +150,7 @@ app.get("/health", async (c) => {
 // API info endpoint
 app.get("/", (c) => {
   return c.json({
-    name: "Open Sunsama API",
+    name: "StudyOS API",
     version: process.env.npm_package_version || "0.0.0",
     docs: "/docs",
     health: "/health",
@@ -314,7 +314,7 @@ async function startServer(): Promise<void> {
     console.log(`
   ╔═══════════════════════════════════════════════════════════╗
   ║                                                           ║
-  ║   Open Sunsama API                                        ║
+  ║   StudyOS API                                             ║
   ║                                                           ║
   ║   Server running at http://localhost:${port}                 ║
   ║                                                           ║

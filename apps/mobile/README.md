@@ -1,4 +1,4 @@
-# Open Sunsama Mobile App
+# StudyOS Mobile App
 
 Tauri v2 mobile app that wraps the web app for iOS and Android. This provides 100% feature parity with the web app while adding native mobile capabilities like haptic feedback, push notifications, and biometric authentication.
 

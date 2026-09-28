@@ -125,7 +125,7 @@ export function ExtendSection({ section }: { section: CustomSection }) {
                 <figure className="w-full">
                   <BrowserFrame>
                     <div className="relative aspect-[16/10] w-full overflow-hidden">
-                      <ClipPlayer id="ai-plan" label="Claude plans the afternoon over MCP while tasks and time blocks appear live in Open Sunsama" controls />
+                      <ClipPlayer id="ai-plan" label="Claude plans the afternoon over MCP while tasks and time blocks appear live in StudyOS" controls />
                     </div>
                   </BrowserFrame>
                   <figcaption className="mt-3 text-center text-[12.5px] text-muted-foreground">

@@ -1,5 +1,5 @@
 /**
- * Open Sunsama Mobile - Tauri Bridge
+ * StudyOS Mobile - Tauri Bridge
  * 
  * This module provides TypeScript wrappers for Tauri mobile commands.
  * Import these in the web app when running in Tauri mobile context.

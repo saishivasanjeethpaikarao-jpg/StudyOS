@@ -47,7 +47,7 @@ function oauthErrorResponse(c: Context, error: unknown): Response {
   if (error instanceof OAuthError) {
     const headers: Record<string, string> = { ...NO_STORE };
     if (error.status === 401 && error.basicAuth) {
-      headers["WWW-Authenticate"] = 'Basic realm="Open Sunsama"';
+      headers["WWW-Authenticate"] = 'Basic realm="StudyOS"';
     }
     return c.json(error.toJSON(), error.status as 400 | 401, headers);
   }
@@ -115,7 +115,7 @@ oauthRouter.get("/authorize", async (c) => {
     return consentErrorRedirect(
       c,
       "invalid_client",
-      "This app isn't registered with Open Sunsama. Remove the connector and add it again."
+      "This app isn't registered with StudyOS. Remove the connector and add it again."
     );
   }
 

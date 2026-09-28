@@ -11,7 +11,7 @@ interface SEOConfig {
 
 const BASE_URL = "https://opensunsama.com";
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
-const SITE_NAME = "Open Sunsama";
+const SITE_NAME = "StudyOS";
 
 /**
  * Hook for managing per-page SEO meta tags
@@ -91,42 +91,42 @@ export function useSEO(config: SEOConfig) {
 // Pre-defined SEO configs for common pages
 export const SEO_CONFIGS = {
   landing: {
-    title: "Open Sunsama",
+    title: "StudyOS",
     description: "Daily planning, done right. The open-source daily planner for time-blocking, focused work, and AI integration. Control it from any agent: Claude, ChatGPT, Cursor, or any MCP client.",
     canonical: "/",
   },
   alternative: {
     sunsama: {
       title: "Open-Source Sunsama Alternative for Any AI Agent",
-      description: "Open Sunsama is an open-source daily planner that works like Sunsama: a board of days, time blocking and focus mode. Self-host it and connect any AI agent.",
+      description: "StudyOS builds on an open-source daily planner foundation with a board of days, time blocking, focus mode, and optional AI connections.",
       canonical: "/alternative/sunsama",
     },
   },
   download: {
     title: "Download",
-    description: "Download Open Sunsama for macOS, Windows, and Linux. Native desktop apps with system tray integration, global hotkeys, and offline support.",
+    description: "Download StudyOS for macOS, Windows, and Linux. Native desktop apps with system tray integration, global hotkeys, and offline support.",
     canonical: "/download",
   },
   login: {
     title: "Sign In",
-    description: "Sign in to your Open Sunsama account to access your daily planner and time-blocked schedule.",
+    description: "Sign in to your StudyOS account to access your daily planner and time-blocked schedule.",
     canonical: "/login",
     noindex: true,
   },
   register: {
     title: "Create Account",
-    description: "Create your Open Sunsama account. Start time-blocking your day and connect the AI agent you already use.",
+    description: "Create your StudyOS account and start planning your day.",
     canonical: "/register",
     noindex: true,
   },
   privacy: {
     title: "Privacy Policy",
-    description: "Open Sunsama privacy policy. Learn how we handle your data with transparency and respect for your privacy.",
+    description: "StudyOS privacy policy. Learn how we handle your data with transparency and respect for your privacy.",
     canonical: "/privacy",
   },
   terms: {
     title: "Terms of Service",
-    description: "Open Sunsama terms of service. The terms and conditions for using our daily planner application.",
+    description: "StudyOS terms of service. The terms and conditions for using our planning application.",
     canonical: "/terms",
   },
 } as const;

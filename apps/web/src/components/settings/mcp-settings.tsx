@@ -192,12 +192,12 @@ function ConnectorInstructions({ client, copied, onCopy }: {
               <span className="font-medium">Add</span>.
             </li>
             <li>
-              Name it <span className="font-medium">Open Sunsama</span>, paste the connector URL as the{" "}
+              Name it <span className="font-medium">StudyOS</span>, paste the connector URL as the{" "}
               <span className="font-medium">MCP server URL</span>, and click <span className="font-medium">Continue</span>.
             </li>
             <li>
               Keep the detected sign-in settings and click <span className="font-medium">Add</span>. Then click{" "}
-              <span className="font-medium">Connect</span>, sign in to Open Sunsama, and choose{" "}
+              <span className="font-medium">Connect</span>, sign in to StudyOS, and choose{" "}
               <span className="font-medium">Allow access</span>.
             </li>
           </Steps>
@@ -218,13 +218,13 @@ function ConnectorInstructions({ client, copied, onCopy }: {
             </li>
             <li>
               Go to <span className="font-medium">Plugins</span>, click <span className="font-medium">+</span>, name
-              it <span className="font-medium">Open Sunsama</span>, and paste the connector URL under{" "}
+              it <span className="font-medium">StudyOS</span>, and paste the connector URL under{" "}
               <span className="font-medium">Connection</span>.
             </li>
             <li>
               Leave authentication on <span className="font-medium">OAuth</span>, check{" "}
               <span className="font-medium">I understand and want to continue</span>, click{" "}
-              <span className="font-medium">Create</span>, sign in to Open Sunsama, and choose{" "}
+              <span className="font-medium">Create</span>, sign in to StudyOS, and choose{" "}
               <span className="font-medium">Allow access</span>.
             </li>
           </Steps>
@@ -327,7 +327,7 @@ function ConnectorCard() {
       <CardHeader>
         <CardTitle>Connect AI assistants</CardTitle>
         <CardDescription>
-          Add Open Sunsama to Claude, ChatGPT, Cursor, and other MCP clients. You sign in once and
+          Add StudyOS to Claude, ChatGPT, Cursor, and other MCP clients. You sign in once and
           approve access. There's no API key to paste.
         </CardDescription>
       </CardHeader>

@@ -1,7 +1,7 @@
 # Google Calendar Setup Guide
 
 ## Overview
-Open Sunsama uses Google OAuth 2.0 to connect to your Google Calendar.
+StudyOS uses Google OAuth 2.0 to connect to your Google Calendar.
 This guide walks you through setting up Google Calendar integration for local development.
 
 ## Prerequisites
@@ -27,7 +27,7 @@ This guide walks you through setting up Google Calendar integration for local de
 1. Go to **APIs & Services** → **OAuth Consent Screen**
 2. Select **External** → **Create**
 3. Fill in:
-   - App name: `Open Sunsama Dev`
+   - App name: `StudyOS Dev`
    - User support email: your email
    - Developer contact email: your email
 4. Click **Save & Continue**

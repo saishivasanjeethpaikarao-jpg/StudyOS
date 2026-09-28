@@ -87,7 +87,7 @@ function ConsentError({ title, message }: { title: string; message: string }) {
 export default function OAuthConsentPage() {
   useSEO({
     title: "Authorize access",
-    description: "Allow an AI assistant to connect to your Open Sunsama account.",
+    description: "Allow an AI assistant to connect to your StudyOS account.",
     noindex: true,
   });
   const navigate = useNavigate();
@@ -190,7 +190,7 @@ export default function OAuthConsentPage() {
         </div>
 
         <h1 className="text-center text-lg font-semibold tracking-tight">
-          {client.name} wants to access your Open Sunsama account
+          {client.name} wants to access your StudyOS account
         </h1>
         {client.verifiedDomain && (
           <p className="mt-1.5 flex items-center justify-center gap-1 text-xs text-muted-foreground">

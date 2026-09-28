@@ -14,7 +14,7 @@ interface SEOHeadProps {
 
 const BASE_URL = "https://opensunsama.com";
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
-const SITE_NAME = "Open Sunsama";
+const SITE_NAME = "StudyOS";
 
 /**
  * SEO component for managing meta tags dynamically

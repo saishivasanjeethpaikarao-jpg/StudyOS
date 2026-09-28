@@ -158,7 +158,7 @@ function ToolCall({ name, detail, state }: { name: string; detail?: string; stat
       </span>
       <span className="font-mono text-[11.5px] font-medium text-foreground">{name}</span>
       {detail && <span className="truncate text-muted-foreground">{detail}</span>}
-      <span className="ml-auto flex-shrink-0 text-[10px] text-muted-foreground">Open Sunsama</span>
+      <span className="ml-auto flex-shrink-0 text-[10px] text-muted-foreground">StudyOS</span>
     </div>
   );
 }
@@ -219,7 +219,7 @@ export function AssistantDemo() {
             </div>
             <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Open Sunsama connected
+              StudyOS connected
             </span>
           </div>
           <div className="flex flex-1 flex-col gap-3 p-4">

@@ -93,7 +93,7 @@ export function LicenseSection({ section }: { section: CustomSection }) {
             </div>
 
             <figcaption className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-4 py-3 text-[12.5px] text-muted-foreground dark:border-white/[0.06] md:px-6">
-              <span>Summary of the Open Sunsama Non-Commercial License.</span>
+              <span>Summary of the inherited Open Sunsama Non-Commercial License.</span>
               <a
                 href={`mailto:${openSource.licenseContact}`}
                 className="inline-flex items-center gap-1 rounded-sm font-medium text-foreground/80 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

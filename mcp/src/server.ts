@@ -19,12 +19,12 @@ export { MCP_TOOL_SCOPES } from "./lib/define-tool.js";
 
 export const MCP_SERVER_INFO = {
   name: "open-sunsama",
-  title: "Open Sunsama",
+  title: "StudyOS",
   version: "1.2.0",
   websiteUrl: "https://opensunsama.com",
 } as const;
 
-const INSTRUCTIONS = `Open Sunsama is the user's daily planner: tasks scheduled on dates (or in the backlog), subtasks, time blocks on a calendar, and read-only events from their connected Google, Outlook and iCloud calendars.
+const INSTRUCTIONS = `StudyOS is the user's planner: tasks scheduled on dates (or in the backlog), subtasks, time blocks on a calendar, and read-only events from their connected Google, Outlook and iCloud calendars.
 - Dates are YYYY-MM-DD in the user's timezone; call get_user_profile if you need the timezone.
 - Use get_schedule_for_day to see a whole day at once (meetings and time blocks) before planning it, and plan time blocks around the meetings.
 - Prefer schedule_task to move work between days and link_task_to_time_block to put a task on the calendar.`;

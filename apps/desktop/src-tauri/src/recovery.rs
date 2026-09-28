@@ -43,7 +43,7 @@ pub fn check_for_updates(app: &AppHandle) {
         match update {
             Ok(Some(update)) => {
                 notify(
-                    "Updating Open Sunsama",
+                    "Updating StudyOS",
                     &format!("Installing version {}. The app restarts when it's done.", update.version),
                 );
                 match update.download_and_install(|_, _| {}, || {}).await {
@@ -51,7 +51,7 @@ pub fn check_for_updates(app: &AppHandle) {
                     Err(error) => notify("Update failed", &error.to_string()),
                 }
             }
-            Ok(None) => notify("Open Sunsama is up to date", "You have the latest version."),
+            Ok(None) => notify("StudyOS is up to date", "You have the latest version."),
             Err(error) => notify("Couldn't check for updates", &error.to_string()),
         }
     });

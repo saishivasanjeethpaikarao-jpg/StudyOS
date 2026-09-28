@@ -19,7 +19,7 @@ const VIEWS: Array<{ id: ShotName; label: string; icon: typeof LayoutGrid; alt: 
     id: "board",
     label: "Board",
     icon: LayoutGrid,
-    alt: "Open Sunsama board with today's prioritized tasks and a time-blocked schedule",
+    alt: "StudyOS board with today's prioritized tasks and a time-blocked schedule",
   },
   {
     id: "calendar-week",

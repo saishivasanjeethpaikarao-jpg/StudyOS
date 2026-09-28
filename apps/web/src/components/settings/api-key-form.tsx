@@ -100,7 +100,7 @@ export function ApiKeyForm({
         <DialogHeader>
           <DialogTitle>Create API Key</DialogTitle>
           <DialogDescription>
-            Create a new API key to access Open Sunsama from external applications
+            Create a new API key to access StudyOS from external applications
           </DialogDescription>
         </DialogHeader>
 

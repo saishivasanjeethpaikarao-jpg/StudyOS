@@ -1,4 +1,4 @@
-# robots.txt for Open Sunsama
+# robots.txt for StudyOS
 # https://opensunsama.com
 
 # Search engines and AI assistants are welcome everywhere except the signed-in app.

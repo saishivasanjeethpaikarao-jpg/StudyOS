@@ -41,7 +41,7 @@ const rowIcons: Record<string, React.ElementType> = {
 /**
  * A drawn phone that acts out the install flow for one browser: a finger
  * taps the menu button, then the "Add to Home Screen" row, then the confirm
- * button, and the Open Sunsama icon lands on the Home Screen.
+ * button, and the StudyOS icon lands on the Home Screen.
  */
 export function PhoneDemo({ guide, phase, scale = 1, className }: PhoneDemoProps) {
   const bottomBar = guide.toolbar === "bottom";
@@ -104,7 +104,7 @@ export function PhoneDemo({ guide, phase, scale = 1, className }: PhoneDemoProps
               <div className="mb-[6px] flex h-[36px] items-center gap-[7px] rounded-[12px] bg-white px-[8px]">
                 <AppIcon size={24} />
                 <div className="leading-tight">
-                  <div className="text-[9px] font-semibold">Open Sunsama</div>
+                  <div className="text-[9px] font-semibold">StudyOS</div>
                   <div className="text-[7.5px] text-black/45">opensunsama.com</div>
                 </div>
               </div>
@@ -226,7 +226,7 @@ function AddressBar({ icon, top, pressed }: { icon: React.ReactNode; top?: boole
   );
 }
 
-/** A tiny, recognisable Open Sunsama day view. */
+/** A tiny, recognisable StudyOS day view. */
 function MiniApp({ top }: { top: number }) {
   return (
     <div className="absolute inset-x-0 px-[12px]" style={{ top }}>
@@ -289,7 +289,7 @@ function ConfirmDialog({ guide, show }: { guide: InstallGuide; show: boolean }) 
         <div className="mx-[10px] mt-[10px] flex items-center gap-[8px] rounded-[12px] bg-white p-[8px]">
           <AppIcon size={30} />
           <div className="leading-tight">
-            <div className="text-[10px] font-medium">Open Sunsama</div>
+            <div className="text-[10px] font-medium">StudyOS</div>
             <div className="mt-[2px] text-[7.5px] text-black/40">opensunsama.com</div>
           </div>
         </div>
@@ -304,7 +304,7 @@ function ConfirmDialog({ guide, show }: { guide: InstallGuide; show: boolean }) 
       <div className="text-[11px] font-semibold">{guide.confirm.title}</div>
       <div className="mt-[10px] flex items-center gap-[8px]">
         <AppIcon size={28} />
-        <div className="text-[9.5px]">Open Sunsama</div>
+        <div className="text-[9.5px]">StudyOS</div>
       </div>
       <div className="mt-[14px] flex justify-end gap-[14px] text-[9.5px] font-semibold text-[#1a73e8]">
         <span>Cancel</span>
@@ -337,7 +337,7 @@ function HomeScreen({ show }: { show: boolean }) {
           <div className={cn("rounded-[9px] shadow-lg", show && "animate-[demo-icon-pop_700ms_cubic-bezier(0.34,1.56,0.64,1)_300ms_both]")}>
             <AppIcon size={32} />
           </div>
-          <div className="whitespace-nowrap text-[6.5px] font-medium text-white drop-shadow">Open Sunsama</div>
+          <div className="whitespace-nowrap text-[6.5px] font-medium text-white drop-shadow">StudyOS</div>
         </div>
       </div>
       {/* Dock */}

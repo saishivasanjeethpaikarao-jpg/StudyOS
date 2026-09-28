@@ -168,7 +168,7 @@ export function AppErrorScreen({ error }: { error: unknown }) {
     <div className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
       <div className="w-full max-w-md space-y-5">
         <div className="space-y-2">
-          <h1 className="text-lg font-semibold">Open Sunsama hit an error</h1>
+          <h1 className="text-lg font-semibold">StudyOS hit an error</h1>
           <p className="text-sm text-muted-foreground">
             Your tasks are safe on the server. Reload to try again. If it keeps happening, reset
             local data: it clears this device's cached copy and keeps you signed in.

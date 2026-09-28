@@ -19,7 +19,7 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let reset_local_data =
         MenuItem::with_id(app, "tray_reset_local_data", "Reset Local Data and Reload", true, None::<&str>)?;
     let separator3 = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Open Sunsama", true, Some("CmdOrCtrl+Q"))?;
+    let quit = MenuItem::with_id(app, "quit", "Quit StudyOS", true, Some("CmdOrCtrl+Q"))?;
 
     let menu = Menu::with_items(
         app,

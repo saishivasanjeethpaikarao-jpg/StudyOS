@@ -58,7 +58,7 @@ export function getThemeHexColor(colorTheme?: string): string {
  * Get the from email address
  */
 export function getFromEmail(): string {
-  return process.env.FROM_EMAIL || 'Open Sunsama <noreply@opensunsama.com>';
+  return process.env.FROM_EMAIL || 'StudyOS <noreply@opensunsama.com>';
 }
 
 /**

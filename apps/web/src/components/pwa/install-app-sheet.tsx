@@ -20,7 +20,7 @@ interface InstallAppSheetProps {
 }
 
 /**
- * Shows how to add Open Sunsama to the Home Screen on this phone's browser:
+ * Shows how to add StudyOS to the Home Screen on this phone's browser:
  * an animated phone acting out the taps, with the matching step highlighted.
  * Where the browser supports it (Chrome on Android), one button installs.
  */
@@ -57,7 +57,7 @@ export function InstallAppSheet({ open, onOpenChange }: InstallAppSheetProps) {
       <BottomSheetContent onDismiss={() => onOpenChange(false)}>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5">
           <DialogTitle className="text-center text-[19px] font-semibold leading-snug tracking-tight">
-            Put Open Sunsama on your Home Screen
+            Put StudyOS on your Home Screen
           </DialogTitle>
           <DialogDescription className="mx-auto mt-1.5 max-w-[300px] text-center text-sm text-muted-foreground">
             It opens full screen like any app, one tap from your day.

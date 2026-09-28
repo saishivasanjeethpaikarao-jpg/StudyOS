@@ -1,7 +1,7 @@
 {
   "id": "/app",
-  "name": "Open Sunsama",
-  "short_name": "Open Sunsama",
+  "name": "StudyOS",
+  "short_name": "StudyOS",
   "description": "Plan your day, time-block your tasks and focus.",
   "start_url": "/app",
   "scope": "/",

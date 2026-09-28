@@ -206,7 +206,7 @@ export const SHORTCUTS: Record<string, ShortcutDefinition> = {
   desktopToggleWindow: {
     key: "o",
     modifiers: { super: true, shift: true },
-    description: "Show or hide Open Sunsama",
+    description: "Show or hide StudyOS",
     category: "desktop",
   },
   desktopNewTask: {

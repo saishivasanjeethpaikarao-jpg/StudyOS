@@ -165,7 +165,7 @@ jobs:
       - name: Verify entitlements (macOS)
         if: matrix.platform == 'macos-latest'
         run: |
-          APP_PATH=$(find apps/desktop/src-tauri/target -name "Open Sunsama.app" -type d | head -1)
+          APP_PATH=$(find apps/desktop/src-tauri/target -name "StudyOS.app" -type d | head -1)
           echo "=== Checking entitlements on: $APP_PATH ==="
           codesign -d --entitlements - "$APP_PATH" 2>&1 || true
           echo ""
@@ -234,10 +234,10 @@ jobs:
           fi
           echo "updater_file=$UPDATER_FILE" >> $GITHUB_OUTPUT
 
-          # Both macOS builds name their updater "Open Sunsama.app.tar.gz"; give each an
+          # Both macOS builds name their updater "StudyOS.app.tar.gz"; give each an
           # arch-specific name in S3 so one build can't overwrite the other's.
           case "$UPDATER_FILE" in
-            *.app.tar.gz) UPDATER_KEY="Open Sunsama_${{ steps.version.outputs.version }}_${{ matrix.artifact_name }}.app.tar.gz" ;;
+            *.app.tar.gz) UPDATER_KEY="StudyOS_${{ steps.version.outputs.version }}_${{ matrix.artifact_name }}.app.tar.gz" ;;
             *) UPDATER_KEY="$UPDATER_FILE" ;;
           esac
           echo "updater_key=$UPDATER_KEY" >> $GITHUB_OUTPUT

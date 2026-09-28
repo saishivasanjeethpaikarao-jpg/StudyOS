@@ -2,7 +2,7 @@
   "apps": [
     {
       "id": "open-sunsama",
-      "name": "Open Sunsama",
+      "name": "StudyOS",
       "tagline": "A daily planner with a kanban board of days, time blocking, focus mode and a hosted MCP server for AI agents.",
       "categories": [
         "planner",

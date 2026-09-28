@@ -1,12 +1,12 @@
 <div align="center">
 
-<a href="https://opensunsama.com"><img src="docs/images/logo.png" alt="Open Sunsama logo" width="96" height="96" /></a>
+<a href="https://opensunsama.com"><img src="docs/images/logo.png" alt="StudyOS logo" width="96" height="96" /></a>
 
-# Open Sunsama
+# StudyOS
 
 ### Daily planning, done right.
 
-The open-source daily planner for time-blocking, focused work, and seamless AI integration.<br />
+The student-first planner for time-blocking, focused work, and study execution.<br />
 **AI native:** control it from any agent, including **Claude**, **ChatGPT**, Cursor, Claude Code, or any MCP client, with one URL and no API key.
 
 <br />
@@ -22,7 +22,7 @@ The open-source daily planner for time-blocking, focused work, and seamless AI i
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/board-dark.png" />
-  <img src="docs/images/readme/board.png" alt="Open Sunsama board: today's prioritized tasks in columns by day, with a time-blocked schedule on the right" width="100%" />
+  <img src="docs/images/readme/board.png" alt="StudyOS board: today's prioritized tasks in columns by day, with a time-blocked schedule on the right" width="100%" />
 </picture>
 
 <sub>A real Tuesday for a Head of Product: a prioritized board, subtasks, estimates, and a time-blocked schedule. The backlog is tucked away on the left.</sub>
@@ -31,9 +31,9 @@ The open-source daily planner for time-blocking, focused work, and seamless AI i
 
 <br />
 
-## ✨ Why Open Sunsama
+## ✨ Why StudyOS
 
-Most planners are closed boxes that your AI assistant can't see into. Open Sunsama is built to be driven by AI as much as by you:
+StudyOS is being built as a student-first planning and study execution system on the inherited Open Sunsama foundation. The migration is incremental so the existing planner remains usable while academic capabilities are added. See [upstream provenance](docs/UPSTREAM_PROVENANCE.md).
 
 - **🤖 Your AI plans with you.** Claude and ChatGPT can read your schedule, create and prioritize tasks, time-block your day, and close things out through a secure one-click connector.
 - **🗓️ Sunsama-style daily planning.** A kanban board of days, drag-and-drop time blocking, focus mode with a timer, and rollover of unfinished work.
@@ -57,7 +57,7 @@ https://api.opensunsama.com/mcp
 **Claude** (web, Desktop, and mobile)
 
 1. **Settings → Customize → Connectors → Add**
-2. Name it *Open Sunsama* and paste the URL
+2. Name it *StudyOS* and paste the URL
 3. **Continue → Add → Connect**, then **Allow access**
 
 [Claude setup guide →](https://opensunsama.com/docs/mcp/claude)
@@ -76,8 +76,8 @@ https://api.opensunsama.com/mcp
 </td>
 </tr>
 <tr>
-<td width="50%" align="center"><img src="docs/images/readme/consent-claude.png" alt="Open Sunsama consent screen: Claude wants to access your Open Sunsama account, verified app from claude.ai" width="88%" /></td>
-<td width="50%" align="center"><img src="docs/images/readme/consent-chatgpt.png" alt="Open Sunsama consent screen: ChatGPT wants to access your Open Sunsama account, verified app from chatgpt.com" width="88%" /></td>
+<td width="50%" align="center"><img src="docs/images/readme/consent-claude.png" alt="StudyOS consent screen: Claude wants to access your StudyOS account, verified app from claude.ai" width="88%" /></td>
+<td width="50%" align="center"><img src="docs/images/readme/consent-chatgpt.png" alt="StudyOS consent screen: ChatGPT wants to access your StudyOS account, verified app from chatgpt.com" width="88%" /></td>
 </tr>
 </table>
 
@@ -212,7 +212,7 @@ Trello-style boards for bets and side projects. Promote an idea to a real task w
 <table>
 <tr>
 <td width="32%" align="center" valign="top">
-<img src="docs/images/readme/mobile-tasks.png" alt="Open Sunsama on a phone: today's tasks with priorities and completed items" width="100%" />
+<img src="docs/images/readme/mobile-tasks.png" alt="StudyOS on a phone: today's tasks with priorities and completed items" width="100%" />
 </td>
 <td width="68%" valign="top">
 
@@ -234,7 +234,7 @@ Trello-style boards for bets and side projects. Promote an idea to a real task w
 
 ## 🆚 How it compares
 
-| | **Open Sunsama** | Typical closed planners |
+| | **StudyOS** | Typical closed planners |
 | --- | :---: | :---: |
 | Open source & self-hostable | ✅ | ❌ |
 | AI native: control it from any agent over MCP | ✅ | ❌ |
@@ -396,7 +396,7 @@ Have an idea? [Start a discussion](https://github.com/ShadowWalker2014/open-suns
 ## ❓ FAQ
 
 <details>
-<summary><b>What is Open Sunsama?</b></summary>
+<summary><b>What is StudyOS?</b></summary>
 <br />
 An open-source daily planner and task manager inspired by Sunsama. You plan each day on a kanban board, time-block tasks on a calendar, and work through them in focus mode. It's also an MCP server, so AI assistants like Claude and ChatGPT can manage your tasks and schedule for you.
 </details>
@@ -416,7 +416,7 @@ Add <code>https://api.opensunsama.com/mcp</code> as a custom connector in Claude
 <details>
 <summary><b>What is MCP?</b></summary>
 <br />
-The <a href="https://modelcontextprotocol.io">Model Context Protocol</a> is an open standard for connecting AI assistants to tools and data. Open Sunsama's MCP server gives assistants 24 tools to read and update your tasks, subtasks, and time blocks.
+The <a href="https://modelcontextprotocol.io">Model Context Protocol</a> is an open standard for connecting AI assistants to tools and data. The inherited MCP server gives assistants tools to read and update tasks, subtasks, and time blocks.
 </details>
 
 <details>
@@ -445,13 +445,13 @@ git commit -m "feat: add amazing feature"
 
 ## 📄 License
 
-Open Sunsama uses a custom **non-commercial license**. It covers personal, educational, non-profit, and open-source use, plus evaluation. Commercial use by for-profit companies requires an enterprise license. See [LICENSE](LICENSE).
+StudyOS currently inherits Open Sunsama's custom **non-commercial license**. It covers personal, educational, non-profit, and open-source use, plus evaluation. Commercial use by for-profit companies requires an enterprise license. See [LICENSE](LICENSE) and [upstream provenance](docs/UPSTREAM_PROVENANCE.md). These files do not claim distribution rights that have not been established.
 
 <br />
 
 <div align="center">
 
-**If Open Sunsama helps you plan better days, please give it a ⭐. It helps others find it.**
+**If StudyOS helps you plan better days, please give the project a ⭐. It helps others find it.**
 
 [![Star on GitHub](https://img.shields.io/github/stars/ShadowWalker2014/open-sunsama?style=for-the-badge&logo=github&color=yellow)](https://github.com/ShadowWalker2014/open-sunsama/stargazers)
 

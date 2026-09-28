@@ -108,7 +108,7 @@ export function generateEmailHTML(options: GenerateEmailHTMLOptions): string {
           <tr>
             <td style="padding: ${EMAIL_SPACING.padding} ${EMAIL_SPACING.padding} 0 ${EMAIL_SPACING.padding};">
               <div style="font-size: 20px; font-weight: 600; color: ${EMAIL_COLORS.text}; letter-spacing: -0.02em;">
-                Open Sunsama
+                StudyOS
               </div>
             </td>
           </tr>
@@ -126,7 +126,7 @@ export function generateEmailHTML(options: GenerateEmailHTMLOptions): string {
               <div style="border-top: 1px solid ${EMAIL_COLORS.border}; padding-top: 24px;">
                 ${footerContent}
                 <p style="margin: 0; font-size: 13px; color: ${EMAIL_COLORS.textLight};">
-                  © Open Sunsama
+                  StudyOS · Built on the Open Sunsama foundation
                 </p>
               </div>
             </td>
