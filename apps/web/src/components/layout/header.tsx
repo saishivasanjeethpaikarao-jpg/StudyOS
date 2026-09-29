@@ -13,6 +13,8 @@ import {
   User,
   Download,
   BookOpen,
+  ClipboardList,
+  GraduationCap,
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,8 +86,23 @@ export function Header({ className }: HeaderProps) {
 
         {/* Navigation - Hidden on mobile (using bottom nav instead) */}
         <nav className="hidden lg:flex items-center gap-0.5">
-          <NavLink href="/app/board" icon={<LayoutGrid className="h-3.5 w-3.5" />}>
-            Board
+          <NavLink
+            href="/app/board"
+            icon={<LayoutGrid className="h-3.5 w-3.5" />}
+          >
+            Today
+          </NavLink>
+          <NavLink
+            href="/app/assignments"
+            icon={<ClipboardList className="h-3.5 w-3.5" />}
+          >
+            Assignments
+          </NavLink>
+          <NavLink
+            href="/app/subjects"
+            icon={<GraduationCap className="h-3.5 w-3.5" />}
+          >
+            Subjects
           </NavLink>
           <NavLink href="/app/tasks" icon={<List className="h-3.5 w-3.5" />}>
             Tasks
@@ -96,7 +113,10 @@ export function Header({ className }: HeaderProps) {
           >
             Calendar
           </NavLink>
-          <NavLink href="/app/ideas" icon={<Lightbulb className="h-3.5 w-3.5" />}>
+          <NavLink
+            href="/app/ideas"
+            icon={<Lightbulb className="h-3.5 w-3.5" />}
+          >
             Ideas
           </NavLink>
         </nav>
@@ -119,12 +139,12 @@ export function Header({ className }: HeaderProps) {
           className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded border border-border/40 bg-muted/30 hover:bg-muted transition-colors text-xs text-muted-foreground mr-2"
         >
           <Search className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Search...</span>
+          <span className="hidden xl:inline">Search...</span>
           <ShortcutHint shortcutKey="search" />
         </button>
 
         {/* Global Shortcut Hint - Hidden on mobile */}
-        <div className="hidden lg:flex items-center mr-3 text-[10px] text-muted-foreground/50">
+        <div className="mr-3 hidden items-center text-[10px] text-muted-foreground/50 2xl:flex">
           Press{" "}
           <kbd className="mx-1 rounded border border-border/40 bg-muted/50 px-1 py-0.5 text-[9px] font-medium">
             ?
@@ -253,7 +273,13 @@ export function Header({ className }: HeaderProps) {
 }
 
 interface NavLinkProps {
-  href: "/app/board" | "/app/tasks" | "/app/calendar" | "/app/ideas";
+  href:
+    | "/app/board"
+    | "/app/tasks"
+    | "/app/assignments"
+    | "/app/subjects"
+    | "/app/calendar"
+    | "/app/ideas";
   icon?: React.ReactNode;
   children: React.ReactNode;
 }

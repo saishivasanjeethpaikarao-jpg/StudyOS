@@ -16,6 +16,8 @@ import {
   ideaBoardKeys,
   ideaKeys,
   ideaSubtaskKeys,
+  subjectKeys,
+  assignmentKeys,
 } from "@/lib/query-keys";
 
 /**
@@ -148,7 +150,11 @@ function handleWebSocketEvent(
       batcher.schedule(taskKeys.lists());
       batcher.schedule(["tasks", "search", "infinite"]);
 
-      if (event.payload && typeof event.payload === "object" && "taskId" in event.payload) {
+      if (
+        event.payload &&
+        typeof event.payload === "object" &&
+        "taskId" in event.payload
+      ) {
         const { taskId } = event.payload as { taskId: string };
         batcher.scheduleTaskDetail(taskId);
         batcher.scheduleSubtasksFor(taskId);
@@ -191,7 +197,11 @@ function handleWebSocketEvent(
       // Timer events are user-perceptible state changes; invalidate
       // immediately so focus mode stays in sync without delay.
       queryClient.invalidateQueries({ queryKey: timerKeys.active() });
-      if (event.payload && typeof event.payload === "object" && "taskId" in event.payload) {
+      if (
+        event.payload &&
+        typeof event.payload === "object" &&
+        "taskId" in event.payload
+      ) {
         const { taskId } = event.payload as { taskId: string };
         queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
       }
@@ -230,6 +240,20 @@ function handleWebSocketEvent(
       }
       break;
     }
+
+    case "subject:created":
+    case "subject:updated":
+    case "subject:deleted":
+      batcher.schedule(subjectKeys.lists());
+      // Deleting a subject can unlink assignments in the same transaction.
+      batcher.schedule(assignmentKeys.lists());
+      break;
+
+    case "assignment:created":
+    case "assignment:updated":
+    case "assignment:deleted":
+      batcher.schedule(assignmentKeys.lists());
+      break;
 
     case "connected":
       queryClient.invalidateQueries({ queryKey: timerKeys.active() });

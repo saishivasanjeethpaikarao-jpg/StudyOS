@@ -1,10 +1,21 @@
 import * as React from "react";
-import { ListTodo, Calendar, Lightbulb, MoreHorizontal } from "lucide-react";
+import {
+  BookOpen,
+  Calendar,
+  ClipboardList,
+  Home,
+  MoreHorizontal,
+} from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
-  href: "/app" | "/app/calendar" | "/app/ideas" | "/app/more";
+  href:
+    | "/app"
+    | "/app/assignments"
+    | "/app/subjects"
+    | "/app/calendar"
+    | "/app/more";
   icon: React.ReactNode;
   label: string;
   matchExact?: boolean;
@@ -13,19 +24,24 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     href: "/app",
-    icon: <ListTodo className="h-6 w-6" />,
-    label: "Tasks",
+    icon: <Home className="h-5 w-5" />,
+    label: "Today",
     matchExact: true,
   },
   {
-    href: "/app/calendar",
-    icon: <Calendar className="h-6 w-6" />,
-    label: "Calendar",
+    href: "/app/assignments",
+    icon: <ClipboardList className="h-5 w-5" />,
+    label: "Assignments",
   },
   {
-    href: "/app/ideas",
-    icon: <Lightbulb className="h-6 w-6" />,
-    label: "Ideas",
+    href: "/app/subjects",
+    icon: <BookOpen className="h-5 w-5" />,
+    label: "Subjects",
+  },
+  {
+    href: "/app/calendar",
+    icon: <Calendar className="h-5 w-5" />,
+    label: "Calendar",
   },
   {
     href: "/app/more",
@@ -63,8 +79,8 @@ export function MobileBottomNav() {
               key={item.href}
               to={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-3",
-                "min-h-[56px] min-w-[64px]", // Touch-friendly size (> 44px)
+                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2",
+                "min-h-[56px]", // Touch-friendly size (> 44px)
                 "transition-colors",
                 "active:opacity-70", // Touch feedback
                 isActive
@@ -75,13 +91,15 @@ export function MobileBottomNav() {
             >
               <div
                 className={cn(
-                  "flex items-center justify-center rounded-full px-4 py-1.5 transition-colors",
+                  "flex items-center justify-center rounded-full px-3 py-1.5 transition-colors",
                   isActive && "bg-muted"
                 )}
               >
                 {item.icon}
               </div>
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className="max-w-full truncate text-[10px] font-medium sm:text-xs">
+                {item.label}
+              </span>
             </Link>
           );
         })}

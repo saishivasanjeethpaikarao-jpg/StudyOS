@@ -11,6 +11,7 @@ import { TaskModal } from "@/components/kanban/task-modal.lazy";
 import { TimeBlockDetailSheet } from "@/components/calendar/time-block-detail-sheet";
 import { CreateTimeBlockDialog } from "@/components/calendar/create-time-block-dialog";
 import { useTask, useIsMobile } from "@/hooks";
+import { AcademicDueSummary } from "@/components/academics/academic-due-summary";
 
 /**
  * Main board view content.
@@ -21,19 +22,21 @@ export function BoardPageContent() {
   const [activeDate, setActiveDate] = React.useState<Date | null>(null);
 
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
-  const [taskPanelOpen, setTaskPanelOpen] = React.useState(false);
-
-  const [selectedTimeBlock, setSelectedTimeBlock] = React.useState<TimeBlock | null>(
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(
     null
   );
+  const [taskPanelOpen, setTaskPanelOpen] = React.useState(false);
+
+  const [selectedTimeBlock, setSelectedTimeBlock] =
+    React.useState<TimeBlock | null>(null);
   const [timeBlockSheetOpen, setTimeBlockSheetOpen] = React.useState(false);
 
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
-  const [createDialogDate, setCreateDialogDate] = React.useState<Date>(new Date());
-  const [createDialogStartTime, setCreateDialogStartTime] = React.useState<Date>(
+  const [createDialogDate, setCreateDialogDate] = React.useState<Date>(
     new Date()
   );
+  const [createDialogStartTime, setCreateDialogStartTime] =
+    React.useState<Date>(new Date());
   const [createDialogEndTime, setCreateDialogEndTime] = React.useState<Date>(
     new Date()
   );
@@ -49,7 +52,14 @@ export function BoardPageContent() {
   }, [fetchedTask, selectedTaskId]);
 
   if (isMobile) {
-    return <MobileTasksView />;
+    return (
+      <div className="flex h-[calc(100dvh-7.5rem)] flex-col overflow-hidden">
+        <AcademicDueSummary />
+        <div className="min-h-0 flex-1">
+          <MobileTasksView />
+        </div>
+      </div>
+    );
   }
 
   const handleViewTask = (taskId: string) => {
@@ -72,32 +82,35 @@ export function BoardPageContent() {
 
   return (
     <TasksDndProvider>
-      <div className="flex h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3.5rem)]">
-        <Sidebar className="hidden lg:flex" />
-        <MobileBacklogSheet />
+      <div className="flex h-[calc(100vh-3.5rem)] flex-col lg:h-[calc(100vh-3.5rem)]">
+        <AcademicDueSummary />
+        <div className="flex min-h-0 flex-1">
+          <Sidebar className="hidden lg:flex" />
+          <MobileBacklogSheet />
 
-        <div className="flex flex-1 overflow-hidden">
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <KanbanBoard onFirstVisibleDateChange={setActiveDate}>
-              <TasksKeyboardShortcuts />
-            </KanbanBoard>
+          <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <KanbanBoard onFirstVisibleDateChange={setActiveDate}>
+                <TasksKeyboardShortcuts />
+              </KanbanBoard>
+            </div>
+
+            {activeDate && (
+              <KanbanCalendarPanel
+                date={activeDate}
+                className="hidden w-[280px] flex-shrink-0 xl:flex"
+                onBlockClick={handleBlockClick}
+                onEditBlock={handleEditBlock}
+                onTimeSlotClick={(date, startTime, endTime) => {
+                  setCreateDialogDate(date);
+                  setCreateDialogStartTime(startTime);
+                  setCreateDialogEndTime(endTime);
+                  setCreateDialogOpen(true);
+                }}
+                onViewTask={handleViewTask}
+              />
+            )}
           </div>
-
-          {activeDate && (
-            <KanbanCalendarPanel
-              date={activeDate}
-              className="hidden w-[280px] flex-shrink-0 xl:flex"
-              onBlockClick={handleBlockClick}
-              onEditBlock={handleEditBlock}
-              onTimeSlotClick={(date, startTime, endTime) => {
-                setCreateDialogDate(date);
-                setCreateDialogStartTime(startTime);
-                setCreateDialogEndTime(endTime);
-                setCreateDialogOpen(true);
-              }}
-              onViewTask={handleViewTask}
-            />
-          )}
         </div>
       </div>
 

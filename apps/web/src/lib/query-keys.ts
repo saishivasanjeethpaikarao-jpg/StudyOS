@@ -16,7 +16,12 @@
  * compatibility so consumers like `useTasks.taskKeys` keep working.
  */
 
-import type { TaskFilterInput, TimeBlockFilterInput } from "@open-sunsama/types";
+import type {
+  AssignmentFilterInput,
+  SubjectFilterInput,
+  TaskFilterInput,
+  TimeBlockFilterInput,
+} from "@open-sunsama/types";
 
 export const taskKeys = {
   all: ["tasks"] as const,
@@ -79,4 +84,22 @@ export const ideaSubtaskKeys = {
   all: ["ideaSubtasks"] as const,
   lists: () => [...ideaSubtaskKeys.all, "list"] as const,
   list: (ideaId: string) => [...ideaSubtaskKeys.lists(), ideaId] as const,
+};
+
+export const subjectKeys = {
+  all: ["subjects"] as const,
+  lists: () => [...subjectKeys.all, "list"] as const,
+  list: (filters: SubjectFilterInput) =>
+    [...subjectKeys.lists(), filters] as const,
+  details: () => [...subjectKeys.all, "detail"] as const,
+  detail: (id: string) => [...subjectKeys.details(), id] as const,
+};
+
+export const assignmentKeys = {
+  all: ["assignments"] as const,
+  lists: () => [...assignmentKeys.all, "list"] as const,
+  list: (filters: AssignmentFilterInput) =>
+    [...assignmentKeys.lists(), filters] as const,
+  details: () => [...assignmentKeys.all, "detail"] as const,
+  detail: (id: string) => [...assignmentKeys.details(), id] as const,
 };

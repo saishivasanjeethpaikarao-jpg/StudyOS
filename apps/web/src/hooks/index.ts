@@ -130,6 +130,20 @@ export { useWebSocket } from "./useWebSocket";
 export { useTimer, formatTime, formatMins, timerKeys } from "./useTimer";
 export { useIsMobile } from "./useIsMobile";
 export {
+  useSubjects,
+  useCreateSubject,
+  useUpdateSubject,
+  useDeleteSubject,
+  subjectKeys,
+} from "./useSubjects";
+export {
+  useAssignments,
+  useCreateAssignment,
+  useUpdateAssignment,
+  useDeleteAssignment,
+  assignmentKeys,
+} from "./useAssignments";
+export {
   useCalendarAccounts,
   useCalendars,
   useCalendarEvents,
