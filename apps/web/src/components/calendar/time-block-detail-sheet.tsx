@@ -156,6 +156,8 @@ export function TimeBlockDetailSheet({
 
   if (!timeBlock) return null;
 
+  if (timeBlock.studySessionId) return null;
+
   const blockStartTime = new Date(timeBlock.startTime);
   const blockEndTime = new Date(timeBlock.endTime);
   const durationMins = Math.round(

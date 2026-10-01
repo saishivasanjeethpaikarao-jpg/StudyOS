@@ -1,11 +1,8 @@
 import * as React from "react";
-import { format, differenceInMinutes } from "date-fns";
+import { format, differenceInMinutes, startOfDay, endOfDay } from "date-fns";
 import type { TimeBlock as TimeBlockType } from "@open-sunsama/types";
 import { cn } from "@/lib/utils";
-import {
-  calculateYFromTime,
-  HOUR_HEIGHT,
-} from "@/hooks/useCalendarDnd";
+import { calculateYFromTime, HOUR_HEIGHT } from "@/hooks/useCalendarDnd";
 import { TimeBlockContextMenu } from "./time-block-context-menu";
 import type { LayoutResult } from "./event-layout";
 
@@ -13,6 +10,8 @@ const COLUMN_GAP_PCT = 1; // gap between side-by-side overlapping items
 
 interface TimeBlockProps {
   block: TimeBlockType;
+  /** Visible calendar day; a session may straddle midnight in the viewer's zone. */
+  displayDate?: Date;
   /**
    * Lane assignment from the side-by-side overlap layout. When N items
    * overlap at the same time slot, they split the column into N
@@ -35,12 +34,12 @@ interface TimeBlockProps {
 function hexToRgba(hex: string, alpha: number): string {
   // Remove # if present
   const cleanHex = hex.replace("#", "");
-  
+
   // Parse hex values
   const r = parseInt(cleanHex.substring(0, 2), 16);
   const g = parseInt(cleanHex.substring(2, 4), 16);
   const b = parseInt(cleanHex.substring(4, 6), 16);
-  
+
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
@@ -56,7 +55,7 @@ function getBlockColors(block: TimeBlockType): {
 } {
   // Default blue color
   const baseColor = block.color || "#3B82F6";
-  
+
   return {
     bg: hexToRgba(baseColor, 0.15),
     border: hexToRgba(baseColor, 0.6),
@@ -70,6 +69,7 @@ function getBlockColors(block: TimeBlockType): {
  */
 export function TimeBlock({
   block,
+  displayDate,
   layout = { lane: 0, columnCount: 1 },
   onClick,
   onEditBlock,
@@ -80,8 +80,18 @@ export function TimeBlock({
   isDragging = false,
   className,
 }: TimeBlockProps) {
-  const startTime = new Date(block.startTime);
-  const endTime = new Date(block.endTime);
+  const canonicalStart = new Date(block.startTime);
+  const canonicalEnd = new Date(block.endTime);
+  const startTime =
+    block.studySessionId &&
+    displayDate &&
+    canonicalStart < startOfDay(displayDate)
+      ? startOfDay(displayDate)
+      : canonicalStart;
+  const endTime =
+    block.studySessionId && displayDate && canonicalEnd > endOfDay(displayDate)
+      ? endOfDay(displayDate)
+      : canonicalEnd;
 
   // Calculate position and size
   const top = calculateYFromTime(startTime);
@@ -99,17 +109,17 @@ export function TimeBlock({
     if ((e.target as HTMLElement).dataset.resize) {
       return;
     }
-    onDragStart?.(e);
+    if (!block.studySessionId) onDragStart?.(e);
   };
 
   const handleTopResize = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onResizeStart?.(e, "top");
+    if (!block.studySessionId) onResizeStart?.(e, "top");
   };
 
   const handleBottomResize = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onResizeStart?.(e, "bottom");
+    if (!block.studySessionId) onResizeStart?.(e, "bottom");
   };
 
   return (
@@ -126,7 +136,8 @@ export function TimeBlock({
           "hover:brightness-95 hover:z-20",
           isSelected && "ring-2 ring-primary ring-offset-1",
           isDragging && "opacity-50 cursor-grabbing",
-          !isDragging && "cursor-grab",
+          !isDragging &&
+            (block.studySessionId ? "cursor-pointer" : "cursor-grab"),
           className
         )}
         style={{
@@ -143,20 +154,33 @@ export function TimeBlock({
         }}
         onClick={onClick}
         onMouseDown={handleMouseDown}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onClick?.();
+          }
+        }}
         role="button"
         tabIndex={0}
-        aria-label={`Time block: ${block.title} from ${format(startTime, "h:mm a")} to ${format(endTime, "h:mm a")}`}
+        title={
+          block.studySessionId && block.studySessionTimezone
+            ? `${format(canonicalStart, "MMM d, yyyy h:mm a")} in your time zone; scheduled in ${block.studySessionTimezone}`
+            : undefined
+        }
+        aria-label={`Time block: ${block.title} from ${format(canonicalStart, "h:mm a")} to ${format(canonicalEnd, "h:mm a")}${block.studySessionTimezone ? ` (scheduled in ${block.studySessionTimezone})` : ""}`}
       >
         {/* Top resize handle - Larger touch target on mobile */}
-        <div
-          data-resize="top"
-          className={cn(
-            "absolute top-0 left-0 right-0 cursor-ns-resize hover:bg-black/10 rounded-t-sm",
-            "h-3 sm:h-2", // Larger on mobile for touch
-            "-mt-1 sm:mt-0" // Extend beyond block for easier touch
-          )}
-          onMouseDown={handleTopResize}
-        />
+        {!block.studySessionId && (
+          <div
+            data-resize="top"
+            className={cn(
+              "absolute top-0 left-0 right-0 cursor-ns-resize hover:bg-black/10 rounded-t-sm",
+              "h-3 sm:h-2", // Larger on mobile for touch
+              "-mt-1 sm:mt-0" // Extend beyond block for easier touch
+            )}
+            onMouseDown={handleTopResize}
+          />
+        )}
 
         {/* Content */}
         <div
@@ -166,10 +190,12 @@ export function TimeBlock({
           )}
         >
           {/* Title - dark text for readability */}
-          <p className={cn(
-            "truncate font-medium text-foreground",
-            isCompact ? "text-xs" : "text-sm"
-          )}>
+          <p
+            className={cn(
+              "truncate font-medium text-foreground",
+              isCompact ? "text-xs" : "text-sm"
+            )}
+          >
             {block.title}
           </p>
 
@@ -182,15 +208,17 @@ export function TimeBlock({
         </div>
 
         {/* Bottom resize handle - Larger touch target on mobile */}
-        <div
-          data-resize="bottom"
-          className={cn(
-            "absolute bottom-0 left-0 right-0 cursor-ns-resize hover:bg-black/10 rounded-b-sm",
-            "h-3 sm:h-2", // Larger on mobile for touch
-            "-mb-1 sm:mb-0" // Extend beyond block for easier touch
-          )}
-          onMouseDown={handleBottomResize}
-        />
+        {!block.studySessionId && (
+          <div
+            data-resize="bottom"
+            className={cn(
+              "absolute bottom-0 left-0 right-0 cursor-ns-resize hover:bg-black/10 rounded-b-sm",
+              "h-3 sm:h-2", // Larger on mobile for touch
+              "-mb-1 sm:mb-0" // Extend beyond block for easier touch
+            )}
+            onMouseDown={handleBottomResize}
+          />
+        )}
       </div>
     </TimeBlockContextMenu>
   );
@@ -217,7 +245,7 @@ export function TimeBlockPreview({
   color,
 }: TimeBlockPreviewProps) {
   const baseColor = color || "#3B82F6";
-  
+
   return (
     <div
       className="absolute left-1 right-1 z-30 my-0.5 rounded-md border-2 border-dashed pointer-events-none"
@@ -229,9 +257,7 @@ export function TimeBlockPreview({
       }}
     >
       <div className="flex h-full flex-col overflow-hidden px-2 py-1">
-        <p className="truncate text-sm font-medium text-foreground">
-          {title}
-        </p>
+        <p className="truncate text-sm font-medium text-foreground">{title}</p>
         <p className="truncate text-xs text-muted-foreground">
           {format(startTime, "h:mm")} - {format(endTime, "h:mm a")}
         </p>

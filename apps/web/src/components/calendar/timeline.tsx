@@ -7,10 +7,14 @@ import {
   startOfDay,
   endOfDay,
 } from "date-fns";
-import type { TimeBlock as TimeBlockType, CalendarEvent } from "@open-sunsama/types";
+import type {
+  TimeBlock as TimeBlockType,
+  CalendarEvent,
+} from "@open-sunsama/types";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui";
 import { TimeBlock, TimeBlockPreview } from "./time-block";
+import { isCalendarBlockOnDay } from "@/lib/study-session-time";
 import { ExternalEvent, AllDayEvent } from "./external-event";
 import { layoutOverlappingItems, type LayoutResult } from "./event-layout";
 
@@ -39,12 +43,19 @@ interface TimelineProps {
   onBlockClick?: (block: TimeBlockType) => void;
   onEditBlock?: (block: TimeBlockType) => void;
   onBlockDragStart?: (block: TimeBlockType, e: React.MouseEvent) => void;
-  onBlockResizeStart?: (block: TimeBlockType, edge: "top" | "bottom", e: React.MouseEvent) => void;
+  onBlockResizeStart?: (
+    block: TimeBlockType,
+    edge: "top" | "bottom",
+    e: React.MouseEvent
+  ) => void;
   onViewTask?: (taskId: string) => void;
   /** Fired when the user clicks an external (Google/Outlook/iCloud) event */
   onExternalEventClick?: (event: CalendarEvent) => void;
   /** Fired when the user starts dragging an editable external event */
-  onExternalEventDragStart?: (event: CalendarEvent, e: React.MouseEvent) => void;
+  onExternalEventDragStart?: (
+    event: CalendarEvent,
+    e: React.MouseEvent
+  ) => void;
   /** Fired when the user starts resizing an editable external event */
   onExternalEventResizeStart?: (
     event: CalendarEvent,
@@ -123,9 +134,11 @@ export function Timeline({
     if (isToday && scrollAreaRef.current) {
       // Scroll to 2 hours before current time, or start of day
       const scrollPosition = Math.max(0, (now.getHours() - 2) * HOUR_HEIGHT);
-      
+
       // Find the scroll viewport within ScrollArea
-      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      const viewport = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
       if (viewport) {
         viewport.scrollTop = scrollPosition;
       }
@@ -134,9 +147,7 @@ export function Timeline({
 
   // Filter blocks for this day
   const dayBlocks = React.useMemo(() => {
-    return timeBlocks.filter((block) =>
-      isSameDay(new Date(block.startTime), date)
-    );
+    return timeBlocks.filter((block) => isCalendarBlockOnDay(block, date));
   }, [timeBlocks, date]);
 
   // Filter and separate external calendar events for this day.
@@ -227,9 +238,9 @@ export function Timeline({
     // block" dialog as a side-effect.
     const target = e.target as HTMLElement;
     if (
-      target.closest('[data-time-block]') ||
-      target.closest('[data-external-event]') ||
-      target.closest('[data-all-day-event]')
+      target.closest("[data-time-block]") ||
+      target.closest("[data-external-event]") ||
+      target.closest("[data-all-day-event]")
     ) {
       return;
     }
@@ -248,10 +259,10 @@ export function Timeline({
 
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
-    
+
     // Calculate Y relative to the timeline content (no scroll offset needed - click is relative to visible area)
     const relativeY = e.clientY - rect.top;
-    
+
     // Calculate time from Y position
     const clickedTime = calculateTimeFromY(relativeY, date);
     const snappedStartTime = snapToInterval(clickedTime, SNAP_INTERVAL);
@@ -265,7 +276,9 @@ export function Timeline({
       {/* All-day events banner */}
       {allDayEvents.length > 0 && (
         <div className="flex-shrink-0 border-b bg-muted/30 px-2 py-1.5 space-y-1">
-          <p className="text-xs font-medium text-muted-foreground mb-1">All day</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1">
+            All day
+          </p>
           <div className="flex flex-wrap gap-1">
             {allDayEvents.map((event) => (
               <AllDayEvent
@@ -283,10 +296,7 @@ export function Timeline({
       )}
 
       <ScrollArea className="h-full flex-1" ref={scrollAreaRef}>
-        <div
-          className="flex"
-          style={{ minHeight: hours.length * HOUR_HEIGHT }}
-        >
+        <div className="flex" style={{ minHeight: hours.length * HOUR_HEIGHT }}>
           {/* Time Labels Column */}
           <div className="w-12 sm:w-16 flex-shrink-0 border-r bg-muted/30">
             {hours.map((hour) => (
@@ -333,7 +343,11 @@ export function Timeline({
               <div
                 key={`${hour}-half`}
                 className="absolute left-0 right-0 border-b border-border/15"
-                style={{ top: (hour - TIMELINE_START_HOUR) * HOUR_HEIGHT + HOUR_HEIGHT / 2 }}
+                style={{
+                  top:
+                    (hour - TIMELINE_START_HOUR) * HOUR_HEIGHT +
+                    HOUR_HEIGHT / 2,
+                }}
               />
             ))}
 
@@ -404,11 +418,22 @@ export function Timeline({
                 <TimeBlock
                   key={block.id}
                   block={block}
-                  layout={itemLayouts.get(`block:${block.id}`) ?? DEFAULT_LAYOUT}
+                  displayDate={date}
+                  layout={
+                    itemLayouts.get(`block:${block.id}`) ?? DEFAULT_LAYOUT
+                  }
                   onClick={() => onBlockClick?.(block)}
                   onEditBlock={() => onEditBlock?.(block)}
-                  onDragStart={(e) => onBlockDragStart?.(block, e)}
-                  onResizeStart={(e, edge) => onBlockResizeStart?.(block, edge, e)}
+                  onDragStart={
+                    block.studySessionId
+                      ? undefined
+                      : (e) => onBlockDragStart?.(block, e)
+                  }
+                  onResizeStart={
+                    block.studySessionId
+                      ? undefined
+                      : (e, edge) => onBlockResizeStart?.(block, edge, e)
+                  }
                   onViewTask={onViewTask}
                   isDragging={dragState?.blockId === block.id}
                 />

@@ -7,7 +7,7 @@ import {
   asc,
   eq,
   getDb,
-  gte,
+  gt,
   isNull,
   lt,
   sql,
@@ -67,7 +67,7 @@ studySessionsRouter.get(
     if (filters.status)
       conditions.push(eq(studySessions.status, filters.status));
     if (filters.from)
-      conditions.push(gte(studySessions.startAt, new Date(filters.from)));
+      conditions.push(gt(studySessions.endAt, new Date(filters.from)));
     if (filters.to)
       conditions.push(lt(studySessions.startAt, new Date(filters.to)));
     const where = and(...conditions);

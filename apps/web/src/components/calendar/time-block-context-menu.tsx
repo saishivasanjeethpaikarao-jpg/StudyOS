@@ -31,6 +31,7 @@ export function TimeBlockContextMenu({
   const updateTimeBlock = useUpdateTimeBlock();
 
   const hasLinkedTask = timeBlock.taskId !== null;
+  const hasStudySession = !!timeBlock.studySessionId;
 
   const handleEdit = () => {
     onEdit?.();
@@ -75,52 +76,62 @@ export function TimeBlockContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-48">
-        {/* Open Task - for linked blocks, or Edit for standalone */}
-        <ContextMenuItem onClick={hasLinkedTask ? handleViewTask : handleEdit}>
-          {hasLinkedTask ? (
-            <>
-              <Eye className="mr-2 h-4 w-4" />
-              Open Task
-            </>
-          ) : (
-            <>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </>
-          )}
-          <ContextMenuShortcut>Enter</ContextMenuShortcut>
-        </ContextMenuItem>
-
-        {/* Edit Time Block - only show for linked blocks (standalone uses Edit above) */}
-        {hasLinkedTask && (
-          <ContextMenuItem onClick={handleEditBlock}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit Time Block
+        {hasStudySession ? (
+          <ContextMenuItem onClick={handleEdit}>
+            <Eye className="mr-2 h-4 w-4" /> Open Study Session
           </ContextMenuItem>
-        )}
-
-        <ContextMenuSeparator />
-
-        {/* Unlink Task - only show if time block has a linked task */}
-        {hasLinkedTask && (
+        ) : (
           <>
-            <ContextMenuItem onClick={handleUnlinkTask}>
-              <Unlink className="mr-2 h-4 w-4" />
-              Unlink Task
+            {/* Open Task - for linked blocks, or Edit for standalone */}
+            <ContextMenuItem
+              onClick={hasLinkedTask ? handleViewTask : handleEdit}
+            >
+              {hasLinkedTask ? (
+                <>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Open Task
+                </>
+              ) : (
+                <>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </>
+              )}
+              <ContextMenuShortcut>Enter</ContextMenuShortcut>
             </ContextMenuItem>
+
+            {/* Edit Time Block - only show for linked blocks (standalone uses Edit above) */}
+            {hasLinkedTask && (
+              <ContextMenuItem onClick={handleEditBlock}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Time Block
+              </ContextMenuItem>
+            )}
+
             <ContextMenuSeparator />
+
+            {/* Unlink Task - only show if time block has a linked task */}
+            {hasLinkedTask && (
+              <>
+                <ContextMenuItem onClick={handleUnlinkTask}>
+                  <Unlink className="mr-2 h-4 w-4" />
+                  Unlink Task
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+              </>
+            )}
+
+            {/* Delete Time Block */}
+            <ContextMenuItem
+              onClick={handleDelete}
+              className="text-destructive focus:text-destructive focus:bg-destructive/10"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+              <ContextMenuShortcut>⌫</ContextMenuShortcut>
+            </ContextMenuItem>
           </>
         )}
-
-        {/* Delete Time Block */}
-        <ContextMenuItem
-          onClick={handleDelete}
-          className="text-destructive focus:text-destructive focus:bg-destructive/10"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
-          <ContextMenuShortcut>⌫</ContextMenuShortcut>
-        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );

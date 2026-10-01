@@ -12,6 +12,8 @@ import { TimeBlockDetailSheet } from "@/components/calendar/time-block-detail-sh
 import { CreateTimeBlockDialog } from "@/components/calendar/create-time-block-dialog";
 import { useTask, useIsMobile } from "@/hooks";
 import { AcademicDueSummary } from "@/components/academics/academic-due-summary";
+import { StudySessionCalendarSheet } from "@/components/academics/study-session-calendar-sheet";
+import { TodayStudySessions } from "@/components/academics/today-study-sessions";
 
 /**
  * Main board view content.
@@ -30,6 +32,9 @@ export function BoardPageContent() {
   const [selectedTimeBlock, setSelectedTimeBlock] =
     React.useState<TimeBlock | null>(null);
   const [timeBlockSheetOpen, setTimeBlockSheetOpen] = React.useState(false);
+  const [selectedSessionId, setSelectedSessionId] = React.useState<
+    string | null
+  >(null);
 
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [createDialogDate, setCreateDialogDate] = React.useState<Date>(
@@ -55,9 +60,15 @@ export function BoardPageContent() {
     return (
       <div className="flex h-[calc(100dvh-7.5rem)] flex-col overflow-hidden">
         <AcademicDueSummary />
+        <TodayStudySessions onSelectSession={setSelectedSessionId} />
         <div className="min-h-0 flex-1">
           <MobileTasksView />
         </div>
+        <StudySessionCalendarSheet
+          sessionId={selectedSessionId}
+          open={!!selectedSessionId}
+          onOpenChange={(open) => !open && setSelectedSessionId(null)}
+        />
       </div>
     );
   }
@@ -67,6 +78,10 @@ export function BoardPageContent() {
   };
 
   const handleBlockClick = (block: TimeBlock) => {
+    if (block.studySessionId) {
+      setSelectedSessionId(block.studySessionId);
+      return;
+    }
     if (block.taskId) {
       setSelectedTaskId(block.taskId);
       return;
@@ -76,6 +91,10 @@ export function BoardPageContent() {
   };
 
   const handleEditBlock = (block: TimeBlock) => {
+    if (block.studySessionId) {
+      setSelectedSessionId(block.studySessionId);
+      return;
+    }
     setSelectedTimeBlock(block);
     setTimeBlockSheetOpen(true);
   };
@@ -84,6 +103,7 @@ export function BoardPageContent() {
     <TasksDndProvider>
       <div className="flex h-[calc(100vh-3.5rem)] flex-col lg:h-[calc(100vh-3.5rem)]">
         <AcademicDueSummary />
+        <TodayStudySessions onSelectSession={setSelectedSessionId} />
         <div className="flex min-h-0 flex-1">
           <Sidebar className="hidden lg:flex" />
           <MobileBacklogSheet />
@@ -130,6 +150,11 @@ export function BoardPageContent() {
           setTimeBlockSheetOpen(open);
           if (!open) setSelectedTimeBlock(null);
         }}
+      />
+      <StudySessionCalendarSheet
+        sessionId={selectedSessionId}
+        open={!!selectedSessionId}
+        onOpenChange={(open) => !open && setSelectedSessionId(null)}
       />
 
       <CreateTimeBlockDialog

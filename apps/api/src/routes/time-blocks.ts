@@ -2,21 +2,45 @@
  * Time block routes for Open Sunsama API
  * Handles CRUD operations for time blocks
  */
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
-import { getDb, eq, and, asc, isNull, timeBlocks, tasks, users, sql } from '@open-sunsama/database';
-import { ConflictError, NotFoundError, uuidSchema } from '@open-sunsama/utils';
-import { auth, requireScopes, type AuthVariables } from '../middleware/auth.js';
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
 import {
-  createTimeBlockSchema, updateTimeBlockSchema, timeBlockFilterSchema, calculateDuration,
-  quickScheduleSchema, calculateEndTime, cascadeResizeSchema, autoScheduleSchema,
-  timeToMinutes, minutesToTime,
-} from '../validation/time-blocks.js';
+  getDb,
+  eq,
+  and,
+  or,
+  asc,
+  isNull,
+  timeBlocks,
+  tasks,
+  users,
+  studySessions,
+  sql,
+} from "@open-sunsama/database";
+import {
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+  uuidSchema,
+} from "@open-sunsama/utils";
+import { auth, requireScopes, type AuthVariables } from "../middleware/auth.js";
+import {
+  createTimeBlockSchema,
+  updateTimeBlockSchema,
+  timeBlockFilterSchema,
+  calculateDuration,
+  quickScheduleSchema,
+  calculateEndTime,
+  cascadeResizeSchema,
+  autoScheduleSchema,
+  timeToMinutes,
+  minutesToTime,
+} from "../validation/time-blocks.js";
 
 // Default working hours for auto-scheduling (used when user has no preference)
-const DEFAULT_WORK_START_HOUR = 9;  // 9:00 AM
-const DEFAULT_WORK_END_HOUR = 18;   // 6:00 PM
+const DEFAULT_WORK_START_HOUR = 9; // 9:00 AM
+const DEFAULT_WORK_END_HOUR = 18; // 6:00 PM
 
 /**
  * Find the next available time slot, preferring working hours.
@@ -36,7 +60,7 @@ function findNextAvailableSlot(
   _date: string,
   earliestStartMinutes?: number,
   workStartHour: number = DEFAULT_WORK_START_HOUR,
-  workEndHour: number = DEFAULT_WORK_END_HOUR,
+  workEndHour: number = DEFAULT_WORK_END_HOUR
 ): { startTime: string; endTime: string } {
   const workStartMinutes = workStartHour * 60;
   const workEndMinutes = workEndHour * 60;
@@ -98,9 +122,10 @@ function findNextAvailableSlot(
 
   // No slot within working hours - schedule after the last block or after work end
   // (whichever is later), so the task still gets scheduled
-  const lastBlockEnd = existingBlocks.length > 0
-    ? Math.max(...existingBlocks.map(b => timeToMinutes(b.endTime)))
-    : workEndMinutes;
+  const lastBlockEnd =
+    existingBlocks.length > 0
+      ? Math.max(...existingBlocks.map((b) => timeToMinutes(b.endTime)))
+      : workEndMinutes;
   const overflowStart = Math.max(currentStart, lastBlockEnd);
 
   return {
@@ -108,416 +133,673 @@ function findNextAvailableSlot(
     endTime: minutesToTime(overflowStart + durationMins),
   };
 }
-import { publishEvent } from '../lib/websocket/index.js';
+import { publishEvent } from "../lib/websocket/index.js";
 
 const timeBlocksRouter = new Hono<{ Variables: AuthVariables }>();
-timeBlocksRouter.use('*', auth);
+timeBlocksRouter.use("*", auth);
 
 /** GET /time-blocks - List time blocks with filters */
-timeBlocksRouter.get('/', requireScopes('time-blocks:read'), zValidator('query', timeBlockFilterSchema), async (c) => {
-  const userId = c.get('userId');
-  const filters = c.req.valid('query');
-  const db = getDb();
-  const conditions = [eq(timeBlocks.userId, userId)];
+timeBlocksRouter.get(
+  "/",
+  requireScopes("time-blocks:read"),
+  zValidator("query", timeBlockFilterSchema),
+  async (c) => {
+    const userId = c.get("userId");
+    const filters = c.req.valid("query");
+    const db = getDb();
+    const conditions = [eq(timeBlocks.userId, userId)];
 
-  if (filters.date) conditions.push(eq(timeBlocks.date, filters.date));
-  if (filters.from) conditions.push(sql`${timeBlocks.date} >= ${filters.from}`);
-  if (filters.to) conditions.push(sql`${timeBlocks.date} <= ${filters.to}`);
-  if (filters.taskId) conditions.push(eq(timeBlocks.taskId, filters.taskId));
+    const dateConditions = [];
+    if (filters.date) dateConditions.push(eq(timeBlocks.date, filters.date));
+    if (filters.from)
+      dateConditions.push(sql`${timeBlocks.date} >= ${filters.from}`);
+    if (filters.to)
+      dateConditions.push(sql`${timeBlocks.date} <= ${filters.to}`);
+    if (filters.sessionFrom && filters.sessionTo) {
+      const start = new Date(filters.sessionFrom);
+      const end = new Date(filters.sessionTo);
+      if (start >= end)
+        throw new ValidationError("Session instant range must be increasing");
+      conditions.push(
+        or(
+          and(isNull(timeBlocks.studySessionId), ...dateConditions),
+          and(
+            sql`${timeBlocks.studySessionId} IS NOT NULL`,
+            sql`${studySessions.startAt} < ${filters.sessionTo}::timestamptz`,
+            sql`${studySessions.endAt} > ${filters.sessionFrom}::timestamptz`
+          )
+        )!
+      );
+    } else {
+      conditions.push(...dateConditions);
+    }
+    if (filters.taskId) conditions.push(eq(timeBlocks.taskId, filters.taskId));
 
-  const offset = (filters.page - 1) * filters.limit;
-  const [countResult] = await db.select({ count: sql<number>`count(*)::int` }).from(timeBlocks).where(and(...conditions));
-  const total = countResult?.count || 0;
+    const offset = (filters.page - 1) * filters.limit;
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(timeBlocks)
+      .leftJoin(
+        studySessions,
+        and(
+          eq(timeBlocks.studySessionId, studySessions.id),
+          eq(studySessions.userId, userId)
+        )
+      )
+      .where(and(...conditions));
+    const total = countResult?.count || 0;
 
-  const results = await db
-    .select({ timeBlock: timeBlocks, task: tasks })
-    .from(timeBlocks)
-    .leftJoin(tasks, eq(timeBlocks.taskId, tasks.id))
-    .where(and(...conditions))
-    .orderBy(asc(timeBlocks.date), asc(timeBlocks.startTime), asc(timeBlocks.position))
-    .limit(filters.limit)
-    .offset(offset);
+    const results = await db
+      .select({ timeBlock: timeBlocks, task: tasks, session: studySessions })
+      .from(timeBlocks)
+      .leftJoin(tasks, eq(timeBlocks.taskId, tasks.id))
+      .leftJoin(
+        studySessions,
+        and(
+          eq(timeBlocks.studySessionId, studySessions.id),
+          eq(studySessions.userId, userId)
+        )
+      )
+      .where(and(...conditions))
+      .orderBy(
+        asc(timeBlocks.date),
+        asc(timeBlocks.startTime),
+        asc(timeBlocks.position)
+      )
+      .limit(filters.limit)
+      .offset(offset);
 
-  return c.json({
-    success: true,
-    data: results.map(({ timeBlock, task }) => ({ ...timeBlock, task: task || null })),
-    meta: { page: filters.page, limit: filters.limit, total, totalPages: Math.ceil(total / filters.limit) },
-  });
-});
+    return c.json({
+      success: true,
+      data: results.map(({ timeBlock, task, session }) => ({
+        ...timeBlock,
+        task: task || null,
+        sessionStartAt: session?.startAt ?? null,
+        sessionEndAt: session?.endAt ?? null,
+        studySessionTimezone: session?.timezone ?? null,
+      })),
+      meta: {
+        page: filters.page,
+        limit: filters.limit,
+        total,
+        totalPages: Math.ceil(total / filters.limit),
+      },
+    });
+  }
+);
 
 /** POST /time-blocks - Create a new time block */
-timeBlocksRouter.post('/', requireScopes('time-blocks:write'), zValidator('json', createTimeBlockSchema), async (c) => {
-  const userId = c.get('userId');
-  const data = c.req.valid('json');
-  const db = getDb();
+timeBlocksRouter.post(
+  "/",
+  requireScopes("time-blocks:write"),
+  zValidator("json", createTimeBlockSchema),
+  async (c) => {
+    const userId = c.get("userId");
+    const data = c.req.valid("json");
+    const db = getDb();
 
-  if (data.taskId) {
-    const [task] = await db.select().from(tasks).where(and(eq(tasks.id, data.taskId), eq(tasks.userId, userId))).limit(1);
-    if (!task) throw new NotFoundError('Task', data.taskId);
+    if (data.taskId) {
+      const [task] = await db
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.id, data.taskId), eq(tasks.userId, userId)))
+        .limit(1);
+      if (!task) throw new NotFoundError("Task", data.taskId);
+    }
+
+    const durationMins = calculateDuration(data.startTime, data.endTime);
+    let position = data.position;
+    if (position === undefined) {
+      const [maxPos] = await db
+        .select({ max: sql<number>`COALESCE(MAX(${timeBlocks.position}), -1)` })
+        .from(timeBlocks)
+        .where(
+          and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, data.date))
+        );
+      position = (maxPos?.max ?? -1) + 1;
+    }
+
+    const [newTimeBlock] = await db
+      .insert(timeBlocks)
+      .values({
+        userId,
+        taskId: data.taskId ?? null,
+        title: data.title,
+        description: data.description ?? null,
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        durationMins,
+        color: data.color,
+        position,
+      })
+      .returning();
+
+    let task = null;
+    if (newTimeBlock?.taskId) {
+      [task] = await db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.id, newTimeBlock.taskId))
+        .limit(1);
+    }
+
+    // Publish realtime event (fire and forget)
+    if (newTimeBlock) {
+      publishEvent(userId, "timeblock:created", {
+        timeBlockId: newTimeBlock.id,
+        date: newTimeBlock.date,
+      });
+    }
+
+    return c.json({ success: true, data: { ...newTimeBlock, task } }, 201);
   }
+);
 
-  const durationMins = calculateDuration(data.startTime, data.endTime);
-  let position = data.position;
-  if (position === undefined) {
+/** POST /time-blocks/quick-schedule - Create a time block from a task */
+timeBlocksRouter.post(
+  "/quick-schedule",
+  requireScopes("time-blocks:write"),
+  zValidator("json", quickScheduleSchema),
+  async (c) => {
+    const userId = c.get("userId");
+    const data = c.req.valid("json");
+    const db = getDb();
+
+    // Look up the task
+    const [task] = await db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, data.taskId), eq(tasks.userId, userId)))
+      .limit(1);
+    if (!task) throw new NotFoundError("Task", data.taskId);
+
+    // Calculate end time from start time + duration
+    const endTime = calculateEndTime(data.startTime, data.durationMins);
+    const durationMins = data.durationMins;
+
+    // Get next position for this date
     const [maxPos] = await db
       .select({ max: sql<number>`COALESCE(MAX(${timeBlocks.position}), -1)` })
       .from(timeBlocks)
-      .where(and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, data.date)));
-    position = (maxPos?.max ?? -1) + 1;
+      .where(
+        and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, data.date))
+      );
+    const position = (maxPos?.max ?? -1) + 1;
+
+    // Create time block with task's title and link to task
+    const [newTimeBlock] = await db
+      .insert(timeBlocks)
+      .values({
+        userId,
+        taskId: data.taskId,
+        title: task.title,
+        description: task.notes ?? null,
+        date: data.date,
+        startTime: data.startTime,
+        endTime,
+        durationMins,
+        color: data.color ?? "#3B82F6",
+        position,
+      })
+      .returning();
+
+    // Publish realtime event (fire and forget)
+    if (newTimeBlock) {
+      publishEvent(userId, "timeblock:created", {
+        timeBlockId: newTimeBlock.id,
+        date: newTimeBlock.date,
+      });
+    }
+
+    return c.json({ success: true, data: { ...newTimeBlock, task } }, 201);
   }
-
-  const [newTimeBlock] = await db.insert(timeBlocks).values({
-    userId, taskId: data.taskId ?? null, title: data.title, description: data.description ?? null,
-    date: data.date, startTime: data.startTime, endTime: data.endTime, durationMins, color: data.color, position,
-  }).returning();
-
-  let task = null;
-  if (newTimeBlock?.taskId) {
-    [task] = await db.select().from(tasks).where(eq(tasks.id, newTimeBlock.taskId)).limit(1);
-  }
-
-  // Publish realtime event (fire and forget)
-  if (newTimeBlock) {
-    publishEvent(userId, 'timeblock:created', {
-      timeBlockId: newTimeBlock.id,
-      date: newTimeBlock.date,
-    });
-  }
-
-  return c.json({ success: true, data: { ...newTimeBlock, task } }, 201);
-});
-
-/** POST /time-blocks/quick-schedule - Create a time block from a task */
-timeBlocksRouter.post('/quick-schedule', requireScopes('time-blocks:write'), zValidator('json', quickScheduleSchema), async (c) => {
-  const userId = c.get('userId');
-  const data = c.req.valid('json');
-  const db = getDb();
-
-  // Look up the task
-  const [task] = await db.select().from(tasks).where(and(eq(tasks.id, data.taskId), eq(tasks.userId, userId))).limit(1);
-  if (!task) throw new NotFoundError('Task', data.taskId);
-
-  // Calculate end time from start time + duration
-  const endTime = calculateEndTime(data.startTime, data.durationMins);
-  const durationMins = data.durationMins;
-
-  // Get next position for this date
-  const [maxPos] = await db
-    .select({ max: sql<number>`COALESCE(MAX(${timeBlocks.position}), -1)` })
-    .from(timeBlocks)
-    .where(and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, data.date)));
-  const position = (maxPos?.max ?? -1) + 1;
-
-  // Create time block with task's title and link to task
-  const [newTimeBlock] = await db.insert(timeBlocks).values({
-    userId,
-    taskId: data.taskId,
-    title: task.title,
-    description: task.notes ?? null,
-    date: data.date,
-    startTime: data.startTime,
-    endTime,
-    durationMins,
-    color: data.color ?? '#3B82F6',
-    position,
-  }).returning();
-
-  // Publish realtime event (fire and forget)
-  if (newTimeBlock) {
-    publishEvent(userId, 'timeblock:created', {
-      timeBlockId: newTimeBlock.id,
-      date: newTimeBlock.date,
-    });
-  }
-
-  return c.json({ success: true, data: { ...newTimeBlock, task } }, 201);
-});
+);
 
 /** POST /time-blocks/auto-schedule - Intelligently schedule a task to the next available time slot */
-timeBlocksRouter.post('/auto-schedule', requireScopes('time-blocks:write'), zValidator('json', autoScheduleSchema), async (c) => {
-  const userId = c.get('userId');
-  const { taskId, currentTime } = c.req.valid('json');
-  const db = getDb();
+timeBlocksRouter.post(
+  "/auto-schedule",
+  requireScopes("time-blocks:write"),
+  zValidator("json", autoScheduleSchema),
+  async (c) => {
+    const userId = c.get("userId");
+    const { taskId, currentTime } = c.req.valid("json");
+    const db = getDb();
 
-  // Look up the task
-  const [task] = await db.select().from(tasks).where(and(eq(tasks.id, taskId), eq(tasks.userId, userId))).limit(1);
-  if (!task) throw new NotFoundError('Task', taskId);
+    // Look up the task
+    const [task] = await db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+      .limit(1);
+    if (!task) throw new NotFoundError("Task", taskId);
 
-  // Determine the date to schedule on (task's scheduledDate or today)
-  const scheduleDate = task.scheduledDate ?? new Date().toISOString().split('T')[0]!;
+    // Determine the date to schedule on (task's scheduledDate or today)
+    const scheduleDate =
+      task.scheduledDate ?? new Date().toISOString().split("T")[0]!;
 
-  // Get duration from task or use default of 30 minutes
-  const durationMins = task.estimatedMins ?? 30;
+    // Get duration from task or use default of 30 minutes
+    const durationMins = task.estimatedMins ?? 30;
 
-  // Get existing time blocks for this date, ordered by start time
-  const existingBlocks = await db
-    .select({ startTime: timeBlocks.startTime, endTime: timeBlocks.endTime })
-    .from(timeBlocks)
-    .where(and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, scheduleDate)))
-    .orderBy(asc(timeBlocks.startTime));
+    // Get existing time blocks for this date, ordered by start time
+    const existingBlocks = await db
+      .select({ startTime: timeBlocks.startTime, endTime: timeBlocks.endTime })
+      .from(timeBlocks)
+      .where(
+        and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, scheduleDate))
+      )
+      .orderBy(asc(timeBlocks.startTime));
 
-  // Fetch user preferences for working hours
-  const [user] = await db.select({ preferences: users.preferences }).from(users).where(eq(users.id, userId)).limit(1);
-  const workStartHour = user?.preferences?.workStartHour ?? DEFAULT_WORK_START_HOUR;
-  const workEndHour = user?.preferences?.workEndHour ?? DEFAULT_WORK_END_HOUR;
+    // Fetch user preferences for working hours
+    const [user] = await db
+      .select({ preferences: users.preferences })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const workStartHour =
+      user?.preferences?.workStartHour ?? DEFAULT_WORK_START_HOUR;
+    const workEndHour = user?.preferences?.workEndHour ?? DEFAULT_WORK_END_HOUR;
 
-  // Convert currentTime (HH:mm) to minutes if provided
-  const earliestStartMinutes = currentTime ? timeToMinutes(currentTime) : undefined;
+    // Convert currentTime (HH:mm) to minutes if provided
+    const earliestStartMinutes = currentTime
+      ? timeToMinutes(currentTime)
+      : undefined;
 
-  // Find the next available slot (never fails - schedules beyond working hours if needed)
-  const slot = findNextAvailableSlot(existingBlocks, durationMins, scheduleDate, earliestStartMinutes, workStartHour, workEndHour);
+    // Find the next available slot (never fails - schedules beyond working hours if needed)
+    const slot = findNextAvailableSlot(
+      existingBlocks,
+      durationMins,
+      scheduleDate,
+      earliestStartMinutes,
+      workStartHour,
+      workEndHour
+    );
 
-  // Get next position for this date
-  const [maxPos] = await db
-    .select({ max: sql<number>`COALESCE(MAX(${timeBlocks.position}), -1)` })
-    .from(timeBlocks)
-    .where(and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, scheduleDate)));
-  const position = (maxPos?.max ?? -1) + 1;
+    // Get next position for this date
+    const [maxPos] = await db
+      .select({ max: sql<number>`COALESCE(MAX(${timeBlocks.position}), -1)` })
+      .from(timeBlocks)
+      .where(
+        and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, scheduleDate))
+      );
+    const position = (maxPos?.max ?? -1) + 1;
 
-  // Create the time block
-  const [newTimeBlock] = await db.insert(timeBlocks).values({
-    userId,
-    taskId,
-    title: task.title,
-    description: task.notes ?? null,
-    date: scheduleDate,
-    startTime: slot.startTime,
-    endTime: slot.endTime,
-    durationMins,
-    color: '#3B82F6',
-    position,
-  }).returning();
+    // Create the time block
+    const [newTimeBlock] = await db
+      .insert(timeBlocks)
+      .values({
+        userId,
+        taskId,
+        title: task.title,
+        description: task.notes ?? null,
+        date: scheduleDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        durationMins,
+        color: "#3B82F6",
+        position,
+      })
+      .returning();
 
-  // Publish realtime event (fire and forget)
-  if (newTimeBlock) {
-    publishEvent(userId, 'timeblock:created', {
-      timeBlockId: newTimeBlock.id,
-      date: newTimeBlock.date,
-    });
+    // Publish realtime event (fire and forget)
+    if (newTimeBlock) {
+      publishEvent(userId, "timeblock:created", {
+        timeBlockId: newTimeBlock.id,
+        date: newTimeBlock.date,
+      });
+    }
+
+    return c.json({ success: true, data: { ...newTimeBlock, task } }, 201);
   }
-
-  return c.json({ success: true, data: { ...newTimeBlock, task } }, 201);
-});
+);
 
 /** GET /time-blocks/:id - Get a single time block by ID */
-timeBlocksRouter.get('/:id', requireScopes('time-blocks:read'), zValidator('param', z.object({ id: uuidSchema })), async (c) => {
-  const userId = c.get('userId');
-  const { id } = c.req.valid('param');
-  const db = getDb();
+timeBlocksRouter.get(
+  "/:id",
+  requireScopes("time-blocks:read"),
+  zValidator("param", z.object({ id: uuidSchema })),
+  async (c) => {
+    const userId = c.get("userId");
+    const { id } = c.req.valid("param");
+    const db = getDb();
 
-  const [result] = await db
-    .select({ timeBlock: timeBlocks, task: tasks })
-    .from(timeBlocks)
-    .leftJoin(tasks, eq(timeBlocks.taskId, tasks.id))
-    .where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId)))
-    .limit(1);
+    const [result] = await db
+      .select({ timeBlock: timeBlocks, task: tasks, session: studySessions })
+      .from(timeBlocks)
+      .leftJoin(tasks, eq(timeBlocks.taskId, tasks.id))
+      .leftJoin(
+        studySessions,
+        and(
+          eq(timeBlocks.studySessionId, studySessions.id),
+          eq(studySessions.userId, userId)
+        )
+      )
+      .where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId)))
+      .limit(1);
 
-  if (!result) throw new NotFoundError('Time block', id);
-  return c.json({ success: true, data: { ...result.timeBlock, task: result.task || null } });
-});
+    if (!result) throw new NotFoundError("Time block", id);
+    return c.json({
+      success: true,
+      data: {
+        ...result.timeBlock,
+        task: result.task || null,
+        sessionStartAt: result.session?.startAt ?? null,
+        sessionEndAt: result.session?.endAt ?? null,
+        studySessionTimezone: result.session?.timezone ?? null,
+      },
+    });
+  }
+);
 
 /** PATCH /time-blocks/:id - Update a time block */
-timeBlocksRouter.patch('/:id', requireScopes('time-blocks:write'), zValidator('param', z.object({ id: uuidSchema })), zValidator('json', updateTimeBlockSchema), async (c) => {
-  const userId = c.get('userId');
-  const { id } = c.req.valid('param');
-  const updates = c.req.valid('json');
-  const db = getDb();
+timeBlocksRouter.patch(
+  "/:id",
+  requireScopes("time-blocks:write"),
+  zValidator("param", z.object({ id: uuidSchema })),
+  zValidator("json", updateTimeBlockSchema),
+  async (c) => {
+    const userId = c.get("userId");
+    const { id } = c.req.valid("param");
+    const updates = c.req.valid("json");
+    const db = getDb();
 
-  const [existing] = await db.select().from(timeBlocks).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId))).limit(1);
-  if (!existing) throw new NotFoundError('Time block', id);
-  if (existing.studySessionId) throw new ConflictError('This Time Block is managed by its Study Session');
+    const [existing] = await db
+      .select()
+      .from(timeBlocks)
+      .where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId)))
+      .limit(1);
+    if (!existing) throw new NotFoundError("Time block", id);
+    if (existing.studySessionId)
+      throw new ConflictError(
+        "This Time Block is managed by its Study Session"
+      );
 
-  if (updates.taskId) {
-    const [task] = await db.select().from(tasks).where(and(eq(tasks.id, updates.taskId), eq(tasks.userId, userId))).limit(1);
-    if (!task) throw new NotFoundError('Task', updates.taskId);
+    if (updates.taskId) {
+      const [task] = await db
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.id, updates.taskId), eq(tasks.userId, userId)))
+        .limit(1);
+      if (!task) throw new NotFoundError("Task", updates.taskId);
+    }
+
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (updates.taskId !== undefined) updateData.taskId = updates.taskId;
+    if (updates.title !== undefined) updateData.title = updates.title;
+    if (updates.description !== undefined)
+      updateData.description = updates.description;
+    if (updates.date !== undefined) updateData.date = updates.date;
+    if (updates.startTime !== undefined)
+      updateData.startTime = updates.startTime;
+    if (updates.endTime !== undefined) updateData.endTime = updates.endTime;
+    if (updates.color !== undefined) updateData.color = updates.color;
+    if (updates.position !== undefined) updateData.position = updates.position;
+
+    if (updates.startTime !== undefined || updates.endTime !== undefined) {
+      updateData.durationMins = calculateDuration(
+        updates.startTime ?? existing.startTime,
+        updates.endTime ?? existing.endTime
+      );
+    }
+
+    const [updatedTimeBlock] = await db
+      .update(timeBlocks)
+      .set(updateData)
+      .where(
+        and(
+          eq(timeBlocks.id, id),
+          eq(timeBlocks.userId, userId),
+          isNull(timeBlocks.studySessionId)
+        )
+      )
+      .returning();
+    if (!updatedTimeBlock)
+      throw new ConflictError(
+        "This Time Block is managed by its Study Session"
+      );
+
+    let task = null;
+    if (updatedTimeBlock?.taskId) {
+      [task] = await db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.id, updatedTimeBlock.taskId))
+        .limit(1);
+    }
+
+    // Publish realtime event (fire and forget)
+    if (updatedTimeBlock) {
+      publishEvent(userId, "timeblock:updated", {
+        timeBlockId: updatedTimeBlock.id,
+        date: updatedTimeBlock.date,
+      });
+    }
+
+    return c.json({ success: true, data: { ...updatedTimeBlock, task } });
   }
-
-  const updateData: Record<string, unknown> = { updatedAt: new Date() };
-  if (updates.taskId !== undefined) updateData.taskId = updates.taskId;
-  if (updates.title !== undefined) updateData.title = updates.title;
-  if (updates.description !== undefined) updateData.description = updates.description;
-  if (updates.date !== undefined) updateData.date = updates.date;
-  if (updates.startTime !== undefined) updateData.startTime = updates.startTime;
-  if (updates.endTime !== undefined) updateData.endTime = updates.endTime;
-  if (updates.color !== undefined) updateData.color = updates.color;
-  if (updates.position !== undefined) updateData.position = updates.position;
-
-  if (updates.startTime !== undefined || updates.endTime !== undefined) {
-    updateData.durationMins = calculateDuration(updates.startTime ?? existing.startTime, updates.endTime ?? existing.endTime);
-  }
-
-  const [updatedTimeBlock] = await db.update(timeBlocks).set(updateData).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId), isNull(timeBlocks.studySessionId))).returning();
-  if (!updatedTimeBlock) throw new ConflictError('This Time Block is managed by its Study Session');
-
-  let task = null;
-  if (updatedTimeBlock?.taskId) {
-    [task] = await db.select().from(tasks).where(eq(tasks.id, updatedTimeBlock.taskId)).limit(1);
-  }
-
-  // Publish realtime event (fire and forget)
-  if (updatedTimeBlock) {
-    publishEvent(userId, 'timeblock:updated', {
-      timeBlockId: updatedTimeBlock.id,
-      date: updatedTimeBlock.date,
-    });
-  }
-
-  return c.json({ success: true, data: { ...updatedTimeBlock, task } });
-});
+);
 
 /** PATCH /time-blocks/:id/cascade-resize - Resize a block and cascade shift subsequent blocks */
-timeBlocksRouter.patch('/:id/cascade-resize', requireScopes('time-blocks:write'), zValidator('param', z.object({ id: uuidSchema })), zValidator('json', cascadeResizeSchema), async (c) => {
-  const userId = c.get('userId');
-  const { id } = c.req.valid('param');
-  const { startTime: newStartTime, endTime: newEndTime } = c.req.valid('json');
-  const db = getDb();
+timeBlocksRouter.patch(
+  "/:id/cascade-resize",
+  requireScopes("time-blocks:write"),
+  zValidator("param", z.object({ id: uuidSchema })),
+  zValidator("json", cascadeResizeSchema),
+  async (c) => {
+    const userId = c.get("userId");
+    const { id } = c.req.valid("param");
+    const { startTime: newStartTime, endTime: newEndTime } =
+      c.req.valid("json");
+    const db = getDb();
 
-  // Fetch the target block
-  const [targetBlock] = await db.select().from(timeBlocks).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId))).limit(1);
-  if (!targetBlock) throw new NotFoundError('Time block', id);
-  if (targetBlock.studySessionId) throw new ConflictError('This Time Block is managed by its Study Session');
+    // Fetch the target block
+    const [targetBlock] = await db
+      .select()
+      .from(timeBlocks)
+      .where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId)))
+      .limit(1);
+    if (!targetBlock) throw new NotFoundError("Time block", id);
+    if (targetBlock.studySessionId)
+      throw new ConflictError(
+        "This Time Block is managed by its Study Session"
+      );
 
-  const originalStartTime = targetBlock.startTime;
-  const targetDate = targetBlock.date;
+    const originalStartTime = targetBlock.startTime;
+    const targetDate = targetBlock.date;
 
-  // Fetch all blocks for the same date, ordered by start time
-  const allBlocks = await db
-    .select()
-    .from(timeBlocks)
-    .where(and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, targetDate)))
-    .orderBy(asc(timeBlocks.startTime));
+    // Fetch all blocks for the same date, ordered by start time
+    const allBlocks = await db
+      .select()
+      .from(timeBlocks)
+      .where(
+        and(eq(timeBlocks.userId, userId), eq(timeBlocks.date, targetDate))
+      )
+      .orderBy(asc(timeBlocks.startTime));
 
-  // Filter to blocks that start AFTER the resized block's original start time (excluding the target)
-  const subsequentBlocks = allBlocks.filter(
-    (block) => block.id !== id && block.startTime > originalStartTime
-  );
+    // Filter to blocks that start AFTER the resized block's original start time (excluding the target)
+    const subsequentBlocks = allBlocks.filter(
+      (block) => block.id !== id && block.startTime > originalStartTime
+    );
 
-  // Calculate the updates needed
-  type BlockUpdate = { id: string; startTime: string; endTime: string; durationMins: number };
-  const updates: BlockUpdate[] = [];
+    // Calculate the updates needed
+    type BlockUpdate = {
+      id: string;
+      startTime: string;
+      endTime: string;
+      durationMins: number;
+    };
+    const updates: BlockUpdate[] = [];
 
-  // First, add the resized block's update
-  const newDuration = calculateDuration(newStartTime, newEndTime);
-  updates.push({
-    id: targetBlock.id,
-    startTime: newStartTime,
-    endTime: newEndTime,
-    durationMins: newDuration,
-  });
-
-  // Track the current "end boundary" - blocks need to shift if they start before this
-  let currentEndMinutes = timeToMinutes(newEndTime);
-
-  // Process subsequent blocks in order
-  for (let i = 0; i < subsequentBlocks.length; i++) {
-    const block = subsequentBlocks[i]!;
-    const blockStartMinutes = timeToMinutes(block.startTime);
-    const blockEndMinutes = timeToMinutes(block.endTime);
-    const blockDuration = blockEndMinutes - blockStartMinutes;
-
-    // Calculate the original gap between this block and the previous one
-    let originalGap = 0;
-    if (i === 0) {
-      // Gap from the target block's original end to this block's start
-      const targetOriginalEndMinutes = timeToMinutes(targetBlock.endTime);
-      originalGap = Math.max(0, blockStartMinutes - targetOriginalEndMinutes);
-    } else {
-      // Gap from the previous subsequent block's original end to this block's start
-      const prevBlock = subsequentBlocks[i - 1]!;
-      const prevEndMinutes = timeToMinutes(prevBlock.endTime);
-      originalGap = Math.max(0, blockStartMinutes - prevEndMinutes);
-    }
-
-    // Check if this block needs to shift
-    if (blockStartMinutes < currentEndMinutes + originalGap) {
-      // Shift this block: new start = current end boundary + original gap
-      const newBlockStartMinutes = currentEndMinutes + originalGap;
-      const newBlockEndMinutes = newBlockStartMinutes + blockDuration;
-
-      updates.push({
-        id: block.id,
-        startTime: minutesToTime(newBlockStartMinutes),
-        endTime: minutesToTime(newBlockEndMinutes),
-        durationMins: blockDuration,
-      });
-
-      // Update the end boundary for the next block
-      currentEndMinutes = newBlockEndMinutes;
-    } else {
-      // This block doesn't need to shift, but we still need to update the boundary
-      // for cascade detection of following blocks
-      currentEndMinutes = blockEndMinutes;
-    }
-  }
-
-  // Execute all updates in a single transaction
-  if (updates.some((update) => allBlocks.find((block) => block.id === update.id)?.studySessionId)) {
-    throw new ConflictError('Cascade resize would move a Study Session Time Block');
-  }
-  const updatedBlocks = await db.transaction(async (tx) => {
-    const results: typeof timeBlocks.$inferSelect[] = [];
-
-    for (const update of updates) {
-      const [updated] = await tx
-        .update(timeBlocks)
-        .set({
-          startTime: update.startTime,
-          endTime: update.endTime,
-          durationMins: update.durationMins,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(timeBlocks.id, update.id), eq(timeBlocks.userId, userId), isNull(timeBlocks.studySessionId)))
-        .returning();
-
-      if (!updated) throw new ConflictError('Cascade resize would move a Study Session Time Block');
-      results.push(updated);
-    }
-
-    return results;
-  });
-
-  // Fetch tasks for all updated blocks
-  const updatedBlocksWithTasks = await Promise.all(
-    updatedBlocks.map(async (block) => {
-      let task = null;
-      if (block.taskId) {
-        [task] = await db.select().from(tasks).where(eq(tasks.id, block.taskId)).limit(1);
-      }
-      return { ...block, task };
-    })
-  );
-
-  // Publish realtime events for all updated blocks
-  for (const block of updatedBlocks) {
-    publishEvent(userId, 'timeblock:updated', {
-      timeBlockId: block.id,
-      date: block.date,
+    // First, add the resized block's update
+    const newDuration = calculateDuration(newStartTime, newEndTime);
+    updates.push({
+      id: targetBlock.id,
+      startTime: newStartTime,
+      endTime: newEndTime,
+      durationMins: newDuration,
     });
-  }
 
-  return c.json({ success: true, data: updatedBlocksWithTasks });
-});
+    // Track the current "end boundary" - blocks need to shift if they start before this
+    let currentEndMinutes = timeToMinutes(newEndTime);
+
+    // Process subsequent blocks in order
+    for (let i = 0; i < subsequentBlocks.length; i++) {
+      const block = subsequentBlocks[i]!;
+      const blockStartMinutes = timeToMinutes(block.startTime);
+      const blockEndMinutes = timeToMinutes(block.endTime);
+      const blockDuration = blockEndMinutes - blockStartMinutes;
+
+      // Calculate the original gap between this block and the previous one
+      let originalGap = 0;
+      if (i === 0) {
+        // Gap from the target block's original end to this block's start
+        const targetOriginalEndMinutes = timeToMinutes(targetBlock.endTime);
+        originalGap = Math.max(0, blockStartMinutes - targetOriginalEndMinutes);
+      } else {
+        // Gap from the previous subsequent block's original end to this block's start
+        const prevBlock = subsequentBlocks[i - 1]!;
+        const prevEndMinutes = timeToMinutes(prevBlock.endTime);
+        originalGap = Math.max(0, blockStartMinutes - prevEndMinutes);
+      }
+
+      // Check if this block needs to shift
+      if (blockStartMinutes < currentEndMinutes + originalGap) {
+        // Shift this block: new start = current end boundary + original gap
+        const newBlockStartMinutes = currentEndMinutes + originalGap;
+        const newBlockEndMinutes = newBlockStartMinutes + blockDuration;
+
+        updates.push({
+          id: block.id,
+          startTime: minutesToTime(newBlockStartMinutes),
+          endTime: minutesToTime(newBlockEndMinutes),
+          durationMins: blockDuration,
+        });
+
+        // Update the end boundary for the next block
+        currentEndMinutes = newBlockEndMinutes;
+      } else {
+        // This block doesn't need to shift, but we still need to update the boundary
+        // for cascade detection of following blocks
+        currentEndMinutes = blockEndMinutes;
+      }
+    }
+
+    // Execute all updates in a single transaction
+    if (
+      updates.some(
+        (update) =>
+          allBlocks.find((block) => block.id === update.id)?.studySessionId
+      )
+    ) {
+      throw new ConflictError(
+        "Cascade resize would move a Study Session Time Block"
+      );
+    }
+    const updatedBlocks = await db.transaction(async (tx) => {
+      const results: (typeof timeBlocks.$inferSelect)[] = [];
+
+      for (const update of updates) {
+        const [updated] = await tx
+          .update(timeBlocks)
+          .set({
+            startTime: update.startTime,
+            endTime: update.endTime,
+            durationMins: update.durationMins,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(timeBlocks.id, update.id),
+              eq(timeBlocks.userId, userId),
+              isNull(timeBlocks.studySessionId)
+            )
+          )
+          .returning();
+
+        if (!updated)
+          throw new ConflictError(
+            "Cascade resize would move a Study Session Time Block"
+          );
+        results.push(updated);
+      }
+
+      return results;
+    });
+
+    // Fetch tasks for all updated blocks
+    const updatedBlocksWithTasks = await Promise.all(
+      updatedBlocks.map(async (block) => {
+        let task = null;
+        if (block.taskId) {
+          [task] = await db
+            .select()
+            .from(tasks)
+            .where(eq(tasks.id, block.taskId))
+            .limit(1);
+        }
+        return { ...block, task };
+      })
+    );
+
+    // Publish realtime events for all updated blocks
+    for (const block of updatedBlocks) {
+      publishEvent(userId, "timeblock:updated", {
+        timeBlockId: block.id,
+        date: block.date,
+      });
+    }
+
+    return c.json({ success: true, data: updatedBlocksWithTasks });
+  }
+);
 
 /** DELETE /time-blocks/:id - Delete a time block */
-timeBlocksRouter.delete('/:id', requireScopes('time-blocks:write'), zValidator('param', z.object({ id: uuidSchema })), async (c) => {
-  const userId = c.get('userId');
-  const { id } = c.req.valid('param');
-  const db = getDb();
+timeBlocksRouter.delete(
+  "/:id",
+  requireScopes("time-blocks:write"),
+  zValidator("param", z.object({ id: uuidSchema })),
+  async (c) => {
+    const userId = c.get("userId");
+    const { id } = c.req.valid("param");
+    const db = getDb();
 
-  const [existing] = await db.select().from(timeBlocks).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId))).limit(1);
-  if (!existing) throw new NotFoundError('Time block', id);
-  if (existing.studySessionId) throw new ConflictError('This Time Block is managed by its Study Session');
+    const [existing] = await db
+      .select()
+      .from(timeBlocks)
+      .where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId)))
+      .limit(1);
+    if (!existing) throw new NotFoundError("Time block", id);
+    if (existing.studySessionId)
+      throw new ConflictError(
+        "This Time Block is managed by its Study Session"
+      );
 
-  const [deleted] = await db.delete(timeBlocks).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId), isNull(timeBlocks.studySessionId))).returning({ id: timeBlocks.id });
-  if (!deleted) throw new ConflictError('This Time Block is managed by its Study Session');
+    const [deleted] = await db
+      .delete(timeBlocks)
+      .where(
+        and(
+          eq(timeBlocks.id, id),
+          eq(timeBlocks.userId, userId),
+          isNull(timeBlocks.studySessionId)
+        )
+      )
+      .returning({ id: timeBlocks.id });
+    if (!deleted)
+      throw new ConflictError(
+        "This Time Block is managed by its Study Session"
+      );
 
-  // Publish realtime event (fire and forget)
-  publishEvent(userId, 'timeblock:deleted', {
-    timeBlockId: id,
-    date: existing.date,
-  });
+    // Publish realtime event (fire and forget)
+    publishEvent(userId, "timeblock:deleted", {
+      timeBlockId: id,
+      date: existing.date,
+    });
 
-  return c.json({ success: true, message: 'Time block deleted successfully' });
-});
+    return c.json({
+      success: true,
+      message: "Time block deleted successfully",
+    });
+  }
+);
 
 export { timeBlocksRouter };

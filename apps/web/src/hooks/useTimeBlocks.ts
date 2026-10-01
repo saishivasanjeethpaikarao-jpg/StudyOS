@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { TimeBlockFilterInput } from "@open-sunsama/types";
+import { addDays, format, startOfDay } from "date-fns";
 import { getApi } from "@/lib/api";
 import { timeBlockKeys } from "@/lib/query-keys";
 
@@ -39,6 +40,17 @@ export function useTimeBlocksForDateRange(startDate: Date, endDate: Date) {
  */
 export function useTimeBlocksForDate(date: string) {
   return useTimeBlocks({ date });
+}
+
+/** Generic blocks use their local date; session projections use canonical instants. */
+export function useCalendarTimeBlocks(startDate: Date, endDate: Date) {
+  return useTimeBlocks({
+    from: format(startDate, "yyyy-MM-dd"),
+    to: format(endDate, "yyyy-MM-dd"),
+    sessionFrom: startOfDay(startDate).toISOString(),
+    sessionTo: addDays(startOfDay(endDate), 1).toISOString(),
+    limit: 500,
+  });
 }
 
 /**

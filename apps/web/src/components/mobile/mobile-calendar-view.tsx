@@ -24,7 +24,8 @@ import type {
   CalendarEvent,
 } from "@open-sunsama/types";
 import { cn } from "@/lib/utils";
-import { useTasks, useTimeBlocksForDate } from "@/hooks";
+import { useTasks, useCalendarTimeBlocks } from "@/hooks";
+import { isCalendarBlockOnDay } from "@/lib/study-session-time";
 import {
   useCalendarEvents,
   useCalendars,
@@ -183,9 +184,9 @@ export function MobileCalendarView({
     limit: 200,
   });
 
-  // Fetch time blocks for selected date
+  // Keep generic local-date blocks and canonical Study Session projections together.
   const { data: timeBlocks = [], isLoading: isLoadingBlocks } =
-    useTimeBlocksForDate(dateString);
+    useCalendarTimeBlocks(dayStart, dayEnd);
 
   // External calendar events
   const { data: calendarEvents = [] } = useCalendarEvents(fromDate, toDate);
@@ -262,7 +263,7 @@ export function MobileCalendarView({
   // Filter blocks for this day
   const dayBlocks = React.useMemo(() => {
     return timeBlocks.filter((block) =>
-      isSameDay(new Date(block.startTime), selectedDate)
+      isCalendarBlockOnDay(block, selectedDate)
     );
   }, [timeBlocks, selectedDate]);
 
@@ -665,6 +666,7 @@ export function MobileCalendarView({
                     <TimeBlock
                       key={block.id}
                       block={block}
+                      displayDate={selectedDate}
                       layout={
                         itemLayouts.get(`block:${block.id}`) ?? DEFAULT_LAYOUT
                       }

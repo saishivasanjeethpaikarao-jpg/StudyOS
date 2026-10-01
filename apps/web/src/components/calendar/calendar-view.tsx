@@ -23,8 +23,7 @@ import type {
 import { cn } from "@/lib/utils";
 import {
   useTasks,
-  useTimeBlocksForDate,
-  useTimeBlocksForDateRange,
+  useCalendarTimeBlocks,
   useCreateTimeBlock,
   useMoveTimeBlock,
   useCascadeResizeTimeBlock,
@@ -156,9 +155,7 @@ export function CalendarView({
   // View mode: prefer server-synced preference; fall back to localStorage,
   // then to "day".
   const [viewMode, setViewModeRaw] = React.useState<CalendarViewMode>(() => {
-    return (
-      user?.preferences?.calendarViewMode ?? getStoredViewMode() ?? "day"
-    );
+    return user?.preferences?.calendarViewMode ?? getStoredViewMode() ?? "day";
   });
   // If the server preference loads *after* mount (typical: /auth/me
   // resolves shortly after the first paint), seed it into local state
@@ -249,16 +246,10 @@ export function CalendarView({
     limit: 200,
   });
 
-  // Fetch time blocks for the visible range. Day view stays on the
-  // single-day endpoint to avoid changing its cache key shape; multi-day
-  // and month use the range endpoint.
-  const { data: dayTimeBlocks = [], isLoading: isLoadingDayBlocks } =
-    useTimeBlocksForDate(dateString);
-  const { data: rangeTimeBlocks = [], isLoading: isLoadingRangeBlocks } =
-    useTimeBlocksForDateRange(range.start, range.end);
-  const timeBlocks = viewMode === "day" ? dayTimeBlocks : rangeTimeBlocks;
-  const isLoadingBlocks =
-    viewMode === "day" ? isLoadingDayBlocks : isLoadingRangeBlocks;
+  // Generic blocks keep their stored local date. Study Session projections
+  // are selected by absolute overlap with the viewer's visible local days.
+  const { data: timeBlocks = [], isLoading: isLoadingBlocks } =
+    useCalendarTimeBlocks(range.start, range.end);
 
   // Fetch external calendar events for the visible range. `.toISOString()`
   // encodes the user's local-day boundary as a real UTC instant so the
@@ -439,8 +430,8 @@ export function CalendarView({
       if (
         document.querySelector(
           '[role="dialog"][data-state="open"], ' +
-          '[role="alertdialog"][data-state="open"], ' +
-          '[role="menu"][data-state="open"]'
+            '[role="alertdialog"][data-state="open"], ' +
+            '[role="menu"][data-state="open"]'
         )
       ) {
         return;
@@ -478,7 +469,10 @@ export function CalendarView({
   // Mouse handlers for drag
   const handleTimelineMouseMove = (e: React.MouseEvent) => {
     if (isDragging) {
-      updateDrag(e.clientY, (e.currentTarget as HTMLElement).getBoundingClientRect());
+      updateDrag(
+        e.clientY,
+        (e.currentTarget as HTMLElement).getBoundingClientRect()
+      );
     }
   };
 
@@ -502,21 +496,24 @@ export function CalendarView({
         updateDrag(e.clientY, timelineRef.current.getBoundingClientRect());
       }
     };
-    
+
     // Touch event handlers for mobile
     const handleGlobalTouchEnd = () => endDrag();
     const handleGlobalTouchMove = (e: TouchEvent) => {
       if (timelineRef.current && e.touches.length > 0) {
         const touch = e.touches[0];
         if (touch) {
-          updateDrag(touch.clientY, timelineRef.current.getBoundingClientRect());
+          updateDrag(
+            touch.clientY,
+            timelineRef.current.getBoundingClientRect()
+          );
           // Prevent page scrolling while dragging
           e.preventDefault();
         }
       }
     };
     const handleGlobalTouchCancel = () => cancelDrag();
-    
+
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") cancelDrag();
     };
@@ -524,12 +521,14 @@ export function CalendarView({
     // Mouse events
     document.addEventListener("mouseup", handleGlobalMouseUp);
     document.addEventListener("mousemove", handleGlobalMouseMove);
-    
+
     // Touch events with passive: false to allow preventDefault
     document.addEventListener("touchend", handleGlobalTouchEnd);
-    document.addEventListener("touchmove", handleGlobalTouchMove, { passive: false });
+    document.addEventListener("touchmove", handleGlobalTouchMove, {
+      passive: false,
+    });
     document.addEventListener("touchcancel", handleGlobalTouchCancel);
-    
+
     document.addEventListener("keydown", handleEscape);
 
     return () => {
@@ -550,6 +549,7 @@ export function CalendarView({
 
   // Block drag handlers
   const handleBlockDragStart = (block: TimeBlock, e: React.MouseEvent) => {
+    if (block.studySessionId) return;
     e.preventDefault();
     startBlockDrag(block, e.clientY);
   };
@@ -559,6 +559,7 @@ export function CalendarView({
     edge: "top" | "bottom",
     e: React.MouseEvent
   ) => {
+    if (block.studySessionId) return;
     e.preventDefault();
     startBlockResize(block, edge, e.clientY);
   };
@@ -613,10 +614,13 @@ export function CalendarView({
 
   // When the user clicks a day cell in month view, switch to day view
   // anchored on that date — common UX pattern (Google / Outlook).
-  const handleDayCellClick = React.useCallback((date: Date) => {
-    setSelectedDate(startOfDay(date));
-    setViewMode("day");
-  }, [setViewMode]);
+  const handleDayCellClick = React.useCallback(
+    (date: Date) => {
+      setSelectedDate(startOfDay(date));
+      setViewMode("day");
+    },
+    [setViewMode]
+  );
 
   // Drag handlers for external events — start the move/resize, then
   // useCalendarDnd's `onEventMove` / `onEventResize` callbacks fire on
@@ -643,8 +647,7 @@ export function CalendarView({
       // Don't allow drag for all-day events from the timeline path —
       // they live in the banner row and have different semantics.
       if (event.isAllDay) return false;
-      const isReadOnly =
-        calendarReadOnlyById.get(event.calendarId) ?? true;
+      const isReadOnly = calendarReadOnlyById.get(event.calendarId) ?? true;
       return !isReadOnly;
     },
     [calendarReadOnlyById]
@@ -729,8 +732,7 @@ export function CalendarView({
                 patch: {
                   startTime,
                   endTime,
-                  timezone:
-                    Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 },
               });
             }}
@@ -768,9 +770,8 @@ export function CalendarView({
         rangeTo={toDate}
         calendarReadOnly={
           selectedExternalEvent
-            ? (calendarReadOnlyById.get(
-                selectedExternalEvent.calendarId
-              ) ?? true)
+            ? (calendarReadOnlyById.get(selectedExternalEvent.calendarId) ??
+              true)
             : true
         }
         calendarProvider={

@@ -8,12 +8,12 @@ import {
   eachDayOfInterval,
   isSameMonth,
   isToday,
-  isSameDay,
   isWeekend,
   startOfDay,
   endOfDay,
 } from "date-fns";
 import type { CalendarEvent, TimeBlock } from "@open-sunsama/types";
+import { isCalendarBlockOnDay } from "@/lib/study-session-time";
 import { cn } from "@/lib/utils";
 
 interface MonthViewProps {
@@ -67,9 +67,7 @@ function bucketEntriesForDay(
     }
   }
 
-  const dayBlocks = blocks.filter((b) =>
-    isSameDay(new Date(b.startTime), date)
-  );
+  const dayBlocks = blocks.filter((b) => isCalendarBlockOnDay(b, date));
 
   return { events: dayEvents, blocks: dayBlocks };
 }
@@ -110,7 +108,8 @@ export function MonthView({
     });
   }, [month, weekStartsOn]);
 
-  const weekdayLabels = weekStartsOn === 1 ? WEEKDAY_LABELS_MON : WEEKDAY_LABELS_SUN;
+  const weekdayLabels =
+    weekStartsOn === 1 ? WEEKDAY_LABELS_MON : WEEKDAY_LABELS_SUN;
 
   return (
     <div className="flex h-full w-full min-w-0 flex-1 flex-col">

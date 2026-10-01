@@ -1,11 +1,5 @@
 import * as React from "react";
-import {
-  endOfDay,
-  format,
-  isSameDay,
-  isToday,
-  startOfDay,
-} from "date-fns";
+import { endOfDay, format, isSameDay, isToday, startOfDay } from "date-fns";
 import type { CalendarEvent, TimeBlock } from "@open-sunsama/types";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui";
@@ -15,7 +9,8 @@ import {
   TIMELINE_END_HOUR,
 } from "@/hooks/calendar-dnd-utils";
 import { useCalendarEvents } from "@/hooks/useCalendars";
-import { useTimeBlocksForDateRange } from "@/hooks/useTimeBlocks";
+import { useCalendarTimeBlocks } from "@/hooks/useTimeBlocks";
+import { isCalendarBlockOnDay } from "@/lib/study-session-time";
 
 interface MobileMultiDayViewProps {
   /** Days to show side by side (3 for the 3-day view, 7 for the week). */
@@ -77,7 +72,7 @@ export function MobileMultiDayView({
     startOfDay(rangeStart).toISOString(),
     endOfDay(rangeEnd).toISOString()
   );
-  const { data: blocks = [] } = useTimeBlocksForDateRange(
+  const { data: blocks = [] } = useCalendarTimeBlocks(
     startOfDay(rangeStart),
     endOfDay(rangeEnd)
   );
@@ -145,7 +140,7 @@ export function MobileMultiDayView({
                 !event.isAllDay && isSameDay(new Date(event.startTime), day)
             );
             const dayBlocks = blocks.filter((block) =>
-              isSameDay(new Date(block.startTime), day)
+              isCalendarBlockOnDay(block, day)
             );
             const nowTop = isToday(day)
               ? (minutesFromTop(day, new Date()) / 60) * HOUR_HEIGHT

@@ -40,6 +40,9 @@ export type WebSocketEventType =
   | "assignment:created"
   | "assignment:updated"
   | "assignment:deleted"
+  | "study-session:created"
+  | "study-session:updated"
+  | "study-session:deleted"
   | "connected";
 
 export interface WebSocketEvent<T = unknown> {

@@ -3,12 +3,12 @@ import {
   format,
   startOfDay,
   endOfDay,
-  isSameDay,
   isToday,
   isWeekend,
   differenceInMinutes,
 } from "date-fns";
 import type { CalendarEvent, TimeBlock } from "@open-sunsama/types";
+import { isCalendarBlockOnDay } from "@/lib/study-session-time";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui";
 import {
@@ -134,9 +134,7 @@ function bucketEventsForDay(
     }
   }
 
-  const dayBlocks = blocks.filter((b) =>
-    isSameDay(new Date(b.startTime), date)
-  );
+  const dayBlocks = blocks.filter((b) => isCalendarBlockOnDay(b, date));
 
   return { timed, allDay, blocks: dayBlocks };
 }
@@ -487,7 +485,9 @@ export function MultiDayView({
   const isWeek = days.length >= 7;
 
   return (
-    <div className={cn("flex h-full w-full min-w-0 flex-1 flex-col", className)}>
+    <div
+      className={cn("flex h-full w-full min-w-0 flex-1 flex-col", className)}
+    >
       {/* Day-of-week headers */}
       <div className="flex flex-shrink-0 border-b bg-background">
         {/* Empty gutter to align with hour axis */}
@@ -508,9 +508,7 @@ export function MultiDayView({
                 className={cn(
                   "uppercase tracking-wide",
                   isWeek ? "text-[10px] sm:text-[11px]" : "text-[11px]",
-                  today
-                    ? "text-primary font-semibold"
-                    : "text-muted-foreground"
+                  today ? "text-primary font-semibold" : "text-muted-foreground"
                 )}
               >
                 {/* Week view at narrow widths shows single-letter
@@ -519,7 +517,9 @@ export function MultiDayView({
                 {isWeek ? (
                   <>
                     <span className="sm:hidden">{format(day, "EEEEE")}</span>
-                    <span className="hidden sm:inline">{format(day, "EEE")}</span>
+                    <span className="hidden sm:inline">
+                      {format(day, "EEE")}
+                    </span>
                   </>
                 ) : (
                   format(day, "EEE")
@@ -700,8 +700,7 @@ export function MultiDayView({
                   {/* Time blocks (above events) */}
                   {bucket.blocks.map((block) => {
                     const layout =
-                      dayLayouts[i]?.get(`block:${block.id}`) ??
-                      DEFAULT_LAYOUT;
+                      dayLayouts[i]?.get(`block:${block.id}`) ?? DEFAULT_LAYOUT;
                     return (
                       <MultiDayBlock
                         key={block.id}
@@ -718,12 +717,9 @@ export function MultiDayView({
                   {/* External calendar events */}
                   {bucket.timed.map((event) => {
                     const layout =
-                      dayLayouts[i]?.get(`event:${event.id}`) ??
-                      DEFAULT_LAYOUT;
-                    const canEdit =
-                      externalEventCanEdit?.(event) ?? false;
-                    const isThisDragging =
-                      drag.dragState?.eventId === event.id;
+                      dayLayouts[i]?.get(`event:${event.id}`) ?? DEFAULT_LAYOUT;
+                    const canEdit = externalEventCanEdit?.(event) ?? false;
+                    const isThisDragging = drag.dragState?.eventId === event.id;
                     return (
                       <MultiDayEvent
                         key={event.id}
@@ -781,7 +777,8 @@ export function MultiDayView({
                   {drag.dragState &&
                     drag.dragState.currentDayDate.toDateString() ===
                       day.toDateString() &&
-                    drag.dragState.moved && (() => {
+                    drag.dragState.moved &&
+                    (() => {
                       const previewTop = calculateYFromTime(
                         drag.dragState.previewStart
                       );

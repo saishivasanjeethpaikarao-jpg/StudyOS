@@ -17,6 +17,7 @@ import { errorHandler } from "../middleware/error.js";
 import { studySessionsRouter } from "./study-sessions.js";
 import { assignmentsRouter } from "./assignments.js";
 import { timeBlocksRouter } from "./time-blocks.js";
+import { subjectsRouter } from "./subjects.js";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 type SessionResult = {
@@ -38,6 +39,7 @@ describe.skipIf(!testDatabaseUrl)(
     app.route("/study-sessions", studySessionsRouter);
     app.route("/assignments", assignmentsRouter);
     app.route("/time-blocks", timeBlocksRouter);
+    app.route("/subjects", subjectsRouter);
     app.onError(errorHandler);
 
     let db: DbClient;
@@ -258,6 +260,97 @@ describe.skipIf(!testDatabaseUrl)(
           (row) => row.id === session.id
         )
       ).toBe(false);
+    });
+
+    it("returns canonical session instants for a viewer day different from the projection date", async () => {
+      const response = await request("/study-sessions", ownerToken, "POST", {
+        assignmentId,
+        startAt: "2030-04-09T22:00:00.000Z",
+        endAt: "2030-04-09T22:40:00.000Z",
+        timezone: "America/New_York",
+        plannedMinutes: 40,
+      });
+      expect(response.status).toBe(201);
+      const session = ((await response.json()) as { data: SessionResult }).data;
+      const [projection] = await linkedBlocks(session.id);
+      expect(projection).toMatchObject({
+        date: "2030-04-09",
+        startTime: "18:00",
+      });
+
+      const genericResponse = await request(
+        "/time-blocks",
+        ownerToken,
+        "POST",
+        {
+          title: "Ordinary task-free block",
+          date: "2030-04-10",
+          startTime: "09:00",
+          endTime: "09:40",
+        }
+      );
+      expect(genericResponse.status).toBe(201);
+      const genericId = (
+        (await genericResponse.json()) as { data: { id: string } }
+      ).data.id;
+
+      const viewerRange = new URLSearchParams({
+        from: "2030-04-10",
+        to: "2030-04-10",
+        sessionFrom: "2030-04-09T15:00:00.000Z", // Tokyo Apr 10 midnight
+        sessionTo: "2030-04-10T15:00:00.000Z",
+      });
+      const blocksResponse = await request(`/time-blocks?${viewerRange}`);
+      expect(blocksResponse.status).toBe(200);
+      const blocks = (
+        (await blocksResponse.json()) as {
+          data: Array<{
+            id: string;
+            sessionStartAt: string;
+            sessionEndAt: string;
+            studySessionTimezone: string;
+          }>;
+        }
+      ).data;
+      expect(blocks.find((block) => block.id === projection!.id)).toMatchObject(
+        {
+          sessionStartAt: "2030-04-09T22:00:00.000Z",
+          sessionEndAt: "2030-04-09T22:40:00.000Z",
+          studySessionTimezone: "America/New_York",
+        }
+      );
+      expect(blocks.find((block) => block.id === genericId)).toBeDefined();
+      const foreign = await request(`/time-blocks?${viewerRange}`, otherToken);
+      const foreignBlocks = (
+        (await foreign.json()) as { data: Array<{ id: string }> }
+      ).data;
+      expect(foreignBlocks.some((block) => block.id === projection!.id)).toBe(
+        false
+      );
+      expect((await request(`/time-blocks/${projection!.id}`)).status).toBe(
+        200
+      );
+      expect(
+        (await request(`/time-blocks/${projection!.id}`, otherToken)).status
+      ).toBe(404);
+      expect(
+        (await request(`/time-blocks/${projection!.id}`, ownerToken, "DELETE"))
+          .status
+      ).toBe(409);
+
+      const crossing = await create(
+        assignmentId,
+        ownerToken,
+        "2030-04-09T14:40:00.000Z"
+      );
+      const todayList = await request(
+        "/study-sessions?from=2030-04-09T15%3A00%3A00.000Z&to=2030-04-10T15%3A00%3A00.000Z"
+      );
+      expect(
+        ((await todayList.json()) as { data: SessionResult[] }).data.some(
+          (row) => row.id === crossing.id
+        )
+      ).toBe(true);
     });
 
     it("hides foreign Assignment, Study Session and Time Block IDs", async () => {
@@ -767,6 +860,204 @@ describe.skipIf(!testDatabaseUrl)(
       expect(await linkedBlocks(session.id)).toHaveLength(
         stored!.status === "planned" ? 1 : 0
       );
+    });
+
+    it("keeps calendar projection titles in step with assignment edits", async () => {
+      const academicId = await newAssignment();
+      const session = await create(
+        academicId,
+        ownerToken,
+        "2030-04-21T09:00:00.000Z"
+      );
+      const response = await request(
+        `/assignments/${academicId}`,
+        ownerToken,
+        "PATCH",
+        {
+          title: "Revised mathematics work",
+        }
+      );
+      expect(response.status).toBe(200);
+      expect((await linkedBlocks(session.id))[0]?.title).toBe(
+        "Study: Revised mathematics work"
+      );
+      const [stored] = await db
+        .select()
+        .from(studySessions)
+        .where(eq(studySessions.id, session.id));
+      expect(stored?.revision).toBe(1);
+    });
+
+    it("soft-deleting an assignment cancels only its planned sessions and preserves history", async () => {
+      const academicId = await newAssignment();
+      const planned = await create(
+        academicId,
+        ownerToken,
+        "2030-04-22T09:00:00.000Z"
+      );
+      const completed = await create(
+        academicId,
+        ownerToken,
+        "2030-04-23T09:00:00.000Z"
+      );
+      const foreign = await create(
+        otherAssignmentId,
+        otherToken,
+        "2030-04-22T10:00:00.000Z"
+      );
+      expect(
+        (
+          await request(
+            `/study-sessions/${completed.id}/complete`,
+            ownerToken,
+            "POST",
+            { actualMinutes: 35 },
+            1
+          )
+        ).status
+      ).toBe(200);
+      const response = await request(
+        `/assignments/${academicId}`,
+        ownerToken,
+        "DELETE"
+      );
+      expect(response.status).toBe(200);
+      const [plannedRow] = await db
+        .select()
+        .from(studySessions)
+        .where(eq(studySessions.id, planned.id));
+      const [completedRow] = await db
+        .select()
+        .from(studySessions)
+        .where(eq(studySessions.id, completed.id));
+      const [foreignRow] = await db
+        .select()
+        .from(studySessions)
+        .where(eq(studySessions.id, foreign.id));
+      expect(plannedRow).toMatchObject({
+        status: "cancelled",
+        revision: 2,
+        deletedAt: null,
+      });
+      expect(plannedRow!.startAt.toISOString()).toBe(planned.startAt);
+      expect(await linkedBlocks(planned.id)).toHaveLength(0);
+      expect(completedRow).toMatchObject({
+        status: "completed",
+        actualMinutes: 35,
+        revision: 2,
+      });
+      expect(foreignRow).toMatchObject({ status: "planned", revision: 1 });
+      expect(await linkedBlocks(foreign.id)).toHaveLength(1);
+      expect((await request(`/study-sessions/${planned.id}`)).status).toBe(200);
+    });
+
+    it("preserves planned history when a deadline moves or the assignment is completed", async () => {
+      const academicId = await newAssignment({ estimatedMinutes: 40 });
+      const session = await create(
+        academicId,
+        ownerToken,
+        "2030-04-24T09:00:00.000Z"
+      );
+      const dueChange = await request(
+        `/assignments/${academicId}`,
+        ownerToken,
+        "PATCH",
+        {
+          dueAt: "2030-04-23T18:00:00.000Z",
+        }
+      );
+      expect(dueChange.status).toBe(200);
+      const [unchanged] = await db
+        .select()
+        .from(studySessions)
+        .where(eq(studySessions.id, session.id));
+      expect(unchanged).toMatchObject({ status: "planned", revision: 1 });
+      expect(await linkedBlocks(session.id)).toHaveLength(1);
+
+      expect(
+        (
+          await request(`/assignments/${academicId}`, ownerToken, "PATCH", {
+            status: "completed",
+          })
+        ).status
+      ).toBe(200);
+      expect(
+        (
+          await request("/study-sessions", ownerToken, "POST", {
+            assignmentId: academicId,
+            ...schedule("2030-04-25T09:00:00.000Z"),
+          })
+        ).status
+      ).toBe(409);
+      expect(
+        (
+          await request(
+            `/study-sessions/${session.id}/reschedule`,
+            ownerToken,
+            "POST",
+            schedule("2030-04-25T09:00:00.000Z"),
+            1
+          )
+        ).status
+      ).toBe(409);
+      expect(
+        (
+          await request(
+            `/study-sessions/${session.id}/complete`,
+            ownerToken,
+            "POST",
+            { actualMinutes: 30 },
+            1
+          )
+        ).status
+      ).toBe(200);
+      expect(await linkedBlocks(session.id)).toHaveLength(0);
+      const progress = await request(
+        `/assignments/${academicId}/study-progress`
+      );
+      expect(
+        ((await progress.json()) as { data: { studiedMinutes: number } }).data
+          .studiedMinutes
+      ).toBe(30);
+    });
+
+    it("keeps sessions when their assignment's subject is deleted", async () => {
+      const subjectResponse = await request("/subjects", ownerToken, "POST", {
+        name: `Study subject ${randomUUID()}`,
+      });
+      expect(subjectResponse.status).toBe(201);
+      const subjectId = (
+        (await subjectResponse.json()) as { data: { id: string } }
+      ).data.id;
+      const academicResponse = await request(
+        "/assignments",
+        ownerToken,
+        "POST",
+        {
+          title: "Subject unlink study",
+          subjectId,
+          dueAt: "2030-04-27T18:00:00.000Z",
+        }
+      );
+      expect(academicResponse.status).toBe(201);
+      const academicId = (
+        (await academicResponse.json()) as { data: { id: string } }
+      ).data.id;
+      const session = await create(
+        academicId,
+        ownerToken,
+        "2030-04-26T09:00:00.000Z"
+      );
+      expect(
+        (await request(`/subjects/${subjectId}`, ownerToken, "DELETE")).status
+      ).toBe(200);
+      const [assignment] = await db
+        .select()
+        .from(assignments)
+        .where(eq(assignments.id, academicId));
+      expect(assignment?.subjectId).toBeNull();
+      expect((await request(`/study-sessions/${session.id}`)).status).toBe(200);
+      expect(await linkedBlocks(session.id)).toHaveLength(1);
     });
   }
 );

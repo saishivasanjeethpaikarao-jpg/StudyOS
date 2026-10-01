@@ -8,6 +8,7 @@ import { CreateTimeBlockDialog } from "@/components/calendar/create-time-block-d
 import { useTask } from "@/hooks";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileCalendarView } from "@/components/mobile";
+import { StudySessionCalendarSheet } from "@/components/academics/study-session-calendar-sheet";
 
 /**
  * Calendar page with time blocking functionality
@@ -23,21 +24,32 @@ export default function CalendarPage() {
     () => (dateParam ? new Date(`${dateParam}T00:00:00`) : new Date()),
     [dateParam]
   );
-  
+
   // Task detail panel state
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(
+    null
+  );
   const [taskPanelOpen, setTaskPanelOpen] = React.useState(false);
-  
+
   // Time block detail sheet state
-  const [selectedTimeBlock, setSelectedTimeBlock] = React.useState<TimeBlock | null>(null);
+  const [selectedTimeBlock, setSelectedTimeBlock] =
+    React.useState<TimeBlock | null>(null);
   const [timeBlockSheetOpen, setTimeBlockSheetOpen] = React.useState(false);
-  
+  const [selectedSessionId, setSelectedSessionId] = React.useState<
+    string | null
+  >(null);
+
   // Create time block dialog state
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
-  const [createDialogDate, setCreateDialogDate] = React.useState<Date>(new Date());
-  const [createDialogStartTime, setCreateDialogStartTime] = React.useState<Date>(new Date());
-  const [createDialogEndTime, setCreateDialogEndTime] = React.useState<Date>(new Date());
+  const [createDialogDate, setCreateDialogDate] = React.useState<Date>(
+    new Date()
+  );
+  const [createDialogStartTime, setCreateDialogStartTime] =
+    React.useState<Date>(new Date());
+  const [createDialogEndTime, setCreateDialogEndTime] = React.useState<Date>(
+    new Date()
+  );
 
   // Fetch task by ID when viewing from context menu
   const { data: fetchedTask } = useTask(selectedTaskId ?? "");
@@ -61,6 +73,10 @@ export default function CalendarPage() {
   };
 
   const handleBlockClick = (block: TimeBlock) => {
+    if (block.studySessionId) {
+      setSelectedSessionId(block.studySessionId);
+      return;
+    }
     if (block.taskId) {
       // Open task modal directly for linked blocks
       setSelectedTaskId(block.taskId);
@@ -72,6 +88,10 @@ export default function CalendarPage() {
   };
 
   const handleEditBlock = (block: TimeBlock) => {
+    if (block.studySessionId) {
+      setSelectedSessionId(block.studySessionId);
+      return;
+    }
     setSelectedTimeBlock(block);
     setTimeBlockSheetOpen(true);
   };
@@ -121,6 +141,11 @@ export default function CalendarPage() {
           open={timeBlockSheetOpen}
           onOpenChange={handleTimeBlockSheetOpenChange}
         />
+        <StudySessionCalendarSheet
+          sessionId={selectedSessionId}
+          open={!!selectedSessionId}
+          onOpenChange={(open) => !open && setSelectedSessionId(null)}
+        />
         <CreateTimeBlockDialog
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}
@@ -155,6 +180,11 @@ export default function CalendarPage() {
         timeBlock={selectedTimeBlock}
         open={timeBlockSheetOpen}
         onOpenChange={handleTimeBlockSheetOpenChange}
+      />
+      <StudySessionCalendarSheet
+        sessionId={selectedSessionId}
+        open={!!selectedSessionId}
+        onOpenChange={(open) => !open && setSelectedSessionId(null)}
       />
 
       {/* Create Time Block Dialog */}

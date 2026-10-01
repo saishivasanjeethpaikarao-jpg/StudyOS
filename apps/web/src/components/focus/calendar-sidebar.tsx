@@ -1,9 +1,9 @@
 import * as React from "react";
-import { format, setHours } from "date-fns";
+import { format, setHours, startOfDay, endOfDay } from "date-fns";
 import type { TimeBlock } from "@open-sunsama/types";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui";
-import { useTimeBlocksForDate } from "@/hooks/useTimeBlocks";
+import { useCalendarTimeBlocks } from "@/hooks/useTimeBlocks";
 import { TIMELINE_START_HOUR, TIMELINE_END_HOUR } from "@/hooks/useCalendarDnd";
 
 interface CalendarSidebarProps {
@@ -20,8 +20,11 @@ export function CalendarSidebar({
   onOpenChange,
   currentTaskId,
 }: CalendarSidebarProps) {
-  const today = format(new Date(), "yyyy-MM-dd");
-  const { data: timeBlocks = [] } = useTimeBlocksForDate(today);
+  const today = new Date();
+  const { data: timeBlocks = [] } = useCalendarTimeBlocks(
+    startOfDay(today),
+    endOfDay(today)
+  );
 
   return (
     <>
@@ -54,7 +57,9 @@ export function CalendarSidebar({
             <h2 className="font-semibold">
               {format(new Date(), "EEEE, MMMM d")}
             </h2>
-            <p className="text-sm text-muted-foreground">Today&apos;s schedule</p>
+            <p className="text-sm text-muted-foreground">
+              Today&apos;s schedule
+            </p>
           </div>
 
           {/* Timeline */}

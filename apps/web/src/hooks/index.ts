@@ -24,6 +24,7 @@ export {
   useTimeBlock,
   useTimeBlocksForDate,
   useTimeBlocksForDateRange,
+  useCalendarTimeBlocks,
   useCreateTimeBlock,
   useUpdateTimeBlock,
   useDeleteTimeBlock,

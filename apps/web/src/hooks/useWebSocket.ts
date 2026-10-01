@@ -18,6 +18,7 @@ import {
   ideaSubtaskKeys,
   subjectKeys,
   assignmentKeys,
+  studySessionKeys,
 } from "@/lib/query-keys";
 
 /**
@@ -253,6 +254,14 @@ function handleWebSocketEvent(
     case "assignment:updated":
     case "assignment:deleted":
       batcher.schedule(assignmentKeys.lists());
+      batcher.schedule(studySessionKeys.all);
+      break;
+
+    case "study-session:created":
+    case "study-session:updated":
+    case "study-session:deleted":
+      batcher.schedule(studySessionKeys.all);
+      batcher.schedule(timeBlockKeys.lists());
       break;
 
     case "connected":
