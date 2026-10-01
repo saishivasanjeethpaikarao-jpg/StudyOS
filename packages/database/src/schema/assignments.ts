@@ -6,13 +6,14 @@ import {
   integer,
   timestamp,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "./users";
 import { subjects } from "./subjects";
-import { TASK_PRIORITIES } from "./tasks";
+import { TASK_PRIORITIES } from "./task-priorities";
 
 export const ASSIGNMENT_STATUSES = [
   "not_started",
@@ -61,6 +62,7 @@ export const assignments = pgTable(
     index("assignments_user_status_idx")
       .on(table.userId, table.status)
       .where(sql`${table.deletedAt} IS NULL`),
+    uniqueIndex("assignments_id_user_idx").on(table.id, table.userId),
   ]
 );
 

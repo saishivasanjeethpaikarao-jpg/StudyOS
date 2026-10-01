@@ -15,6 +15,13 @@
       "when": 1790576641403,
       "tag": "0001_giant_morlocks",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790835810506,
+      "tag": "0002_silly_menace",
+      "breakpoints": true
     }
   ]
 }

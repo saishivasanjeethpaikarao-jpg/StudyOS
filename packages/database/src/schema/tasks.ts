@@ -17,6 +17,8 @@ import { users } from "./users";
 import { timeBlocks } from "./time-blocks";
 import { attachments } from "./attachments";
 import { taskSeries } from "./task-series";
+import { TASK_PRIORITIES } from "./task-priorities";
+export { TASK_PRIORITIES } from "./task-priorities";
 
 export const tasks = pgTable(
   "tasks",
@@ -99,7 +101,6 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
 }));
 
 // Priority type
-export const TASK_PRIORITIES = ["P0", "P1", "P2", "P3"] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
 // Zod schemas for validation

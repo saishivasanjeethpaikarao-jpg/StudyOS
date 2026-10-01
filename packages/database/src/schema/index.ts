@@ -32,6 +32,30 @@ export type {
 } from "./assignments";
 
 export {
+  studySessions,
+  studySessionsRelations,
+  insertStudySessionSchema,
+  selectStudySessionSchema,
+  STUDY_SESSION_STATUSES,
+} from "./study-sessions";
+export type {
+  StudySession,
+  NewStudySession,
+  StudySessionStatus,
+} from "./study-sessions";
+
+export {
+  studyPlanApplications,
+  studyPlanApplicationsRelations,
+  insertStudyPlanApplicationSchema,
+  selectStudyPlanApplicationSchema,
+} from "./study-plan-applications";
+export type {
+  StudyPlanApplication,
+  NewStudyPlanApplication,
+} from "./study-plan-applications";
+
+export {
   tasks,
   tasksRelations,
   insertTaskSchema,

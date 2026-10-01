@@ -1,9 +1,10 @@
-import { pgTable, uuid, varchar, timestamp, integer, date, index } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { pgTable, uuid, varchar, timestamp, integer, date, index, uniqueIndex, foreignKey, check } from 'drizzle-orm/pg-core';
+import { relations, sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { users } from './users';
 import { tasks } from './tasks';
+import { studySessions } from './study-sessions';
 
 export const timeBlocks = pgTable(
   'time_blocks',
@@ -13,6 +14,7 @@ export const timeBlocks = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     taskId: uuid('task_id').references(() => tasks.id, { onDelete: 'set null' }),
+    studySessionId: uuid('study_session_id'),
     title: varchar('title', { length: 255 }).notNull(),
     description: varchar('description', { length: 1000 }),
     date: date('date').notNull(),
@@ -31,6 +33,16 @@ export const timeBlocks = pgTable(
     // modal's "all blocks for this task" lookup.
     userDateIdx: index('time_blocks_user_date_idx').on(table.userId, table.date),
     taskIdIdx: index('time_blocks_task_id_idx').on(table.taskId),
+    studySessionIdIdx: uniqueIndex('time_blocks_study_session_id_idx').on(table.studySessionId),
+    studySessionOwnerFk: foreignKey({
+      name: 'time_blocks_study_session_owner_fk',
+      columns: [table.studySessionId, table.userId],
+      foreignColumns: [studySessions.id, studySessions.userId],
+    }).onDelete('cascade'),
+    taskOrStudySessionCheck: check(
+      'time_blocks_task_or_study_session_check',
+      sql`${table.taskId} IS NULL OR ${table.studySessionId} IS NULL`
+    ),
   })
 );
 
@@ -42,6 +54,10 @@ export const timeBlocksRelations = relations(timeBlocks, ({ one }) => ({
   task: one(tasks, {
     fields: [timeBlocks.taskId],
     references: [tasks.id],
+  }),
+  studySession: one(studySessions, {
+    fields: [timeBlocks.studySessionId],
+    references: [studySessions.id],
   }),
 }));
 

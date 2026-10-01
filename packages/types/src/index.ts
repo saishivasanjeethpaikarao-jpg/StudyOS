@@ -67,6 +67,11 @@ export type {
   UpdateAssignmentInput,
   AssignmentFilterInput,
 } from "./assignment.js";
+export type {
+  StudySession,
+  StudySessionStatus,
+  StudyPlanApplication,
+} from "./study-session.js";
 
 // Task Series (Recurring Tasks) types
 export type {
