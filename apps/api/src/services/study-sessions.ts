@@ -17,7 +17,16 @@ import {
 } from "@open-sunsama/utils";
 import { publishEvent } from "../lib/websocket/index.js";
 
-type DbTransaction = Parameters<Parameters<DbClient["transaction"]>[0]>[0];
+export type DbTransaction = Parameters<
+  Parameters<DbClient["transaction"]>[0]
+>[0];
+
+/** Serialize canonical session writes for a user with plan confirmation. */
+export async function lockStudyPlanningUser(tx: DbTransaction, userId: string) {
+  await tx.execute(
+    sql`SELECT pg_advisory_xact_lock(hashtextextended(${userId}, 0))`
+  );
+}
 
 export interface SessionScheduleInput {
   startAt: string;
@@ -251,6 +260,53 @@ function notify(
   }
 }
 
+export type CreatedPlannedSession = {
+  session: StudySession;
+  block: BlockEvent;
+};
+
+export function publishCreatedPlannedSession(
+  userId: string,
+  created: CreatedPlannedSession
+) {
+  notify(userId, created.session, "created", created.block);
+}
+
+/** Shared transactional writer for manual creation and confirmed plans. */
+export async function createPlannedSessionInTransaction(
+  tx: DbTransaction,
+  userId: string,
+  assignment: { id: string; userId: string; title: string },
+  schedule: SessionScheduleInput,
+  planApplicationId?: string
+): Promise<CreatedPlannedSession> {
+  if (assignment.userId !== userId) {
+    throw new NotFoundError("Assignment", assignment.id);
+  }
+  const projection = projectSchedule(schedule);
+  const [session] = await tx
+    .insert(studySessions)
+    .values({
+      userId,
+      assignmentId: assignment.id,
+      startAt: new Date(schedule.startAt),
+      endAt: new Date(schedule.endAt),
+      timezone: schedule.timezone,
+      plannedMinutes: schedule.plannedMinutes,
+      planApplicationId: planApplicationId ?? null,
+    })
+    .returning();
+  if (!session) throw new Error("Failed to create Study Session");
+  const block = await insertProjection(
+    tx,
+    userId,
+    session.id,
+    assignment.title,
+    projection
+  );
+  return { session, block };
+}
+
 export async function requireOwnedStudySession(
   db: DbClient,
   userId: string,
@@ -276,9 +332,9 @@ export async function createStudySession(
   assignmentId: string,
   schedule: SessionScheduleInput
 ) {
-  const projection = projectSchedule(schedule);
   const db = getDb();
   const result = await db.transaction(async (tx) => {
+    await lockStudyPlanningUser(tx, userId);
     const [assignment] = await tx
       .select()
       .from(assignments)
@@ -300,28 +356,9 @@ export async function createStudySession(
         "Cannot schedule new study for a completed or cancelled Assignment"
       );
     }
-    const [session] = await tx
-      .insert(studySessions)
-      .values({
-        userId,
-        assignmentId,
-        startAt: new Date(schedule.startAt),
-        endAt: new Date(schedule.endAt),
-        timezone: schedule.timezone,
-        plannedMinutes: schedule.plannedMinutes,
-      })
-      .returning();
-    if (!session) throw new Error("Failed to create Study Session");
-    const block = await insertProjection(
-      tx,
-      userId,
-      session.id,
-      assignment.title,
-      projection
-    );
-    return { session, block };
+    return createPlannedSessionInTransaction(tx, userId, assignment, schedule);
   });
-  notify(userId, result.session, "created", result.block);
+  publishCreatedPlannedSession(userId, result);
   return result.session;
 }
 
@@ -341,6 +378,7 @@ export async function mutateStudySession(
 ) {
   const db = getDb();
   const result = await db.transaction(async (tx) => {
+    await lockStudyPlanningUser(tx, userId);
     const [existing] = await tx
       .select()
       .from(studySessions)

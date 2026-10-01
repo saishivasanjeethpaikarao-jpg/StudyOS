@@ -80,6 +80,15 @@ export type {
   AssignmentStudyProgress,
 } from "./study-session.js";
 
+export type {
+  StudyPlanInput,
+  NormalizedStudyPlanInput,
+  StudyPlanSlot,
+  StudyPlanPreview,
+  ConfirmStudyPlanInput,
+  ConfirmStudyPlanResult,
+} from "./study-plan.js";
+
 // Task Series (Recurring Tasks) types
 export type {
   TaskSeries,

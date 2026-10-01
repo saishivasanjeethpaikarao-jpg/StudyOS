@@ -3,8 +3,13 @@ import type {
   AssignmentFilterInput,
   CreateAssignmentInput,
   UpdateAssignmentInput,
+  StudyPlanInput,
+  StudyPlanPreview,
+  ConfirmStudyPlanInput,
+  ConfirmStudyPlanResult,
 } from "@open-sunsama/types";
 import type { OpenSunsamaClient, RequestOptions } from "./client.js";
+import { hydrateStudySession, type RawStudySession } from "./study-sessions.js";
 
 interface ApiResponseWrapper<T> {
   success: boolean;
@@ -37,6 +42,16 @@ export interface AssignmentsApi {
     options?: RequestOptions
   ): Promise<Assignment>;
   delete(id: string, options?: RequestOptions): Promise<void>;
+  previewStudyPlan(
+    id: string,
+    input: StudyPlanInput,
+    options?: RequestOptions
+  ): Promise<StudyPlanPreview>;
+  confirmStudyPlan(
+    id: string,
+    input: ConfirmStudyPlanInput,
+    options?: RequestOptions
+  ): Promise<ConfirmStudyPlanResult>;
 }
 
 export function createAssignmentsApi(
@@ -91,6 +106,32 @@ export function createAssignmentsApi(
 
     async delete(id, options) {
       await client.delete(`assignments/${id}`, options);
+    },
+
+    async previewStudyPlan(id, input, options) {
+      return (
+        await client.post<ApiResponseWrapper<StudyPlanPreview>>(
+          `assignments/${id}/study-plan/preview`,
+          input,
+          options
+        )
+      ).data;
+    },
+
+    async confirmStudyPlan(id, input, options) {
+      const result = (
+        await client.post<
+          ApiResponseWrapper<
+            Omit<ConfirmStudyPlanResult, "sessions"> & {
+              sessions: RawStudySession[];
+            }
+          >
+        >(`assignments/${id}/study-plan/confirm`, input, options)
+      ).data;
+      return {
+        ...result,
+        sessions: result.sessions.map(hydrateStudySession),
+      };
     },
   };
 }

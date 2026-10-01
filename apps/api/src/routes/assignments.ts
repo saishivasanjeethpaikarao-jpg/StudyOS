@@ -8,11 +8,14 @@ import {
   eq,
   getDb,
   gte,
+  inArray,
   isNull,
   lte,
   sql,
+  studySessions,
+  timeBlocks,
 } from "@open-sunsama/database";
-import { uuidSchema } from "@open-sunsama/utils";
+import { NotFoundError, uuidSchema } from "@open-sunsama/utils";
 import { auth, requireScopes, type AuthVariables } from "../middleware/auth.js";
 import {
   assignmentFilterSchema,
@@ -24,7 +27,15 @@ import {
   requireOwnedSubject,
 } from "../services/academic-domain.js";
 import { publishEvent } from "../lib/websocket/index.js";
-import { getAssignmentStudyProgress } from "../services/study-sessions.js";
+import {
+  getAssignmentStudyProgress,
+  lockStudyPlanningUser,
+} from "../services/study-sessions.js";
+import { confirmStudyPlan, previewStudyPlan } from "../services/study-plans.js";
+import {
+  confirmStudyPlanSchema,
+  previewStudyPlanSchema,
+} from "../validation/study-plans.js";
 
 const assignmentsRouter = new Hono<{ Variables: AuthVariables }>();
 assignmentsRouter.use("*", auth);
@@ -124,8 +135,41 @@ assignmentsRouter.get(
   requireScopes("assignments:read", "study-sessions:read"),
   zValidator("param", z.object({ id: uuidSchema })),
   async (c) => {
-    const progress = await getAssignmentStudyProgress(c.get("userId"), c.req.valid("param").id);
+    const progress = await getAssignmentStudyProgress(
+      c.get("userId"),
+      c.req.valid("param").id
+    );
     return c.json({ success: true, data: progress });
+  }
+);
+
+assignmentsRouter.post(
+  "/:id/study-plan/preview",
+  requireScopes("assignments:read", "study-sessions:read"),
+  zValidator("param", z.object({ id: uuidSchema })),
+  zValidator("json", previewStudyPlanSchema),
+  async (c) => {
+    const preview = await previewStudyPlan(
+      c.get("userId"),
+      c.req.valid("param").id,
+      c.req.valid("json")
+    );
+    return c.json({ success: true, data: preview });
+  }
+);
+
+assignmentsRouter.post(
+  "/:id/study-plan/confirm",
+  requireScopes("assignments:write", "study-sessions:write"),
+  zValidator("param", z.object({ id: uuidSchema })),
+  zValidator("json", confirmStudyPlanSchema),
+  async (c) => {
+    const result = await confirmStudyPlan(
+      c.get("userId"),
+      c.req.valid("param").id,
+      c.req.valid("json")
+    );
+    return c.json({ success: true, data: result });
   }
 );
 
@@ -175,20 +219,75 @@ assignmentsRouter.patch(
     if (input.completedMinutes !== undefined)
       updateData.completedMinutes = input.completedMinutes;
 
-    const [assignment] = await db
-      .update(assignments)
-      .set(updateData)
-      .where(
-        and(
-          eq(assignments.id, id),
-          eq(assignments.userId, userId),
-          isNull(assignments.deletedAt)
+    const result = await db.transaction(async (tx) => {
+      await lockStudyPlanningUser(tx, userId);
+      const [owned] = await tx
+        .select({ id: assignments.id })
+        .from(assignments)
+        .where(
+          and(
+            eq(assignments.id, id),
+            eq(assignments.userId, userId),
+            isNull(assignments.deletedAt)
+          )
         )
-      )
-      .returning();
-
+        .limit(1)
+        .for("update");
+      if (!owned) throw new NotFoundError("Assignment", id);
+      const [assignment] = await tx
+        .update(assignments)
+        .set(updateData)
+        .where(
+          and(
+            eq(assignments.id, id),
+            eq(assignments.userId, userId),
+            isNull(assignments.deletedAt)
+          )
+        )
+        .returning();
+      if (!assignment) throw new NotFoundError("Assignment", id);
+      let updatedBlocks: { id: string; date: string }[] = [];
+      if (input.title !== undefined) {
+        const active = await tx
+          .select({ id: studySessions.id })
+          .from(studySessions)
+          .where(
+            and(
+              eq(studySessions.userId, userId),
+              eq(studySessions.assignmentId, id),
+              eq(studySessions.status, "planned"),
+              isNull(studySessions.deletedAt)
+            )
+          );
+        if (active.length) {
+          updatedBlocks = await tx
+            .update(timeBlocks)
+            .set({
+              title: `Study: ${input.title}`.slice(0, 255),
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(timeBlocks.userId, userId),
+                inArray(
+                  timeBlocks.studySessionId,
+                  active.map((session) => session.id)
+                )
+              )
+            )
+            .returning({ id: timeBlocks.id, date: timeBlocks.date });
+        }
+      }
+      return { assignment, updatedBlocks };
+    });
+    for (const block of result.updatedBlocks) {
+      publishEvent(userId, "timeblock:updated", {
+        timeBlockId: block.id,
+        date: block.date,
+      });
+    }
     publishEvent(userId, "assignment:updated", { assignmentId: id });
-    return c.json({ success: true, data: assignment });
+    return c.json({ success: true, data: result.assignment });
   }
 );
 
@@ -200,24 +299,96 @@ assignmentsRouter.delete(
     const userId = c.get("userId");
     const { id } = c.req.valid("param");
     const db = getDb();
-    await requireOwnedAssignment(db, userId, id);
-
-    const now = new Date();
-    await db
-      .update(assignments)
-      .set({
-        deletedAt: now,
-        updatedAt: now,
-        revision: sql`${assignments.revision} + 1`,
-      })
-      .where(
-        and(
-          eq(assignments.id, id),
-          eq(assignments.userId, userId),
-          isNull(assignments.deletedAt)
+    const result = await db.transaction(async (tx) => {
+      await lockStudyPlanningUser(tx, userId);
+      const [owned] = await tx
+        .select({ id: assignments.id })
+        .from(assignments)
+        .where(
+          and(
+            eq(assignments.id, id),
+            eq(assignments.userId, userId),
+            isNull(assignments.deletedAt)
+          )
         )
-      );
-
+        .limit(1)
+        .for("update");
+      if (!owned) throw new NotFoundError("Assignment", id);
+      const now = new Date();
+      const active = await tx
+        .select({ id: studySessions.id })
+        .from(studySessions)
+        .where(
+          and(
+            eq(studySessions.userId, userId),
+            eq(studySessions.assignmentId, id),
+            eq(studySessions.status, "planned"),
+            isNull(studySessions.deletedAt)
+          )
+        )
+        .for("update");
+      const sessionIds = active.map((session) => session.id);
+      const cancelled = sessionIds.length
+        ? await tx
+            .update(studySessions)
+            .set({
+              status: "cancelled",
+              actualMinutes: null,
+              completedAt: null,
+              revision: sql`${studySessions.revision} + 1`,
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(studySessions.userId, userId),
+                inArray(studySessions.id, sessionIds),
+                isNull(studySessions.deletedAt)
+              )
+            )
+            .returning()
+        : [];
+      const removedBlocks = sessionIds.length
+        ? await tx
+            .delete(timeBlocks)
+            .where(
+              and(
+                eq(timeBlocks.userId, userId),
+                inArray(timeBlocks.studySessionId, sessionIds)
+              )
+            )
+            .returning({ id: timeBlocks.id, date: timeBlocks.date })
+        : [];
+      await tx
+        .update(assignments)
+        .set({
+          deletedAt: now,
+          updatedAt: now,
+          revision: sql`${assignments.revision} + 1`,
+        })
+        .where(
+          and(
+            eq(assignments.id, id),
+            eq(assignments.userId, userId),
+            isNull(assignments.deletedAt)
+          )
+        );
+      return { cancelled, removedBlocks };
+    });
+    for (const session of result.cancelled) {
+      publishEvent(userId, "study-session:updated", {
+        sessionId: session.id,
+        assignmentId: id,
+        startAt: session.startAt.toISOString(),
+        endAt: session.endAt.toISOString(),
+        revision: session.revision,
+      });
+    }
+    for (const block of result.removedBlocks) {
+      publishEvent(userId, "timeblock:deleted", {
+        timeBlockId: block.id,
+        date: block.date,
+      });
+    }
     publishEvent(userId, "assignment:deleted", { assignmentId: id });
     return c.json({
       success: true,
