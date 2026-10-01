@@ -5,8 +5,8 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { getDb, eq, and, asc, timeBlocks, tasks, users, sql } from '@open-sunsama/database';
-import { NotFoundError, uuidSchema } from '@open-sunsama/utils';
+import { getDb, eq, and, asc, isNull, timeBlocks, tasks, users, sql } from '@open-sunsama/database';
+import { ConflictError, NotFoundError, uuidSchema } from '@open-sunsama/utils';
 import { auth, requireScopes, type AuthVariables } from '../middleware/auth.js';
 import {
   createTimeBlockSchema, updateTimeBlockSchema, timeBlockFilterSchema, calculateDuration,
@@ -325,6 +325,7 @@ timeBlocksRouter.patch('/:id', requireScopes('time-blocks:write'), zValidator('p
 
   const [existing] = await db.select().from(timeBlocks).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId))).limit(1);
   if (!existing) throw new NotFoundError('Time block', id);
+  if (existing.studySessionId) throw new ConflictError('This Time Block is managed by its Study Session');
 
   if (updates.taskId) {
     const [task] = await db.select().from(tasks).where(and(eq(tasks.id, updates.taskId), eq(tasks.userId, userId))).limit(1);
@@ -345,7 +346,8 @@ timeBlocksRouter.patch('/:id', requireScopes('time-blocks:write'), zValidator('p
     updateData.durationMins = calculateDuration(updates.startTime ?? existing.startTime, updates.endTime ?? existing.endTime);
   }
 
-  const [updatedTimeBlock] = await db.update(timeBlocks).set(updateData).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId))).returning();
+  const [updatedTimeBlock] = await db.update(timeBlocks).set(updateData).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId), isNull(timeBlocks.studySessionId))).returning();
+  if (!updatedTimeBlock) throw new ConflictError('This Time Block is managed by its Study Session');
 
   let task = null;
   if (updatedTimeBlock?.taskId) {
@@ -373,6 +375,7 @@ timeBlocksRouter.patch('/:id/cascade-resize', requireScopes('time-blocks:write')
   // Fetch the target block
   const [targetBlock] = await db.select().from(timeBlocks).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId))).limit(1);
   if (!targetBlock) throw new NotFoundError('Time block', id);
+  if (targetBlock.studySessionId) throw new ConflictError('This Time Block is managed by its Study Session');
 
   const originalStartTime = targetBlock.startTime;
   const targetDate = targetBlock.date;
@@ -448,6 +451,9 @@ timeBlocksRouter.patch('/:id/cascade-resize', requireScopes('time-blocks:write')
   }
 
   // Execute all updates in a single transaction
+  if (updates.some((update) => allBlocks.find((block) => block.id === update.id)?.studySessionId)) {
+    throw new ConflictError('Cascade resize would move a Study Session Time Block');
+  }
   const updatedBlocks = await db.transaction(async (tx) => {
     const results: typeof timeBlocks.$inferSelect[] = [];
 
@@ -460,12 +466,11 @@ timeBlocksRouter.patch('/:id/cascade-resize', requireScopes('time-blocks:write')
           durationMins: update.durationMins,
           updatedAt: new Date(),
         })
-        .where(and(eq(timeBlocks.id, update.id), eq(timeBlocks.userId, userId)))
+        .where(and(eq(timeBlocks.id, update.id), eq(timeBlocks.userId, userId), isNull(timeBlocks.studySessionId)))
         .returning();
 
-      if (updated) {
-        results.push(updated);
-      }
+      if (!updated) throw new ConflictError('Cascade resize would move a Study Session Time Block');
+      results.push(updated);
     }
 
     return results;
@@ -501,8 +506,10 @@ timeBlocksRouter.delete('/:id', requireScopes('time-blocks:write'), zValidator('
 
   const [existing] = await db.select().from(timeBlocks).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId))).limit(1);
   if (!existing) throw new NotFoundError('Time block', id);
+  if (existing.studySessionId) throw new ConflictError('This Time Block is managed by its Study Session');
 
-  await db.delete(timeBlocks).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId)));
+  const [deleted] = await db.delete(timeBlocks).where(and(eq(timeBlocks.id, id), eq(timeBlocks.userId, userId), isNull(timeBlocks.studySessionId))).returning({ id: timeBlocks.id });
+  if (!deleted) throw new ConflictError('This Time Block is managed by its Study Session');
 
   // Publish realtime event (fire and forget)
   publishEvent(userId, 'timeblock:deleted', {

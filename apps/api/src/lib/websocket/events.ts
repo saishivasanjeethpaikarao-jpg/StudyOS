@@ -52,6 +52,9 @@ export type WebSocketEventType =
   | "assignment:created"
   | "assignment:updated"
   | "assignment:deleted"
+  | "study-session:created"
+  | "study-session:updated"
+  | "study-session:deleted"
   // Connection events
   | "connected";
 
@@ -94,6 +97,15 @@ export interface SubjectEvent {
 
 export interface AssignmentEvent {
   assignmentId: string;
+}
+
+export interface StudySessionEvent {
+  sessionId: string;
+  assignmentId: string;
+  startAt: string;
+  endAt: string;
+  revision: number;
+  affectedDates: string[];
 }
 
 /**

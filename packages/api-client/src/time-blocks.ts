@@ -126,10 +126,13 @@ function filtersToSearchParams(
   filters?: TimeBlockFilterInput
 ): Record<string, string | number | boolean | undefined> {
   if (!filters) return {};
+  const rangeDate = (value: Date | string | undefined) =>
+    value === undefined ? undefined : typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? value : formatDateForApi(value);
   return {
     date: filters.date,
-    startTimeFrom: filters.startTimeFrom instanceof Date ? filters.startTimeFrom.toISOString() : filters.startTimeFrom,
-    startTimeTo: filters.startTimeTo instanceof Date ? filters.startTimeTo.toISOString() : filters.startTimeTo,
+    from: filters.from ?? rangeDate(filters.startTimeFrom),
+    to: filters.to ?? rangeDate(filters.startTimeTo),
     taskId: filters.taskId,
     unassignedOnly: filters.unassignedOnly,
   };

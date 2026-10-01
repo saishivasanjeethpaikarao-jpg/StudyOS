@@ -82,6 +82,10 @@ export { createSubtasksApi, type SubtasksApi };
 import { createTimeBlocksApi, type TimeBlocksApi } from "./time-blocks.js";
 export { createTimeBlocksApi, type TimeBlocksApi };
 
+// Study Sessions API
+import { createStudySessionsApi, type StudySessionsApi, type StudySessionsListResponse } from "./study-sessions.js";
+export { createStudySessionsApi, type StudySessionsApi, type StudySessionsListResponse };
+
 // API Keys API
 import { createApiKeysApi, type ApiKeysApi } from "./api-keys.js";
 export { createApiKeysApi, type ApiKeysApi };
@@ -217,6 +221,8 @@ export function createApi(config: ApiClientConfig) {
     subjects: createSubjectsApi(client),
     /** First-class academic assignments owned by the signed-in user */
     assignments: createAssignmentsApi(client),
+    /** Study Session CRUD, transitions, and derived Assignment progress */
+    studySessions: createStudySessionsApi(client),
     /** Subtasks API methods */
     subtasks: createSubtasksApi(client),
     /** Time blocks API methods */

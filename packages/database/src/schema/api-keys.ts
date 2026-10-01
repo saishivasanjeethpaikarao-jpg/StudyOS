@@ -50,6 +50,8 @@ export const API_KEY_SCOPES = [
   'subjects:write',
   'assignments:read',
   'assignments:write',
+  'study-sessions:read',
+  'study-sessions:write',
   'user:read',
   'user:write',
 ] as const;

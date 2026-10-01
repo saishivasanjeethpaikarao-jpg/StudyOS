@@ -32,6 +32,7 @@ import { ideasRouter } from "./routes/ideas.js";
 import { ideaSubtasksRouter } from "./routes/idea-subtasks.js";
 import { subjectsRouter } from "./routes/subjects.js";
 import { assignmentsRouter } from "./routes/assignments.js";
+import { studySessionsRouter } from "./routes/study-sessions.js";
 import { webhooksRouter } from "./routes/webhooks.js";
 import { oauthRouter } from "./routes/oauth.js";
 import { wellKnownRouter } from "./routes/well-known.js";
@@ -74,6 +75,7 @@ app.use(
       "Content-Type",
       "Authorization",
       "X-API-Key",
+      "If-Match",
       "Mcp-Session-Id",
       "Mcp-Protocol-Version",
       "Last-Event-ID",
@@ -173,6 +175,7 @@ app.get("/", (c) => {
       ideas: "/ideas",
       subjects: "/subjects",
       assignments: "/assignments",
+      studySessions: "/study-sessions",
       mcp: "/mcp",
       oauth: "/oauth",
     },
@@ -200,6 +203,7 @@ app.route("/ideas", ideasRouter);
 app.route("/ideas", ideaSubtasksRouter); // /ideas/:ideaId/subtasks
 app.route("/subjects", subjectsRouter);
 app.route("/assignments", assignmentsRouter);
+app.route("/study-sessions", studySessionsRouter);
 // Public — no auth (provider webhooks). Identity verified by per-
 // channel state stored when we registered the watch.
 app.route("/webhooks", webhooksRouter);

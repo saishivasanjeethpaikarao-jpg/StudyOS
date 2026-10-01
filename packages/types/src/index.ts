@@ -71,6 +71,13 @@ export type {
   StudySession,
   StudySessionStatus,
   StudyPlanApplication,
+  StudySessionScheduleInput,
+  CreateStudySessionInput,
+  UpdateStudySessionInput,
+  RescheduleStudySessionInput,
+  CompleteStudySessionInput,
+  StudySessionFilterInput,
+  AssignmentStudyProgress,
 } from "./study-session.js";
 
 // Task Series (Recurring Tasks) types

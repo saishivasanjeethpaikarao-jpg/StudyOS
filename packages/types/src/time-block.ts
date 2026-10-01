@@ -111,10 +111,16 @@ export interface TimeBlockFilterInput {
   /** Filter by date (returns all time blocks that overlap with this date) */
   date?: string;
 
-  /** Filter time blocks starting on or after this datetime */
+  /** Inclusive calendar date (YYYY-MM-DD). */
+  from?: string;
+
+  /** Inclusive calendar date (YYYY-MM-DD). */
+  to?: string;
+
+  /** @deprecated Use `from`; retained for existing callers. */
   startTimeFrom?: Date | string;
 
-  /** Filter time blocks starting on or before this datetime */
+  /** @deprecated Use `to`; retained for existing callers. */
   startTimeTo?: Date | string;
 
   /** Filter by associated task ID */

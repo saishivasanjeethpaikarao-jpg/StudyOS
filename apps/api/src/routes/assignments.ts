@@ -24,6 +24,7 @@ import {
   requireOwnedSubject,
 } from "../services/academic-domain.js";
 import { publishEvent } from "../lib/websocket/index.js";
+import { getAssignmentStudyProgress } from "../services/study-sessions.js";
 
 const assignmentsRouter = new Hono<{ Variables: AuthVariables }>();
 assignmentsRouter.use("*", auth);
@@ -115,6 +116,16 @@ assignmentsRouter.post(
       assignmentId: assignment.id,
     });
     return c.json({ success: true, data: assignment }, 201);
+  }
+);
+
+assignmentsRouter.get(
+  "/:id/study-progress",
+  requireScopes("assignments:read", "study-sessions:read"),
+  zValidator("param", z.object({ id: uuidSchema })),
+  async (c) => {
+    const progress = await getAssignmentStudyProgress(c.get("userId"), c.req.valid("param").id);
+    return c.json({ success: true, data: progress });
   }
 );
 

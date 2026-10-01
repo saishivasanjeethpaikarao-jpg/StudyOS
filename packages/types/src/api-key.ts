@@ -80,6 +80,10 @@ export type ApiKeyScope =
   | 'assignments:read'
   /** Full access to assignments */
   | 'assignments:write'
+  /** Read-only access to Study Sessions */
+  | 'study-sessions:read'
+  /** Full access to Study Sessions */
+  | 'study-sessions:write'
   /** Read-only access to user profile */
   | 'user:read'
   /** Full access to user profile (update) */
