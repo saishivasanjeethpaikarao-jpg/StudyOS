@@ -3,7 +3,11 @@ import { format } from "date-fns";
 import { BookOpenCheck } from "lucide-react";
 import { useStudySessions } from "@/hooks/useStudySessions";
 import { Button, Skeleton } from "@/components/ui";
-import { todaySessionRange } from "@/lib/study-session-time";
+import {
+  isSessionOnViewerClockChangeDay,
+  sessionViewerTimeDetails,
+  todaySessionRange,
+} from "@/lib/study-session-time";
 
 /** A compact Today view over the same canonical sessions projected to Calendar. */
 export function TodayStudySessions({
@@ -49,9 +53,14 @@ export function TodayStudySessions({
             className="h-9 shrink-0 gap-1 text-xs"
             onClick={() => onSelectSession?.(session.id)}
           >
-            {session.startAt < new Date(today.from)
-              ? `Continues until ${format(session.endAt, "h:mm a")}`
-              : format(session.startAt, "h:mm a")}{" "}
+            {isSessionOnViewerClockChangeDay(
+              { studySessionId: session.id },
+              now
+            )
+              ? `Clock change · ${sessionViewerTimeDetails(session.startAt, session.endAt)}`
+              : session.startAt < new Date(today.from)
+                ? `Continues until ${format(session.endAt, "h:mm a")}`
+                : format(session.startAt, "h:mm a")}{" "}
             · {session.plannedMinutes} min
             {session.timezone !== viewerTimezone
               ? ` · your time (scheduled in ${session.timezone})`

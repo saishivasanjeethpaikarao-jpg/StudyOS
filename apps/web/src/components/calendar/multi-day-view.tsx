@@ -8,7 +8,11 @@ import {
   differenceInMinutes,
 } from "date-fns";
 import type { CalendarEvent, TimeBlock } from "@open-sunsama/types";
-import { isCalendarBlockOnDay } from "@/lib/study-session-time";
+import {
+  isCalendarBlockOnDay,
+  isSessionOnViewerClockChangeDay,
+  sessionViewerTimeDetails,
+} from "@/lib/study-session-time";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui";
 import {
@@ -295,6 +299,7 @@ function MultiDayBlock({
   const top = calculateYFromTime(renderStart);
   const durationMins = differenceInMinutes(renderEnd, renderStart);
   const height = (durationMins / 60) * HOUR_HEIGHT;
+  const clockChangeDay = isSessionOnViewerClockChangeDay(block, displayDate);
   const color = block.color ?? "#3B82F6";
 
   const widthPct = 100 / layout.columnCount - COLUMN_GAP_PCT;
@@ -306,7 +311,7 @@ function MultiDayBlock({
       className="absolute z-10 my-0.5 rounded cursor-pointer hover:brightness-90 hover:z-20 transition-all overflow-hidden px-1 py-0.5"
       style={{
         top: `${top}px`,
-        height: `${Math.max(height - 2, 16)}px`,
+        height: `${clockChangeDay ? 28 : Math.max(height - 2, 16)}px`,
         left: `${leftPct}%`,
         width: `${widthPct}%`,
         backgroundColor: hexToRgba(color, 0.85),
@@ -316,14 +321,29 @@ function MultiDayBlock({
         e.stopPropagation();
         onClick?.();
       }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
       role="button"
       tabIndex={0}
-      aria-label={`${block.title} at ${format(startTime, "h:mm a")}`}
+      aria-label={
+        clockChangeDay
+          ? `Study session: ${block.title}. Clock change day; open for exact time. ${sessionViewerTimeDetails(startTime, endTime)}.`
+          : `${block.title} at ${format(startTime, "h:mm a")}`
+      }
+      title={
+        clockChangeDay
+          ? `Clock change day. Open session for exact time: ${sessionViewerTimeDetails(startTime, endTime)}`
+          : undefined
+      }
     >
       <p className="truncate text-[10px] font-semibold leading-tight">
-        {block.title}
+        {clockChangeDay ? `Clock change · ${block.title}` : block.title}
       </p>
-      {height >= 28 && (
+      {height >= 28 && !clockChangeDay && (
         <p className="truncate text-[9px] text-white/80">
           {format(startTime, "h:mm")}–{format(endTime, "h:mm a")}
         </p>

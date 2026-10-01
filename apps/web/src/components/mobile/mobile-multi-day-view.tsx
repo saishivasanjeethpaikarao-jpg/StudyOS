@@ -7,10 +7,15 @@ import {
   HOUR_HEIGHT,
   TIMELINE_START_HOUR,
   TIMELINE_END_HOUR,
+  calculateYFromTime,
 } from "@/hooks/calendar-dnd-utils";
 import { useCalendarEvents } from "@/hooks/useCalendars";
 import { useCalendarTimeBlocks } from "@/hooks/useTimeBlocks";
-import { isCalendarBlockOnDay } from "@/lib/study-session-time";
+import {
+  isCalendarBlockOnDay,
+  isSessionOnViewerClockChangeDay,
+  sessionViewerTimeDetails,
+} from "@/lib/study-session-time";
 
 interface MobileMultiDayViewProps {
   /** Days to show side by side (3 for the 3-day view, 7 for the week). */
@@ -168,14 +173,42 @@ export function MobileMultiDayView({
                     new Date(block.startTime),
                     new Date(block.endTime)
                   );
+                  const clockChangeDay = isSessionOnViewerClockChangeDay(
+                    block,
+                    day
+                  );
+                  const markerTop =
+                    new Date(block.startTime) < startOfDay(day)
+                      ? 0
+                      : Math.max(
+                          calculateYFromTime(new Date(block.startTime)),
+                          0
+                        );
                   return (
                     <button
                       key={block.id}
                       onClick={() => onBlockClick(block)}
-                      style={{ top, height }}
+                      style={{
+                        top: clockChangeDay ? markerTop : top,
+                        height: clockChangeDay ? 28 : height,
+                      }}
+                      aria-label={
+                        clockChangeDay
+                          ? `Study session: ${block.title}. Clock change day; open for exact time. ${sessionViewerTimeDetails(new Date(block.startTime), new Date(block.endTime))}.`
+                          : block.title
+                      }
+                      title={
+                        clockChangeDay
+                          ? `Clock change day. Open session for exact time: ${sessionViewerTimeDetails(new Date(block.startTime), new Date(block.endTime))}`
+                          : undefined
+                      }
                       className="absolute inset-x-0.5 z-10 overflow-hidden rounded border-l-2 border-primary bg-primary/15 px-1 text-left text-[10px] leading-tight text-foreground active:brightness-95"
                     >
-                      <span className="line-clamp-2">{block.title}</span>
+                      <span className="line-clamp-2">
+                        {clockChangeDay
+                          ? `Clock change · ${block.title}`
+                          : block.title}
+                      </span>
                     </button>
                   );
                 })}

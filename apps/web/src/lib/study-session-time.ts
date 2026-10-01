@@ -13,6 +13,29 @@ export function isCalendarBlockOnDay(
   );
 }
 
+/** The inherited 24-hour grid cannot represent a 23/25-hour viewer day. */
+export function isSessionOnViewerClockChangeDay(
+  block: Pick<TimeBlock, "studySessionId">,
+  day: Date
+): boolean {
+  if (!block.studySessionId) return false;
+  const start = startOfDay(day);
+  return start.getTimezoneOffset() !== addDays(start, 1).getTimezoneOffset();
+}
+
+/** Explicit offsets distinguish repeated wall-clock hours in accessible details. */
+export function sessionViewerTimeDetails(start: Date, end: Date): string {
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "shortOffset",
+  });
+  return `${formatter.format(start)}–${formatter.format(end)}`;
+}
+
 /** Today is the viewer's current local calendar day, expressed as UTC bounds. */
 export function todaySessionRange(now: Date): { from: string; to: string } {
   const dayStart = startOfDay(now);

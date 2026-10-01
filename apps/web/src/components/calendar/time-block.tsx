@@ -5,6 +5,10 @@ import { cn } from "@/lib/utils";
 import { calculateYFromTime, HOUR_HEIGHT } from "@/hooks/useCalendarDnd";
 import { TimeBlockContextMenu } from "./time-block-context-menu";
 import type { LayoutResult } from "./event-layout";
+import {
+  isSessionOnViewerClockChangeDay,
+  sessionViewerTimeDetails,
+} from "@/lib/study-session-time";
 
 const COLUMN_GAP_PCT = 1; // gap between side-by-side overlapping items
 
@@ -97,6 +101,10 @@ export function TimeBlock({
   const top = calculateYFromTime(startTime);
   const durationMins = differenceInMinutes(endTime, startTime);
   const height = (durationMins / 60) * HOUR_HEIGHT;
+  const clockChangeDay = isSessionOnViewerClockChangeDay(
+    block,
+    displayDate ?? canonicalStart
+  );
 
   // Get colors
   const colors = getBlockColors(block);
@@ -142,7 +150,7 @@ export function TimeBlock({
         )}
         style={{
           top: `${top}px`,
-          height: `${Math.max(height - 4, 20)}px`, // Account for margin
+          height: `${clockChangeDay ? 28 : Math.max(height - 4, 20)}px`, // The 24-hour grid cannot show DST-day duration faithfully.
           // Side-by-side overlap: column split into layout.columnCount
           // lanes, item lives in lane N. 4px gutter on the leftmost
           // lane preserves the previous `left-1 right-1` look when no
@@ -164,10 +172,14 @@ export function TimeBlock({
         tabIndex={0}
         title={
           block.studySessionId && block.studySessionTimezone
-            ? `${format(canonicalStart, "MMM d, yyyy h:mm a")} in your time zone; scheduled in ${block.studySessionTimezone}`
+            ? `${clockChangeDay ? "Clock change day. Open for exact time. " : ""}${sessionViewerTimeDetails(canonicalStart, canonicalEnd)} in your time zone; scheduled in ${block.studySessionTimezone}`
             : undefined
         }
-        aria-label={`Time block: ${block.title} from ${format(canonicalStart, "h:mm a")} to ${format(canonicalEnd, "h:mm a")}${block.studySessionTimezone ? ` (scheduled in ${block.studySessionTimezone})` : ""}`}
+        aria-label={
+          clockChangeDay
+            ? `Study session: ${block.title}. Clock change day; open for exact time. ${sessionViewerTimeDetails(canonicalStart, canonicalEnd)}.`
+            : `Time block: ${block.title} from ${format(canonicalStart, "h:mm a")} to ${format(canonicalEnd, "h:mm a")}${block.studySessionTimezone ? ` (scheduled in ${block.studySessionTimezone})` : ""}`
+        }
       >
         {/* Top resize handle - Larger touch target on mobile */}
         {!block.studySessionId && (
@@ -196,11 +208,11 @@ export function TimeBlock({
               isCompact ? "text-xs" : "text-sm"
             )}
           >
-            {block.title}
+            {clockChangeDay ? `Clock change · ${block.title}` : block.title}
           </p>
 
           {/* Time range - muted text, hide if too compact */}
-          {!isCompact && (
+          {!isCompact && !clockChangeDay && (
             <p className="truncate text-xs text-muted-foreground">
               {format(startTime, "h:mm")} - {format(endTime, "h:mm a")}
             </p>

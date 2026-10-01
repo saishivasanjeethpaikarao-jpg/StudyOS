@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   formatSessionLocalInput,
   isCalendarBlockOnDay,
+  isSessionOnViewerClockChangeDay,
   parseSessionLocalInput,
+  sessionViewerTimeDetails,
   todaySessionRange,
 } from "./study-session-time";
 
@@ -83,5 +85,26 @@ describe("Study Session timezone semantics", () => {
         "America/New_York"
       ).toISOString()
     ).toBe("2025-11-02T08:00:00.000Z");
+  });
+
+  it("marks session projections on viewer clock-change days without changing their instants", () => {
+    process.env.TZ = "America/New_York";
+    const session = { studySessionId: "session" };
+    const generic = { studySessionId: null };
+    const fall = new Date("2025-11-02T05:30:00.000Z");
+    const spring = new Date("2025-03-09T06:30:00.000Z");
+    expect(isSessionOnViewerClockChangeDay(session, fall)).toBe(true);
+    expect(isSessionOnViewerClockChangeDay(session, spring)).toBe(true);
+    expect(
+      isSessionOnViewerClockChangeDay(session, new Date(2025, 10, 3))
+    ).toBe(false);
+    expect(isSessionOnViewerClockChangeDay(generic, fall)).toBe(false);
+    expect(
+      sessionViewerTimeDetails(fall, new Date("2025-11-02T06:30:00.000Z"))
+    ).toMatch(/GMT-4.*GMT-5/);
+    expect(fall.toISOString()).toBe("2025-11-02T05:30:00.000Z");
+    process.env.TZ = "UTC";
+    expect(isSessionOnViewerClockChangeDay(session, fall)).toBe(false);
+    expect(fall.toISOString()).toBe("2025-11-02T05:30:00.000Z");
   });
 });
