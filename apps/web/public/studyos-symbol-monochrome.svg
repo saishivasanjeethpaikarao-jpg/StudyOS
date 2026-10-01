@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">StudyOS monochrome symbol</title>
+  <desc id="desc">A folded ribbon S</desc>
+  <path fill="currentColor" opacity=".72" d="M20 34 78 5c10-5 18-4 26 1l8 5c8 5 9 16 5 23-2 4-7 7-12 10L43 72 19 62c-8-4-10-18 1-28Z"/>
+  <path fill="currentColor" d="M22 33 78 5c9-5 18-4 26 1l8 5c7 4 9 11 6 17-2 4-5 7-10 9L47 65c-7 3-14 3-22-1-12-7-13-23-3-31Z"/>
+  <path fill="currentColor" opacity=".48" d="M19 79c-8 4-10 13-8 23 2 10 10 17 20 20 7 2 13 1 20-2l48-25-9-19-49 26-22-23Z"/>
+  <path fill="currentColor" opacity=".85" d="M16 80c-8 7-6 17 2 23l20 13c6 4 12 4 19 1l39-20c9-5 13-12 11-20-2-8-10-14-17-17L39 39l-17 20 54 21c10 4 12 8 6 12l-32 17c-4 2-8 2-12 0L17 97c-5-3-6-9-1-17Z"/>
+  <path fill="currentColor" d="M25 31c-9 4-14 13-12 22 1 8 8 14 17 18l56 22c6 3 10 7 10 13 9-5 15-13 15-22 0-10-7-17-17-21L39 42c-7-3-11-6-14-11Z"/>
+</svg>

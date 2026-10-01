@@ -183,7 +183,7 @@ export default function OAuthConsentPage() {
           />
           <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
           <img
-            src="/open-sunsama-logo.png"
+            src="/studyos-symbol.svg"
             alt=""
             className="h-11 w-11 rounded-xl border object-cover"
           />

@@ -83,7 +83,7 @@ export function useSEO(config: SEOConfig) {
     
     // Cleanup function to restore defaults on unmount
     return () => {
-      document.title = `${SITE_NAME} - Open Source Daily Planner & Time Blocking App`;
+      document.title = `${SITE_NAME} - Your study life, in one place`;
     };
   }, [config.title, config.description, config.canonical, config.ogImage, config.ogType, config.noindex]);
 }
@@ -92,7 +92,7 @@ export function useSEO(config: SEOConfig) {
 export const SEO_CONFIGS = {
   landing: {
     title: "StudyOS",
-    description: "Daily planning, done right. The open-source daily planner for time-blocking, focused work, and AI integration. Control it from any agent: Claude, ChatGPT, Cursor, or any MCP client.",
+    description: "Your study life, in one place. Bring assignments, subjects, deadlines and your daily plan together in one calm student workspace.",
     canonical: "/",
   },
   alternative: {
@@ -103,8 +103,8 @@ export const SEO_CONFIGS = {
     },
   },
   download: {
-    title: "Download",
-    description: "Download StudyOS for macOS, Windows, and Linux. Native desktop apps with system tray integration, global hotkeys, and offline support.",
+    title: "Desktop App Coming Soon",
+    description: "StudyOS Desktop is not available for public download yet. Use the current student workspace in your browser.",
     canonical: "/download",
   },
   login: {

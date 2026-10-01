@@ -47,7 +47,7 @@ export function BlogArticleMeta({ post, canonicalUrl }: BlogArticleMetaProps) {
       <div className="mt-7 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-y border-border/60 py-4 dark:border-white/[0.07]">
         <div className="flex min-w-0 items-center gap-3">
           <img
-            src="/open-sunsama-logo.png"
+            src="/studyos-symbol.svg"
             alt=""
             width={36}
             height={36}

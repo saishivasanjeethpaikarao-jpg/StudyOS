@@ -30,7 +30,7 @@ function TryCard() {
     <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[0_16px_40px_-24px_hsl(var(--shadow-color)/0.35)] dark:border-white/[0.08]">
       <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-[radial-gradient(closest-side,hsl(var(--primary)/0.22),transparent)] blur-xl" />
       <img
-        src="/open-sunsama-logo.png"
+        src="/studyos-symbol.svg"
         alt=""
         width={32}
         height={32}

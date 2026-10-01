@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/landing/motion";
 import { BrowserFrame } from "@/components/landing/product-shot";
@@ -42,7 +42,7 @@ export function CtaBand({
             />
             <div className="relative grid items-center gap-10 p-8 md:p-12 lg:grid-cols-[1fr_1.15fr] lg:gap-6 lg:p-14 lg:pr-0">
               <div className="min-w-0 lg:py-4">
-                <img src="/open-sunsama-logo.png" alt="" className="h-11 w-11 rounded-xl shadow-lg" />
+                <img src="/studyos-symbol.svg" alt="" className="h-11 w-11 rounded-xl shadow-lg" />
                 <h2 id="cta-heading" className="mt-6 text-balance text-[30px] font-semibold leading-[1.08] tracking-[-0.035em] md:text-[42px]">
                   {heading}
                 </h2>
@@ -60,9 +60,9 @@ export function CtaBand({
                     className="h-11 w-full rounded-lg border-white/15 bg-white/5 px-5 text-[14px] text-white hover:bg-white/10 hover:text-white sm:w-auto"
                     asChild
                   >
-                    <Link to="/download">
-                      <Download className="h-4 w-4" />
-                      Download for desktop
+                    <Link to="/app">
+                      <Monitor className="h-4 w-4" />
+                      Open StudyOS
                     </Link>
                   </Button>
                 </div>

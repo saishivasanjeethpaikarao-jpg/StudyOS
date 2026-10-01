@@ -24,7 +24,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
         {/* Logo */}
         <Link to="/" className="mb-8 flex items-center gap-2">
           <img
-            src="/open-sunsama-logo.png"
+            src="/studyos-symbol.svg"
             alt="StudyOS"
             className="h-8 w-8 rounded-xl object-cover"
           />

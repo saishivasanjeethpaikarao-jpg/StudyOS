@@ -51,7 +51,7 @@ export function VerdictSection({ section, verdict }: { section: SectionCopy; ver
               aria-hidden
             />
             <h3 className="relative flex items-center gap-2.5 text-[17px] font-semibold tracking-[-0.01em]">
-              <img src="/open-sunsama-logo.png" alt="" width={24} height={24} className="h-6 w-6 rounded-md shadow-sm" />
+              <img src="/studyos-symbol.svg" alt="" width={24} height={24} className="h-6 w-6 rounded-md shadow-sm" />
               Switch to StudyOS if…
             </h3>
             <ul className="relative mt-5 space-y-3.5">

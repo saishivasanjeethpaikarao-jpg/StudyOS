@@ -1,43 +1,73 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Calendar, Command, LayoutGrid, Play, Sparkles, Timer } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  ClipboardCheck,
+  LayoutDashboard,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { clockDuration } from "@/lib/blog-media";
+import { StudyOSWordmark } from "@/components/brand/studyos-logo";
 import { cn } from "@/lib/utils";
 import { BorderBeam } from "./border-beam";
-import { HeadlineReveal, introStyle, useIntro, useReducedMotion, useScrollProgress } from "./motion";
+import {
+  HeadlineReveal,
+  introStyle,
+  useIntro,
+  useReducedMotion,
+  useScrollProgress,
+} from "./motion";
 import { BrowserFrame, ThemedShot, type ShotName } from "./product-shot";
-import { getVideo, VideoLightbox } from "./video-lightbox";
 
 const HEADLINE = [
-  { text: "Daily planning,", accent: false },
-  { text: "done right.", accent: true },
+  { text: "Your studies.", accent: false },
+  { text: "Finally under control.", accent: true },
 ];
 
-const VIEWS: Array<{ id: ShotName; label: string; icon: typeof LayoutGrid; alt: string }> = [
+const VIEWS: Array<{
+  id: ShotName;
+  label: string;
+  icon: typeof LayoutDashboard;
+  alt: string;
+}> = [
   {
-    id: "board",
-    label: "Board",
-    icon: LayoutGrid,
-    alt: "StudyOS board with today's prioritized tasks and a time-blocked schedule",
+    id: "today",
+    label: "Today",
+    icon: LayoutDashboard,
+    alt: "StudyOS Today view with academic deadlines and the day's tasks",
+  },
+  {
+    id: "assignments",
+    label: "Assignments",
+    icon: ClipboardCheck,
+    alt: "StudyOS Assignments workspace showing coursework, due dates, status and priority",
+  },
+  {
+    id: "subjects",
+    label: "Subjects",
+    icon: BookOpen,
+    alt: "StudyOS Subjects workspace organizing courses by color",
   },
   {
     id: "calendar-week",
     label: "Calendar",
-    icon: Calendar,
-    alt: "Week calendar with color-coded time blocks",
-  },
-  { id: "focus", label: "Focus", icon: Timer, alt: "Focus mode with a running timer" },
-  {
-    id: "command-palette",
-    label: "Search",
-    icon: Command,
-    alt: "Command palette searching tasks and ideas",
+    icon: CalendarDays,
+    alt: "StudyOS weekly calendar with color-coded study and planning blocks",
   },
 ];
 
 const AUTOPLAY_MS = 4800;
-export const WORKS_WITH = ["Claude", "ChatGPT", "Claude Code", "Cursor", "VS Code", "Any MCP client"];
+
+/** Kept for the inherited feature-page hero; it is not part of the StudyOS landing story. */
+export const WORKS_WITH = [
+  "Claude",
+  "ChatGPT",
+  "Claude Code",
+  "Cursor",
+  "VS Code",
+  "Any MCP client",
+];
 
 function Showcase({ ready, reduced }: { ready: boolean; reduced: boolean }) {
   const [active, setActive] = React.useState(0);
@@ -46,7 +76,10 @@ function Showcase({ ready, reduced }: { ready: boolean; reduced: boolean }) {
 
   React.useEffect(() => {
     if (paused || reduced || !ready) return;
-    const id = window.setTimeout(() => setActive((i) => (i + 1) % VIEWS.length), AUTOPLAY_MS);
+    const id = window.setTimeout(
+      () => setActive((i) => (i + 1) % VIEWS.length),
+      AUTOPLAY_MS
+    );
     return () => window.clearTimeout(id);
   }, [active, paused, reduced, ready]);
 
@@ -57,7 +90,8 @@ function Showcase({ ready, reduced }: { ready: boolean; reduced: boolean }) {
         reduced
           ? undefined
           : {
-              transition: "opacity 1000ms cubic-bezier(0.2,0.8,0.2,1), transform 1200ms cubic-bezier(0.2,0.8,0.2,1)",
+              transition:
+                "opacity 1000ms cubic-bezier(0.2,0.8,0.2,1), transform 1200ms cubic-bezier(0.2,0.8,0.2,1)",
               transitionDelay: "520ms",
               opacity: ready ? 1 : 0,
               transform: ready ? "none" : "translateY(48px)",
@@ -91,11 +125,17 @@ function Showcase({ ready, reduced }: { ready: boolean; reduced: boolean }) {
                   key={view.id}
                   className={cn(
                     "absolute inset-0 transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
-                    i === active ? "opacity-100 [transform:none]" : "opacity-0 [transform:scale(1.015)]"
+                    i === active
+                      ? "opacity-100 [transform:none]"
+                      : "opacity-0 [transform:scale(1.015)]"
                   )}
                   aria-hidden={i !== active}
                 >
-                  <ThemedShot name={view.id} alt={view.alt} priority={i === 0} />
+                  <ThemedShot
+                    name={view.id}
+                    alt={view.alt}
+                    priority={i === 0}
+                  />
                 </div>
               ))}
             </div>
@@ -111,11 +151,15 @@ function Showcase({ ready, reduced }: { ready: boolean; reduced: boolean }) {
             reduced={reduced}
           >
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
+              <ClipboardCheck className="h-3.5 w-3.5" />
             </span>
             <span className="leading-tight">
-              <span className="block text-[12px] font-semibold text-foreground">Claude connected</span>
-              <span className="block text-[11px] text-muted-foreground">Planned 3 blocks for you</span>
+              <span className="block text-[12px] font-semibold text-foreground">
+                3 assignments due soon
+              </span>
+              <span className="block text-[11px] text-muted-foreground">
+                Everything visible at a glance
+              </span>
             </span>
           </FloatingChip>
 
@@ -128,10 +172,17 @@ function Showcase({ ready, reduced }: { ready: boolean; reduced: boolean }) {
           >
             <div
               className="w-[204px] rounded-md border-l-[3px] px-2 py-1"
-              style={{ backgroundColor: "rgba(239,68,68,0.15)", borderColor: "rgba(239,68,68,0.6)" }}
+              style={{
+                backgroundColor: "rgba(239,68,68,0.15)",
+                borderColor: "rgba(239,68,68,0.6)",
+              }}
             >
-              <p className="truncate text-sm font-medium text-foreground">Deep work: Q4 roadmap</p>
-              <p className="truncate text-xs text-muted-foreground">9:30 - 11:00 AM</p>
+              <p className="truncate text-sm font-medium text-foreground">
+                Calculus problem set
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                Due tomorrow · High priority
+              </p>
             </div>
           </FloatingChip>
 
@@ -142,10 +193,13 @@ function Showcase({ ready, reduced }: { ready: boolean; reduced: boolean }) {
             delay={1650}
             reduced={reduced}
           >
-            <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgb(16_185_129/0.18)]" />
-            <span className="font-mono text-[13px] font-semibold tabular-nums text-foreground">23:02</span>
-            <span className="font-mono text-[12px] text-muted-foreground">/ 1:30</span>
-            <span className="ml-1 text-[11px] text-muted-foreground">Focus</span>
+            <span className="h-2 w-2 rounded-full bg-violet-500 shadow-[0_0_0_3px_rgb(139_92_246/0.18)]" />
+            <span className="text-[12px] font-semibold text-foreground">
+              Biology review
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              4:00–5:00 PM
+            </span>
           </FloatingChip>
         </div>
       </div>
@@ -173,13 +227,20 @@ function Showcase({ ready, reduced }: { ready: boolean; reduced: boolean }) {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <view.icon className={cn("hidden h-3.5 w-3.5 sm:block", i === active ? "text-primary" : "")} />
+              <view.icon
+                className={cn(
+                  "hidden h-3.5 w-3.5 sm:block",
+                  i === active ? "text-primary" : ""
+                )}
+              />
               <span>{view.label}</span>
               {i === active && !paused && !reduced && ready && (
                 <span
                   key={`progress-${active}`}
                   className="absolute inset-x-3 bottom-0.5 h-[2px] origin-left rounded-full bg-primary/70"
-                  style={{ animation: `landing-progress ${AUTOPLAY_MS}ms linear forwards` }}
+                  style={{
+                    animation: `landing-progress ${AUTOPLAY_MS}ms linear forwards`,
+                  }}
                 />
               )}
             </button>
@@ -209,8 +270,15 @@ export function FloatingChip({
 }) {
   return (
     <div
-      className={cn("pointer-events-none absolute z-10 hidden lg:block", className)}
-      style={reduced ? undefined : { transform: `translateY(calc(var(--p) * ${depth}px))` }}
+      className={cn(
+        "pointer-events-none absolute z-10 hidden lg:block",
+        className
+      )}
+      style={
+        reduced
+          ? undefined
+          : { transform: `translateY(calc(var(--p) * ${depth}px))` }
+      }
     >
       <div
         className="flex items-center gap-2 rounded-xl border border-border/70 bg-background/90 p-2.5 pr-3.5 shadow-[0_12px_40px_-12px_rgb(0_0_0/0.25)] backdrop-blur-md dark:border-white/10 dark:bg-[hsl(228_14%_11%/0.92)]"
@@ -218,7 +286,8 @@ export function FloatingChip({
           reduced
             ? undefined
             : {
-                transition: "opacity 600ms ease, transform 700ms cubic-bezier(0.34,1.56,0.64,1)",
+                transition:
+                  "opacity 600ms ease, transform 700ms cubic-bezier(0.34,1.56,0.64,1)",
                 transitionDelay: `${delay}ms`,
                 opacity: visible ? 1 : 0,
                 transform: visible ? "none" : "translateY(10px) scale(0.92)",
@@ -233,7 +302,6 @@ export function FloatingChip({
 
 export function Hero() {
   const ready = useIntro();
-  const tour = getVideo("tour");
   const reduced = useReducedMotion();
 
   return (
@@ -252,17 +320,11 @@ export function Hero() {
 
       <div className="container mx-auto max-w-6xl px-4 text-center">
         <div style={introStyle(ready, 0, reduced)}>
-          <Link
-            to="/docs/$"
-            params={{ _splat: "mcp/overview" }}
-            className="group inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 py-1 pl-1 pr-3 text-[12px] font-medium text-muted-foreground shadow-sm backdrop-blur transition-colors hover:border-primary/40 hover:text-foreground"
-          >
-            <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
-              New
-            </span>
-            Plan your day from Claude or ChatGPT
-            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-          </Link>
+          <span className="inline-flex items-center gap-2.5 rounded-full border border-border/70 bg-background/70 py-1.5 pl-2 pr-3 text-[12px] font-medium text-muted-foreground shadow-sm backdrop-blur">
+            <StudyOSWordmark className="h-5" />
+            <span className="h-3 w-px bg-border" aria-hidden />
+            Your study life, in one place
+          </span>
         </div>
 
         <h1 className="mx-auto mt-7 max-w-4xl text-[40px] font-semibold leading-[1.04] tracking-[-0.035em] sm:text-[56px] md:text-[68px]">
@@ -273,53 +335,40 @@ export function Hero() {
           className="mx-auto mt-6 max-w-2xl text-balance text-[16px] leading-relaxed text-muted-foreground md:text-[18px]"
           style={introStyle(ready, 520, reduced)}
         >
-          The open-source daily planner. Plan your day, block time on your calendar, and focus on one thing
-          at a time. Claude, ChatGPT or any AI agent can plan it with you.
+          Assignments, subjects, deadlines and your daily plan — together in one
+          calm workspace.
         </p>
 
         <div
           className="mt-8 flex flex-col items-center justify-center gap-2.5 sm:flex-row"
           style={introStyle(ready, 640, reduced)}
         >
-          <Button size="lg" className="h-11 rounded-lg px-5 text-[14px] shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.6)]" asChild>
+          <Button
+            size="lg"
+            className="h-11 rounded-lg px-5 text-[14px] shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.6)]"
+            asChild
+          >
             <Link to="/register">
-              Get started
+              Create your workspace
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
-          <VideoLightbox id="tour">
-            <Button
-              variant="outline"
-              size="lg"
-              className="group h-11 gap-2.5 rounded-lg bg-background/70 pl-2 pr-4 text-[14px] backdrop-blur"
-            >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                <Play className="h-3.5 w-3.5 translate-x-px fill-current" />
-              </span>
-              Watch the 1-minute tour
-              {tour && (
-                <span className="font-jetbrains text-[12px] tabular-nums text-muted-foreground">
-                  {clockDuration(tour.duration)}
-                </span>
-              )}
-            </Button>
-          </VideoLightbox>
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-11 rounded-lg bg-background/70 px-5 text-[14px] backdrop-blur"
+            asChild
+          >
+            <a href="#how-it-works">See how it works</a>
+          </Button>
         </div>
 
-        <div
-          className="mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-[12px] text-muted-foreground"
+        <p
+          className="mt-5 text-[12px] text-muted-foreground"
           style={introStyle(ready, 760, reduced)}
         >
-          <span className="mr-1">Control it from</span>
-          {WORKS_WITH.map((name) => (
-            <span
-              key={name}
-              className="rounded-md border border-border/70 bg-background/60 px-2 py-0.5 font-medium text-foreground/80"
-            >
-              {name}
-            </span>
-          ))}
-        </div>
+          Available in the current StudyOS development build
+        </p>
 
         <Showcase ready={ready} reduced={reduced} />
       </div>

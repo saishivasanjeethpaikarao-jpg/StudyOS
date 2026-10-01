@@ -2,14 +2,14 @@
   "id": "/app",
   "name": "StudyOS",
   "short_name": "StudyOS",
-  "description": "Plan your day, time-block your tasks and focus.",
+  "description": "Your study life, in one place: assignments, subjects, deadlines and your daily plan.",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "categories": ["productivity"],
+  "categories": ["education", "productivity"],
   "icons": [
     { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }

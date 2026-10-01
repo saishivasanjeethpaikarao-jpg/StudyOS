@@ -1,47 +1,81 @@
 /**
- * Real product screenshots (captured by scripts/readme-media/capture.mjs) in a
+ * Real product screenshots from the current StudyOS workspace in a
  * browser frame. Light and dark variants swap with the site theme; the hidden
  * one is never fetched because both are lazy unless `priority`.
  */
 
 import { cn } from "@/lib/utils";
 
-export type ShotName = "board" | "calendar-week" | "focus" | "command-palette" | "ideas" | "task-detail";
+export type ShotName =
+  | "assignments"
+  | "board"
+  | "calendar-week"
+  | "command-palette"
+  | "focus"
+  | "ideas"
+  | "subjects"
+  | "task-detail"
+  | "today";
 
 export function ThemedShot({
   name,
   alt,
   priority = false,
+  focusMobile = false,
   className,
 }: {
   name: ShotName;
   alt: string;
   priority?: boolean;
+  /** Use a real screenshot crop to keep product details legible on narrow screens. */
+  focusMobile?: boolean;
   className?: string;
 }) {
   const common = {
-    width: 2880,
-    height: 1800,
+    width: 1440,
+    height: 900,
     decoding: "async" as const,
     draggable: false,
   };
   return (
     <>
-      <img
-        {...common}
-        src={`/landing/${name}-light.webp`}
-        alt={alt}
-        loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : "auto"}
-        className={cn("block h-auto w-full select-none dark:hidden", className)}
-      />
-      <img
-        {...common}
-        src={`/landing/${name}-dark.webp`}
-        alt={alt}
-        loading="lazy"
-        className={cn("hidden h-auto w-full select-none dark:block", className)}
-      />
+      <picture>
+        {focusMobile && (
+          <source
+            media="(max-width: 639px)"
+            srcSet={`/landing/${name}-focus-light.webp`}
+          />
+        )}
+        <img
+          {...common}
+          src={`/landing/${name}-light.webp`}
+          alt={alt}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          className={cn(
+            "block h-auto w-full select-none dark:hidden",
+            className
+          )}
+        />
+      </picture>
+      <picture>
+        {focusMobile && (
+          <source
+            media="(max-width: 639px)"
+            srcSet={`/landing/${name}-focus-dark.webp`}
+          />
+        )}
+        <img
+          {...common}
+          src={`/landing/${name}-dark.webp`}
+          alt={alt}
+          loading="lazy"
+          className={cn(
+            "hidden h-auto w-full select-none dark:block",
+            className
+          )}
+        />
+      </picture>
     </>
   );
 }
@@ -49,7 +83,7 @@ export function ThemedShot({
 /** macOS-style window chrome matching the app's own surfaces. */
 export function BrowserFrame({
   children,
-  url = "opensunsama.com/app",
+  url = "StudyOS · Student workspace",
   className,
 }: {
   children: React.ReactNode;
@@ -70,7 +104,11 @@ export function BrowserFrame({
           <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
         </div>
         <div className="mx-auto flex h-5 min-w-0 max-w-[240px] flex-1 items-center justify-center gap-1.5 rounded-md bg-background/80 px-2 text-[10.5px] text-muted-foreground ring-1 ring-border/60 dark:bg-white/[0.04] dark:ring-white/[0.06]">
-          <svg viewBox="0 0 16 16" className="h-2.5 w-2.5 shrink-0 opacity-60" aria-hidden>
+          <svg
+            viewBox="0 0 16 16"
+            className="h-2.5 w-2.5 shrink-0 opacity-60"
+            aria-hidden
+          >
             <path
               fill="currentColor"
               d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm2 5H6V4.5a2 2 0 1 1 4 0V6Z"

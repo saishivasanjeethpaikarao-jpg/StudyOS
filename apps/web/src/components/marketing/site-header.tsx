@@ -8,9 +8,15 @@
 
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Github, Menu } from "lucide-react";
+import { ArrowRight, Menu } from "lucide-react";
+import { StudyOSLogo, StudyOSWordmark } from "@/components/brand/studyos-logo";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 export const GITHUB_URL = "https://github.com/ShadowWalker2014/open-sunsama";
@@ -18,7 +24,9 @@ export const GITHUB_URL = "https://github.com/ShadowWalker2014/open-sunsama";
 // One request per page load, shared by every component that shows the count
 let starsRequest: Promise<number | null> | null = null;
 function fetchStars(): Promise<number | null> {
-  starsRequest ??= fetch("https://api.github.com/repos/ShadowWalker2014/open-sunsama")
+  starsRequest ??= fetch(
+    "https://api.github.com/repos/ShadowWalker2014/open-sunsama"
+  )
     .then((res) => (res.ok ? res.json() : null))
     .then((repo: { stargazers_count?: number } | null) =>
       typeof repo?.stargazers_count === "number" ? repo.stargazers_count : null
@@ -54,19 +62,8 @@ export function useGitHubStars(): number | null {
 
 const NAV: Array<{ label: string; href: string }> = [
   { label: "Features", href: "/#features" },
-  { label: "AI native", href: "/#ai" },
-  { label: "Docs", href: "/docs" },
-  { label: "Blog", href: "/blog" },
-  { label: "Download", href: "/download" },
-];
-
-const MENU_FEATURES: Array<[string, string]> = [
-  ["Time blocking", "/features/time-blocking"],
-  ["Kanban board", "/features/kanban"],
-  ["Focus mode", "/features/focus-mode"],
-  ["Calendar sync", "/features/calendar-sync"],
-  ["AI and MCP", "/features/ai-integration"],
-  ["Command palette", "/features/command-palette"],
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Coming soon", href: "/#coming-soon" },
 ];
 
 const NAV_LINK =
@@ -107,38 +104,40 @@ function NavLink({
 function MobileMenu() {
   const [open, setOpen] = React.useState(false);
   const close = () => setOpen(false);
-  const item = "block rounded-lg px-3 py-2 text-[15px] text-foreground/85 transition-colors hover:bg-muted/70 hover:text-foreground";
+  const item =
+    "block rounded-lg px-3 py-2 text-[15px] text-foreground/85 transition-colors hover:bg-muted/70 hover:text-foreground";
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden" aria-label="Open menu">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 lg:hidden"
+          aria-label="Open menu"
+        >
           <Menu className="h-4 w-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="flex w-[300px] flex-col gap-0 overflow-y-auto p-0">
+      <SheetContent
+        side="right"
+        className="flex w-[300px] flex-col gap-0 overflow-y-auto p-0"
+      >
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <div className="flex h-14 items-center gap-2 border-b border-border/60 px-5">
-          <img src="/open-sunsama-logo.png" alt="" className="h-6 w-6 rounded-md object-cover" />
-          <span className="text-[14px] font-semibold">StudyOS</span>
+          <StudyOSWordmark className="h-6" />
         </div>
         <nav className="flex-1 px-2 py-4" aria-label="Mobile">
-          <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Features</p>
-          {MENU_FEATURES.map(([label, href]) => (
-            <Link key={href} to={href} onClick={close} className={item}>
-              {label}
-            </Link>
-          ))}
-          <div className="my-3 border-t border-border/60" />
-          {NAV.filter((n) => !n.href.includes("#")).map((n) => (
-            <NavLink key={n.href} href={n.href} className={item} onClick={close}>
+          {NAV.map((n) => (
+            <NavLink
+              key={n.href}
+              href={n.href}
+              className={item}
+              onClick={close}
+            >
               {n.label}
             </NavLink>
           ))}
-          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className={cn(item, "flex items-center gap-2")}>
-            <Github className="h-4 w-4" />
-            GitHub
-          </a>
         </nav>
         <div className="grid gap-2 border-t border-border/60 p-4">
           <Button variant="outline" className="h-10" asChild>
@@ -148,7 +147,7 @@ function MobileMenu() {
           </Button>
           <Button className="h-10" asChild>
             <Link to="/register" onClick={close}>
-              Get started
+              Create workspace
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -167,7 +166,6 @@ export function SiteHeader({
   /** A sub-site label after the logo, e.g. { label: "Docs", href: "/docs" }. */
   section?: { label: string; href: string };
 } = {}) {
-  const stars = useGitHubStars();
   const [scrolled, setScrolled] = React.useState(false);
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -192,10 +190,12 @@ export function SiteHeader({
             to="/"
             className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <img src="/open-sunsama-logo.png" alt="StudyOS" className="h-7 w-7 rounded-lg object-cover" />
-            <span className={cn("whitespace-nowrap text-[14px] font-semibold tracking-tight", section && "hidden sm:inline")}>
-              StudyOS
-            </span>
+            {section && (
+              <StudyOSLogo decorative className="h-7 w-7 sm:hidden" />
+            )}
+            <StudyOSWordmark
+              className={cn("h-7", section && "hidden sm:inline-flex")}
+            />
           </Link>
           {section && (
             <>
@@ -221,23 +221,16 @@ export function SiteHeader({
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <a
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden h-8 items-center gap-1.5 rounded-md border border-border/70 bg-background/60 px-2.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hidden h-8 px-3 text-[13px] sm:inline-flex"
+            asChild
           >
-            <Github className="h-3.5 w-3.5" />
-            Star
-            {stars !== null && (
-              <span className="rounded bg-muted px-1.5 py-px text-[11px] tabular-nums text-foreground">{stars}</span>
-            )}
-          </a>
-          <Button variant="ghost" size="sm" className="hidden h-8 px-3 text-[13px] sm:inline-flex" asChild>
             <Link to="/login">Sign in</Link>
           </Button>
           <Button size="sm" className="h-8 px-3 text-[13px]" asChild>
-            <Link to="/register">Get started</Link>
+            <Link to="/register">Create workspace</Link>
           </Button>
           <MobileMenu />
         </div>

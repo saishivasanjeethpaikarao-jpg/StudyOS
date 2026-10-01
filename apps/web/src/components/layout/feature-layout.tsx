@@ -59,7 +59,7 @@ export function FeatureLayout({
                 className="h-9 px-4 text-[13px]"
                 asChild
               >
-                <Link to="/download">Download App</Link>
+                <Link to="/app">Open StudyOS</Link>
               </Button>
             </div>
           </div>

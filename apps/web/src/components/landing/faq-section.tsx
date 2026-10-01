@@ -1,53 +1,45 @@
-/**
- * Home page FAQ, drawn by the marketing kit's FaqSection: answers always
- * visible, and the same text feeds the FAQPage JSON-LD.
- */
+/** Home-page FAQ. The same copy also feeds the FAQPage structured data. */
 
 import { FaqSection as KitFaqSection } from "@/components/marketing/faq-section";
 import type { MarketingFaq } from "@/content/marketing/types";
 
 const FAQS: MarketingFaq[] = [
   {
-    question: "Is StudyOS open source?",
+    question: "What can I use in StudyOS today?",
     answer:
-      "Yes. The code is public on GitHub. It uses a non-commercial license: you can read it, run it and self-host it for personal use. Companies need a commercial license.",
-    link: { label: "See the code on GitHub", href: "https://github.com/ShadowWalker2014/open-sunsama" },
+      "The current development build includes a Today planner, tasks, calendar time blocks, Subjects, Assignments, assignment statuses and due-date awareness in a responsive student workspace.",
   },
   {
-    question: "Does it work with Claude and ChatGPT?",
+    question: "How are Assignments different from Tasks?",
     answer:
-      "Yes. Add https://api.opensunsama.com/mcp as a connector and sign in once. Claude, ChatGPT, Cursor or any MCP app can then read your plan, add tasks and block time.",
-    link: { label: "Connect your AI", href: "/docs/mcp/overview" },
+      "An Assignment holds the academic context: subject, deadline, priority and status. Tasks hold the concrete actions you plan into a day. Keeping them distinct makes both easier to understand.",
   },
   {
-    question: "Can I self-host it?",
-    answer: "Yes. You can run it on your own server with Docker. The self-hosting guide walks you through each step.",
-    link: { label: "Self-hosting guide", href: "/docs/self-hosting/docker" },
-  },
-  {
-    question: "How is it different from Sunsama?",
+    question: "Does StudyOS create Study Sessions automatically?",
     answer:
-      "Both give you a calm daily plan with a board and time blocks, and both work with AI agents. StudyOS builds on a public codebase, can be self-hosted, and has a public REST API. Sunsama has no public API.",
-    link: { label: "Compare the two", href: "/alternative/sunsama" },
+      "Not yet. Study Sessions are a coming-soon capability. The current build does not automatically split an assignment into sessions or claim to provide AI study planning.",
   },
   {
-    question: "Does it sync with Google Calendar and Outlook?",
-    answer: "Yes. Connect Google Calendar, Outlook or iCloud. Your events show up next to your tasks and time blocks.",
-    link: { label: "How calendar sync works", href: "/features/calendar-sync" },
-  },
-  {
-    question: "Is there a phone app?",
+    question: "Can I download the desktop or Android app?",
     answer:
-      "Not in the app stores yet. On your phone, open StudyOS in the browser. It works as a mobile web app and syncs with your other devices. Desktop apps are ready for Mac, Windows and Linux.",
-    link: { label: "Get the desktop app", href: "/download" },
+      "There is no public StudyOS desktop or Android release in this phase. The current web workspace is responsive, while native packaging and release work remain separate future milestones.",
+  },
+  {
+    question: "How does StudyOS relate to Open Sunsama?",
+    answer:
+      "StudyOS is being built incrementally on the inherited Open Sunsama foundation. The project preserves upstream attribution and license information while developing a student-first product.",
+    link: {
+      label: "View the inherited foundation",
+      href: "https://github.com/ShadowWalker2014/open-sunsama",
+    },
   },
 ];
 
 export function FaqSection() {
   return (
     <KitFaqSection
-      heading="Questions people ask."
-      lead="Something missing? Read the [docs](/docs) or ask on [GitHub](https://github.com/ShadowWalker2014/open-sunsama/issues)."
+      heading="Good questions, honest answers."
+      lead="StudyOS is still in active development, so this page separates what works now from what comes next."
       items={FAQS}
       className="py-24"
     />

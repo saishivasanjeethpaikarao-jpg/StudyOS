@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/landing/motion";
 import { BrowserFrame, ThemedShot } from "@/components/landing/product-shot";
@@ -49,9 +49,9 @@ export function BlogCTA({ className }: { className?: string }) {
                     className="h-11 rounded-lg border-white/15 bg-white/5 px-5 text-[14px] text-white hover:bg-white/10 hover:text-white"
                     asChild
                   >
-                    <Link to="/download">
-                      <Download className="h-4 w-4" />
-                      Download the app
+                    <Link to="/app">
+                      <Monitor className="h-4 w-4" />
+                      Open StudyOS
                     </Link>
                   </Button>
                 </div>

@@ -100,7 +100,7 @@ export function ComparisonTable({
                 >
                   {i === 0 ? (
                     <span className="inline-flex items-center gap-1.5">
-                      <img src="/open-sunsama-logo.png" alt="" className="h-4 w-4 rounded" />
+                      <img src="/studyos-symbol.svg" alt="" className="h-4 w-4 rounded" />
                       {column}
                     </span>
                   ) : (

@@ -74,7 +74,7 @@ export function Header({ className }: HeaderProps) {
         <div className="mr-3 flex">
           <Link to="/app" className="mr-4 flex items-center space-x-2">
             <img
-              src="/open-sunsama-logo.png"
+              src="/studyos-symbol.svg"
               alt="StudyOS"
               className="h-6 w-6 rounded-lg object-cover"
             />
@@ -251,7 +251,7 @@ export function Header({ className }: HeaderProps) {
                 <DropdownMenuItem asChild className="text-[13px] py-1.5">
                   <a href="/download" className="w-full cursor-pointer">
                     <Download className="mr-2 h-3.5 w-3.5" />
-                    Get Desktop App
+                    Desktop app coming soon
                   </a>
                 </DropdownMenuItem>
               )}

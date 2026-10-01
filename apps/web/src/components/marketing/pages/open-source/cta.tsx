@@ -32,7 +32,7 @@ export function OpenSourceCta({ cta }: { cta: MarketingPageContent["cta"] }) {
             />
             <div className="relative grid items-center gap-10 p-8 md:p-12 lg:grid-cols-[1fr_1.15fr] lg:gap-6 lg:p-14 lg:pr-0">
               <div className="min-w-0 lg:py-4">
-                <img src="/open-sunsama-logo.png" alt="" className="h-11 w-11 rounded-xl shadow-lg" />
+                <img src="/studyos-symbol.svg" alt="" className="h-11 w-11 rounded-xl shadow-lg" />
                 <h2 id="cta-heading" className="mt-6 text-balance text-[30px] font-semibold leading-[1.08] tracking-[-0.035em] md:text-[42px]">
                   {cta.heading}
                 </h2>
