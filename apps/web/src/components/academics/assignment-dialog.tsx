@@ -101,7 +101,8 @@ export function AssignmentDialog({
               {assignment ? "Edit assignment" : "Add an assignment"}
             </DialogTitle>
             <DialogDescription>
-              Capture the deadline now. You can plan the work as tasks later.
+              Capture the deadline now. You can plan study sessions from the
+              assignment card.
             </DialogDescription>
           </DialogHeader>
 
@@ -317,7 +318,9 @@ export function DeleteAssignmentDialog({
           <DialogTitle>Delete this assignment?</DialogTitle>
           <DialogDescription>
             “{assignment?.title}” will be removed from your workspace. This
-            cannot be undone from the app.
+            cannot be undone from the app. Planned study sessions will be
+            cancelled and removed from your calendar; completed study history
+            will be preserved.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-4 gap-2">

@@ -13,7 +13,7 @@ interface ApiResponse<T> {
   success: boolean;
   data: T;
 }
-type RawStudySession = Omit<
+export type RawStudySession = Omit<
   StudySession,
   "startAt" | "endAt" | "completedAt" | "createdAt" | "updatedAt" | "deletedAt"
 > & {
@@ -25,7 +25,7 @@ type RawStudySession = Omit<
   deletedAt: string | null;
 };
 
-function hydrateSession(raw: RawStudySession): StudySession {
+export function hydrateStudySession(raw: RawStudySession): StudySession {
   return {
     ...raw,
     startAt: new Date(raw.startAt),
@@ -40,7 +40,7 @@ function hydrateSession(raw: RawStudySession): StudySession {
 async function sessionResponse(
   response: Promise<ApiResponse<RawStudySession>>
 ): Promise<StudySession> {
-  return hydrateSession((await response).data);
+  return hydrateStudySession((await response).data);
 }
 export interface StudySessionsListResponse {
   data: StudySession[];
@@ -119,7 +119,10 @@ export function createStudySessionsApi(
         ...options,
         searchParams: { ...options?.searchParams, ...filters },
       });
-      return { data: response.data.map(hydrateSession), meta: response.meta };
+      return {
+        data: response.data.map(hydrateStudySession),
+        meta: response.meta,
+      };
     },
     async get(id, options) {
       return sessionResponse(

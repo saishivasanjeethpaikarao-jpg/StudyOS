@@ -3,7 +3,7 @@
  * @module @open-sunsama/types/time-block
  */
 
-import type { Task } from './task.js';
+import type { Task } from "./task.js";
 
 /**
  * Represents a time block in the Open Sunsama system.
@@ -19,22 +19,22 @@ export interface TimeBlock {
   /** ID of the task associated with this time block (optional) */
   taskId: string | null;
 
+  /** Present only for a calendar projection managed by a Study Session. */
+  studySessionId: string | null;
+
+  /** Canonical scheduling zone for session-owned projections only. */
+  studySessionTimezone?: string | null;
+
   /** Title/label for the time block */
   title: string;
 
-  /** 
-   * Start time of the time block.
-   * Stored as ISO 8601 datetime string in UTC.
-   */
+  /** Session projections use the canonical instant; generic blocks use viewer-local wall time. */
   startTime: Date;
 
-  /** 
-   * End time of the time block.
-   * Stored as ISO 8601 datetime string in UTC.
-   */
+  /** Session projections use the canonical instant; generic blocks use viewer-local wall time. */
   endTime: Date;
 
-  /** 
+  /**
    * Color code for visual distinction (hex format, e.g., "#FF5733").
    * Used in calendar UI for categorization.
    */
@@ -60,13 +60,13 @@ export interface CreateTimeBlockInput {
   /** Title/label for the time block */
   title: string;
 
-  /** 
+  /**
    * Start time of the time block.
    * Can be Date object or ISO 8601 string.
    */
   startTime: Date | string;
 
-  /** 
+  /**
    * End time of the time block.
    * Can be Date object or ISO 8601 string.
    */
@@ -117,6 +117,14 @@ export interface TimeBlockFilterInput {
   /** Inclusive calendar date (YYYY-MM-DD). */
   to?: string;
 
+  /** Half-open absolute range for session-owned projections; used with from/to for generic blocks. */
+  sessionFrom?: string;
+  sessionTo?: string;
+
+  /** Existing API pagination, exposed for dense calendar ranges. */
+  page?: number;
+  limit?: number;
+
   /** @deprecated Use `from`; retained for existing callers. */
   startTimeFrom?: Date | string;
 
@@ -150,7 +158,7 @@ export interface QuickScheduleInput {
   /** Start time for the time block */
   startTime: Date | string;
 
-  /** 
+  /**
    * Duration in minutes.
    * If omitted, uses the task's estimated minutes or a default value.
    */

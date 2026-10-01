@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   CalendarClock,
+  ChevronDown,
   CheckCircle2,
   CirclePlay,
   Clock3,
@@ -44,6 +45,7 @@ import {
   TabsTrigger,
 } from "@/components/ui";
 import { AssignmentDialog, DeleteAssignmentDialog } from "./assignment-dialog";
+import { StudySessionsPanel } from "./study-sessions-panel";
 import {
   type AssignmentView,
   assignmentStatusLabel,
@@ -115,7 +117,7 @@ export function AssignmentsPage() {
               Assignments
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              Keep deadlines visible, then use tasks to plan the work.
+              Keep deadlines visible, then plan focused study time around them.
             </p>
           </div>
           <Button
@@ -274,6 +276,7 @@ export function AssignmentCard({
   onDelete: () => void;
   onStatusChange: (status: AssignmentStatus) => void;
 }) {
+  const [studyOpen, setStudyOpen] = React.useState(false);
   const overdue =
     new Date(assignment.dueAt) < new Date() &&
     !["completed", "cancelled"].includes(assignment.status);
@@ -364,8 +367,17 @@ export function AssignmentCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        {nextAction && (
-          <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex flex-wrap justify-end gap-2">
+          <Button
+            variant="outline"
+            className="h-11"
+            aria-expanded={studyOpen}
+            onClick={() => setStudyOpen((open) => !open)}
+          >
+            <ChevronDown className={studyOpen ? "rotate-180" : undefined} />
+            {studyOpen ? "Hide study plan" : "Study plan"}
+          </Button>
+          {nextAction && (
             <Button
               variant="outline"
               className="h-11"
@@ -373,8 +385,9 @@ export function AssignmentCard({
             >
               <nextAction.icon /> {nextAction.label}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
+        {studyOpen && <StudySessionsPanel assignment={assignment} />}
       </CardContent>
     </Card>
   );

@@ -19,6 +19,7 @@
 import type {
   AssignmentFilterInput,
   SubjectFilterInput,
+  StudySessionFilterInput,
   TaskFilterInput,
   TimeBlockFilterInput,
 } from "@open-sunsama/types";
@@ -102,4 +103,15 @@ export const assignmentKeys = {
     [...assignmentKeys.lists(), filters] as const,
   details: () => [...assignmentKeys.all, "detail"] as const,
   detail: (id: string) => [...assignmentKeys.details(), id] as const,
+};
+
+export const studySessionKeys = {
+  all: ["studySessions"] as const,
+  lists: () => [...studySessionKeys.all, "list"] as const,
+  list: (filters: StudySessionFilterInput) =>
+    [...studySessionKeys.lists(), filters] as const,
+  details: () => [...studySessionKeys.all, "detail"] as const,
+  detail: (id: string) => [...studySessionKeys.details(), id] as const,
+  progress: (assignmentId: string) =>
+    [...studySessionKeys.all, "progress", assignmentId] as const,
 };
