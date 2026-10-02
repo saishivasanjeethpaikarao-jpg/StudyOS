@@ -33,6 +33,11 @@ import { ideaSubtasksRouter } from "./routes/idea-subtasks.js";
 import { subjectsRouter } from "./routes/subjects.js";
 import { assignmentsRouter } from "./routes/assignments.js";
 import { studySessionsRouter } from "./routes/study-sessions.js";
+import { resourcesRouter } from "./routes/resources.js";
+import { studyNotesRouter } from "./routes/study-notes.js";
+import { studyRemindersRouter } from "./routes/study-reminders.js";
+import { focusSessionsRouter } from "./routes/focus-sessions.js";
+import { quizzesRouter, quizAttemptsRouter } from "./routes/quizzes.js";
 import { webhooksRouter } from "./routes/webhooks.js";
 import { oauthRouter } from "./routes/oauth.js";
 import { wellKnownRouter } from "./routes/well-known.js";
@@ -55,11 +60,19 @@ const app = new Hono();
 // Global middleware
 app.use("*", logger());
 
-const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000"];
+const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [
+  "http://localhost:3000",
+];
 // OAuth discovery/token endpoints and the MCP endpoint are called by
 // third-party clients (including browser-based ones like MCP Inspector), so
 // they answer any origin. They never rely on cookies.
-const PUBLIC_CORS_PATHS = ["/.well-known/", "/oauth/token", "/oauth/register", "/oauth/revoke", "/mcp"];
+const PUBLIC_CORS_PATHS = [
+  "/.well-known/",
+  "/oauth/token",
+  "/oauth/register",
+  "/oauth/revoke",
+  "/mcp",
+];
 
 app.use(
   "*",
@@ -81,7 +94,13 @@ app.use(
       "Last-Event-ID",
     ],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    exposeHeaders: ["X-Total-Count", "X-Page", "X-Limit", "Mcp-Session-Id", "WWW-Authenticate"],
+    exposeHeaders: [
+      "X-Total-Count",
+      "X-Page",
+      "X-Limit",
+      "Mcp-Session-Id",
+      "WWW-Authenticate",
+    ],
     maxAge: 86400,
     credentials: true,
   })
@@ -176,6 +195,11 @@ app.get("/", (c) => {
       subjects: "/subjects",
       assignments: "/assignments",
       studySessions: "/study-sessions",
+      resources: "/resources",
+      studyNotes: "/study-notes",
+      studyReminders: "/study-reminders",
+      focusSessions: "/focus-sessions",
+      quizzes: "/quizzes",
       mcp: "/mcp",
       oauth: "/oauth",
     },
@@ -204,13 +228,22 @@ app.route("/ideas", ideaSubtasksRouter); // /ideas/:ideaId/subtasks
 app.route("/subjects", subjectsRouter);
 app.route("/assignments", assignmentsRouter);
 app.route("/study-sessions", studySessionsRouter);
+app.route("/resources", resourcesRouter);
+app.route("/study-notes", studyNotesRouter);
+app.route("/study-reminders", studyRemindersRouter);
+app.route("/focus-sessions", focusSessionsRouter);
+app.route("/quizzes", quizzesRouter);
+app.route("/quiz-attempts", quizAttemptsRouter);
 // Public — no auth (provider webhooks). Identity verified by per-
 // channel state stored when we registered the watch.
 app.route("/webhooks", webhooksRouter);
 // Remote MCP server + the OAuth 2.1 authorization server that protects it.
 app.route("/.well-known", wellKnownRouter);
 app.route("/oauth", oauthRouter);
-app.route("/mcp", createMcpRouter((request) => app.fetch(request)));
+app.route(
+  "/mcp",
+  createMcpRouter((request) => app.fetch(request))
+);
 
 // Error handling
 app.onError(errorHandler);

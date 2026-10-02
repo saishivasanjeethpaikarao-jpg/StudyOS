@@ -14,6 +14,7 @@ import { useTask, useIsMobile } from "@/hooks";
 import { AcademicDueSummary } from "@/components/academics/academic-due-summary";
 import { StudySessionCalendarSheet } from "@/components/academics/study-session-calendar-sheet";
 import { TodayStudySessions } from "@/components/academics/today-study-sessions";
+import { TodayReminders } from "@/components/academics/today-reminders";
 
 /**
  * Main board view content.
@@ -61,6 +62,7 @@ export function BoardPageContent() {
       <div className="flex h-[calc(100dvh-7.5rem)] flex-col overflow-hidden">
         <AcademicDueSummary />
         <TodayStudySessions onSelectSession={setSelectedSessionId} />
+        <TodayReminders />
         <div className="min-h-0 flex-1">
           <MobileTasksView />
         </div>
@@ -104,6 +106,7 @@ export function BoardPageContent() {
       <div className="flex h-[calc(100vh-3.5rem)] flex-col lg:h-[calc(100vh-3.5rem)]">
         <AcademicDueSummary />
         <TodayStudySessions onSelectSession={setSelectedSessionId} />
+        <TodayReminders />
         <div className="flex min-h-0 flex-1">
           <Sidebar className="hidden lg:flex" />
           <MobileBacklogSheet />

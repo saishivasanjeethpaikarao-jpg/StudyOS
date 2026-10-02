@@ -56,7 +56,11 @@ import { createAuthApi, type AuthApi } from "./auth.js";
 export { createAuthApi, type AuthApi };
 
 // Tasks API
-import { createTasksApi, type TasksApi, type TasksListResponse } from "./tasks.js";
+import {
+  createTasksApi,
+  type TasksApi,
+  type TasksListResponse,
+} from "./tasks.js";
 export { createTasksApi, type TasksApi, type TasksListResponse };
 
 // StudyOS academic domain APIs
@@ -83,15 +87,29 @@ import { createTimeBlocksApi, type TimeBlocksApi } from "./time-blocks.js";
 export { createTimeBlocksApi, type TimeBlocksApi };
 
 // Study Sessions API
-import { createStudySessionsApi, type StudySessionsApi, type StudySessionsListResponse } from "./study-sessions.js";
-export { createStudySessionsApi, type StudySessionsApi, type StudySessionsListResponse };
+import {
+  createStudySessionsApi,
+  type StudySessionsApi,
+  type StudySessionsListResponse,
+} from "./study-sessions.js";
+export {
+  createStudySessionsApi,
+  type StudySessionsApi,
+  type StudySessionsListResponse,
+};
+
+import { createLearningApi } from "./learning.js";
+export { createLearningApi };
 
 // API Keys API
 import { createApiKeysApi, type ApiKeysApi } from "./api-keys.js";
 export { createApiKeysApi, type ApiKeysApi };
 
 // Notifications API
-import { createNotificationsApi, type NotificationsApi } from "./notifications.js";
+import {
+  createNotificationsApi,
+  type NotificationsApi,
+} from "./notifications.js";
 export { createNotificationsApi, type NotificationsApi };
 
 // Ideas API
@@ -223,6 +241,7 @@ export function createApi(config: ApiClientConfig) {
     assignments: createAssignmentsApi(client),
     /** Study Session CRUD, transitions, and derived Assignment progress */
     studySessions: createStudySessionsApi(client),
+    ...createLearningApi(client),
     /** Subtasks API methods */
     subtasks: createSubtasksApi(client),
     /** Time blocks API methods */

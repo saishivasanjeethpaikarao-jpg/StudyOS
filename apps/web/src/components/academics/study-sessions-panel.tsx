@@ -24,6 +24,7 @@ import {
   useStudySessions,
 } from "@/hooks/useStudySessions";
 import { PlanStudyDialog } from "./plan-study-dialog";
+import { LearningWorkspace } from "./learning-workspace";
 import {
   formatSessionLocalInput,
   parseSessionLocalInput,
@@ -276,6 +277,11 @@ export function StudySessionsPanel({
                   {session.actualMinutes ?? 0} min studied
                 </span>
               )}
+              <LearningWorkspace
+                target={{ studySessionId: session.id }}
+                label={`Study session · ${sessionTime(session)}`}
+                triggerLabel="Materials & focus"
+              />
               {session.status === "planned" && (
                 <Button
                   size="sm"

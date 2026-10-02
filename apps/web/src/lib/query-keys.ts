@@ -115,3 +115,12 @@ export const studySessionKeys = {
   progress: (assignmentId: string) =>
     [...studySessionKeys.all, "progress", assignmentId] as const,
 };
+
+export const learningKeys = {
+  resources: ["learning", "resources"] as const,
+  notes: ["learning", "notes"] as const,
+  reminders: ["learning", "reminders"] as const,
+  focus: ["learning", "focus"] as const,
+  quizzes: ["learning", "quizzes"] as const,
+  attempts: ["learning", "attempts"] as const,
+};

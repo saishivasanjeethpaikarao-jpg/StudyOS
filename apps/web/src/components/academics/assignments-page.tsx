@@ -46,6 +46,7 @@ import {
 } from "@/components/ui";
 import { AssignmentDialog, DeleteAssignmentDialog } from "./assignment-dialog";
 import { StudySessionsPanel } from "./study-sessions-panel";
+import { LearningWorkspace } from "./learning-workspace";
 import {
   type AssignmentView,
   assignmentStatusLabel,
@@ -368,6 +369,10 @@ export function AssignmentCard({
           </DropdownMenu>
         </div>
         <div className="mt-4 flex flex-wrap justify-end gap-2">
+          <LearningWorkspace
+            target={{ assignmentId: assignment.id }}
+            label={assignment.title}
+          />
           <Button
             variant="outline"
             className="h-11"

@@ -19,6 +19,7 @@ import {
   subjectKeys,
   assignmentKeys,
   studySessionKeys,
+  learningKeys,
 } from "@/lib/query-keys";
 
 /**
@@ -263,6 +264,19 @@ function handleWebSocketEvent(
       batcher.schedule(studySessionKeys.all);
       batcher.schedule(timeBlockKeys.lists());
       break;
+
+    case "learning:changed": {
+      const payload = event.payload as {
+        kind?: keyof typeof learningKeys;
+      } | null;
+      if (
+        payload?.kind &&
+        Object.prototype.hasOwnProperty.call(learningKeys, payload.kind)
+      )
+        batcher.schedule(learningKeys[payload.kind]);
+      else batcher.schedule(["learning"]);
+      break;
+    }
 
     case "connected":
       queryClient.invalidateQueries({ queryKey: timerKeys.active() });

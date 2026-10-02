@@ -37,6 +37,7 @@ import {
 } from "@/components/ui";
 import { DeleteSubjectDialog, SubjectDialog } from "./subject-dialog";
 import { getAcademicErrorMessage } from "./academic-utils";
+import { LearningWorkspace } from "./learning-workspace";
 
 const subjectIconMap = {
   "book-open": BookOpen,
@@ -274,6 +275,12 @@ function SubjectCard({
             View assignments
           </Link>
         </Button>
+        <div className="mt-2 [&>button]:w-full">
+          <LearningWorkspace
+            target={{ subjectId: subject.id }}
+            label={subject.name}
+          />
+        </div>
       </CardContent>
     </Card>
   );
