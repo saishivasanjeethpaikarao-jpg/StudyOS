@@ -12,6 +12,7 @@ export function createOpaqueToken(): string {
   return randomBytes(32).toString("base64url");
 }
 
+// Raw cookie values are never persisted; only their SHA-256 hashes are stored.
 export async function issueBrowserSession(c: Context, userId: string, deviceId?: string) {
   const token = createOpaqueToken();
   const csrfToken = createOpaqueToken();
@@ -32,7 +33,6 @@ export async function issueBrowserSession(c: Context, userId: string, deviceId?:
   });
   return { csrfToken, expiresAt };
 }
-
 export async function getBrowserSession(token: string) {
   const db = getDb();
   const now = new Date();
@@ -74,4 +74,4 @@ export async function revokeBrowserSession(c: Context, sessionId?: string) {
   }
   deleteCookie(c, SESSION_COOKIE, { path: "/", secure: secure(), sameSite: "Lax" });
 }
-
+// Session records remain revocable server-side even after a browser cookie is cleared.
