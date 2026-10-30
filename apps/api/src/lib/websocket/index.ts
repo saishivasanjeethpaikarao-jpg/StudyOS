@@ -30,10 +30,10 @@ export function initWebSocket(server: Server): WebSocketServer {
     path: '/ws',
   });
 
-  wss.on('connection', (ws: WebSocket, req) => {
+  wss.on('connection', async (ws: WebSocket, req) => {
     // Authenticate connection using JWT from query string
     const url = req.url || '';
-    const auth = authenticateWebSocket(url);
+    const auth = await authenticateWebSocket(url, req.headers.cookie, req.headers.origin);
 
     if (!auth.success || !auth.userId) {
       ws.close(4001, auth.error || 'Unauthorized');

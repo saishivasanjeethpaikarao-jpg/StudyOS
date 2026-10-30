@@ -1,5 +1,5 @@
-import { pgTable, uuid, varchar, timestamp, jsonb } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { pgTable, uuid, varchar, timestamp, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
+import { relations, sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
@@ -17,7 +17,8 @@ export interface UserPreferences {
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).notNull().unique(),
-  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  // Google-only accounts intentionally have no password credential.
+  passwordHash: varchar('password_hash', { length: 255 }),
   name: varchar('name', { length: 255 }),
   avatarUrl: varchar('avatar_url', { length: 500 }),
   timezone: varchar('timezone', { length: 50 }).default('UTC'),
@@ -26,7 +27,7 @@ export const users = pgTable('users', {
   preferences: jsonb('preferences').$type<UserPreferences>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [uniqueIndex('users_email_lower_idx').on(sql`lower(${table.email})`)]);
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   tasks: many(tasks),

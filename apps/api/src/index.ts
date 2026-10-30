@@ -13,6 +13,8 @@ import { logger } from "hono/logger";
 
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import { authRouter } from "./routes/auth.js";
+import { accountRouter } from "./routes/account.js";
+import { syncRouter } from "./routes/sync.js";
 import { tasksRouter } from "./routes/tasks.js";
 import { subtasksRouter } from "./routes/subtasks.js";
 import { timeBlocksRouter } from "./routes/time-blocks.js";
@@ -88,6 +90,8 @@ app.use(
       "Content-Type",
       "Authorization",
       "X-API-Key",
+      "X-CSRF-Token",
+      "X-StudyOS-Web-Session",
       "If-Match",
       "Mcp-Session-Id",
       "Mcp-Protocol-Version",
@@ -177,6 +181,8 @@ app.get("/", (c) => {
     health: "/health",
     endpoints: {
       auth: "/auth",
+      account: "/account",
+      sync: "/sync",
       tasks: "/tasks",
       subtasks: "/tasks/:taskId/subtasks",
       timeBlocks: "/time-blocks",
@@ -208,6 +214,8 @@ app.get("/", (c) => {
 
 // Mount routes
 app.route("/auth", authRouter);
+app.route("/account", accountRouter);
+app.route("/sync", syncRouter);
 app.route("/tasks", tasksRouter);
 app.route("/tasks", subtasksRouter); // Subtask routes under /tasks/:taskId/subtasks
 app.route("/time-blocks", timeBlocksRouter);

@@ -47,6 +47,9 @@ export interface ApiClientConfig {
   /** Custom fetch function (e.g., Tauri HTTP plugin fetch for desktop) */
   customFetch?: typeof globalThis.fetch;
 
+  /** Include browser cookies for authenticated session requests. */
+  credentials?: RequestCredentials;
+
   /**
    * Dynamic token getter. When provided, it is consulted on every request and
    * takes precedence over the static `token`. This lets a refreshed token be
@@ -97,6 +100,7 @@ export function createApiClient(config: ApiClientConfig): KyInstance {
     onError,
     retry = {},
     customFetch,
+    credentials,
     getToken,
     onUnauthorized,
   } = config;
@@ -118,6 +122,7 @@ export function createApiClient(config: ApiClientConfig): KyInstance {
     prefixUrl: baseUrl,
     timeout,
     ...(customFetch ? { fetch: customFetch } : {}),
+    ...(credentials ? { credentials } : {}),
     retry: {
       limit: retry.limit ?? 2,
       methods: retry.methods ?? ["get"],

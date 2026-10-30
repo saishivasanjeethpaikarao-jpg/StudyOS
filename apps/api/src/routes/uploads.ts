@@ -175,7 +175,8 @@ uploadsRouter.post("/attachments", auth, async (c) => {
  * Railway buckets are private, so we proxy requests through this endpoint
  * Supports caching headers for immutable content
  */
-uploadsRouter.get("/*", async (c) => {
+uploadsRouter.get("/*", auth, async (c) => {
+  const userId = c.get("userId");
   // Extract the key from the path (everything after /uploads/)
   const path = c.req.path;
   const key = path.replace(/^\/uploads\//, "");
@@ -186,6 +187,11 @@ uploadsRouter.get("/*", async (c) => {
   if (!key) {
     throw new NotFoundError("File");
   }
+
+  // All inherited avatar/attachment objects are private; their key embeds the
+  // owning user ID and the API never exposes a permanent public object URL.
+  const keyParts = key.split("/");
+  if (keyParts.length < 3 || keyParts[1] !== userId) throw new NotFoundError("File");
 
   // Fetch from S3
   const result = await getS3Object(key);
@@ -199,8 +205,7 @@ uploadsRouter.get("/*", async (c) => {
     headers: {
       "Content-Type": result.contentType,
       "Content-Length": result.contentLength.toString(),
-      // Cache immutable content for 1 year (files have unique timestamps in keys)
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cache-Control": "private, no-store",
     },
   });
 });

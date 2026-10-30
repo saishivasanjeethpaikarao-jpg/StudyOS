@@ -5,6 +5,7 @@
 
 import type { Context, MiddlewareHandler } from 'hono';
 import { getDb, eq, and, apiKeys } from '@open-sunsama/database';
+import type { authSessions } from '@open-sunsama/database';
 import {
   AuthenticationError,
   AuthorizationError,
@@ -15,13 +16,15 @@ import {
 import { verifyToken } from '../lib/jwt.js';
 import { validateAccessToken } from '../lib/oauth/tokens.js';
 import { ACCESS_TOKEN_PREFIX } from '../lib/oauth/config.js';
+import { getBrowserSession, matchesCsrfToken, SESSION_COOKIE } from '../lib/account-sessions.js';
 
 /**
  * Extended context variables for authenticated requests
  */
 export interface AuthVariables {
   userId: string;
-  authMethod: 'jwt' | 'api-key' | 'oauth';
+  authMethod: 'jwt' | 'api-key' | 'oauth' | 'cookie';
+  sessionId?: string;
   apiKeyId?: string;
   /** Scopes for API keys and OAuth tokens; JWT sessions have full access. */
   apiKeyScopes?: string[];
@@ -57,6 +60,18 @@ function extractApiKey(c: Context): string | null {
  * Verifies JWT tokens from the Authorization header
  */
 export const jwtAuth: MiddlewareHandler<{ Variables: AuthVariables }> = async (c, next) => {
+  const cookieToken = readCookie(c.req.header('Cookie'), SESSION_COOKIE);
+  if (cookieToken) {
+    const session = await getBrowserSession(cookieToken);
+    if (session) {
+      await validateCookieCsrf(c, session);
+      c.set('userId', session.userId);
+      c.set('authMethod', 'cookie');
+      c.set('sessionId', session.id);
+      await next();
+      return;
+    }
+  }
   const token = extractBearerToken(c.req.header('Authorization'));
   
   if (!token) {
@@ -75,6 +90,21 @@ export const jwtAuth: MiddlewareHandler<{ Variables: AuthVariables }> = async (c
     throw new AuthenticationError('Invalid or expired token');
   }
 };
+
+function readCookie(header: string | undefined, name: string): string | null {
+  const entry = header?.split(';').map((value) => value.trim()).find((value) => value.startsWith(`${name}=`));
+  return entry ? decodeURIComponent(entry.slice(name.length + 1)) : null;
+}
+
+async function validateCookieCsrf(c: Context, session: typeof authSessions.$inferSelect) {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(c.req.method.toUpperCase())) return;
+  const csrf = c.req.header('X-CSRF-Token');
+  const origin = c.req.header('Origin');
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map((value) => value.trim());
+  if (!csrf || !matchesCsrfToken(session.csrfHash, csrf) || (origin && !allowedOrigins.includes(origin))) {
+    throw new AuthenticationError('Invalid browser request protection token');
+  }
+}
 
 /**
  * API key authentication middleware
@@ -233,6 +263,16 @@ function assertOAuthRouteAllowed(method: string, path: string, scopes: string[])
  * Supports JWT sessions, API keys, and OAuth access tokens
  */
 export const auth: MiddlewareHandler<{ Variables: AuthVariables }> = async (c, next) => {
+  const cookieToken = readCookie(c.req.header('Cookie'), SESSION_COOKIE);
+  if (cookieToken && !c.req.header('Authorization') && !extractApiKey(c)) {
+    const session = await getBrowserSession(cookieToken);
+    if (!session) throw new AuthenticationError('Invalid or expired session');
+    await validateCookieCsrf(c, session);
+    c.set('userId', session.userId);
+    c.set('authMethod', 'cookie');
+    c.set('sessionId', session.id);
+    return next();
+  }
   const principal = await authenticateRequest(c.req.header('Authorization'), extractApiKey(c) ?? undefined);
   if (!principal) {
     throw new AuthenticationError('Authentication required');
@@ -253,7 +293,7 @@ export const auth: MiddlewareHandler<{ Variables: AuthVariables }> = async (c, n
  */
 export function requireAnyScope(...scopes: string[]): MiddlewareHandler<{ Variables: AuthVariables }> {
   return async (c, next) => {
-    if (c.get('authMethod') === 'jwt') return next();
+    if (c.get('authMethod') === 'jwt' || c.get('authMethod') === 'cookie') return next();
     const keyScopes = c.get('apiKeyScopes') || [];
     if (keyScopes.includes('all') || scopes.some((s) => keyScopes.includes(s))) {
       return next();
@@ -272,7 +312,7 @@ export function requireScopes(...requiredScopes: string[]): MiddlewareHandler<{ 
     const authMethod = c.get('authMethod');
     
     // JWT has full access
-    if (authMethod === 'jwt') {
+    if (authMethod === 'jwt' || authMethod === 'cookie') {
       return next();
     }
 

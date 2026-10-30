@@ -2,10 +2,10 @@
  * Authentication routes for Open Sunsama API
  * Handles user registration, login, and profile management
  */
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import crypto from 'crypto';
-import { getDb, eq, users } from '@open-sunsama/database';
+import { getDb, eq, sql, users } from '@open-sunsama/database';
 import { AuthenticationError, ConflictError, ValidationError } from '@open-sunsama/utils';
 import type { User, AuthResponse } from '@open-sunsama/types';
 import { hashPassword, comparePassword } from '../lib/password.js';
@@ -18,8 +18,15 @@ import {
 import { publishEvent } from '../lib/websocket/index.js';
 import { deleteFromS3ByUrl } from '../lib/s3.js';
 import { sendPasswordResetEmail, getThemeHexColor } from '../lib/email/index.js';
+import { issueBrowserSession, issueCsrfToken, revokeBrowserSession } from '../lib/account-sessions.js';
+import { googleAuthRouter } from './google-auth.js';
 
 const authRouter = new Hono<{ Variables: AuthVariables }>();
+authRouter.route('/google', googleAuthRouter);
+
+function isWebSessionRequest(c: Context<{ Variables: AuthVariables }>): boolean {
+  return c.req.header('X-StudyOS-Web-Session') === '1';
+}
 
 /** Format user data for API response (exclude sensitive fields) */
 function formatUser(user: typeof users.$inferSelect): Omit<User, 'passwordHash'> {
@@ -34,15 +41,17 @@ function formatUser(user: typeof users.$inferSelect): Omit<User, 'passwordHash'>
 authRouter.post('/register', zValidator('json', registerSchema), async (c) => {
   const { email, password, name } = c.req.valid('json');
   const db = getDb();
+  const normalizedEmail = email.trim().toLowerCase();
 
-  const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const existing = await db.select().from(users).where(sql`lower(${users.email}) = ${normalizedEmail}`).limit(1);
   if (existing.length > 0) throw new ConflictError('An account with this email already exists', 'email');
 
   const passwordHash = await hashPassword(password);
-  const [newUser] = await db.insert(users).values({ email, passwordHash, name: name || null }).returning();
+  const [newUser] = await db.insert(users).values({ email: normalizedEmail, passwordHash, name: name || null }).returning();
   if (!newUser) throw new Error('Failed to create user');
 
-  const token = signToken(newUser.id);
+  const token = isWebSessionRequest(c) ? '' : signToken(newUser.id);
+  if (isWebSessionRequest(c)) await issueBrowserSession(c, newUser.id);
   return c.json({ success: true, data: { user: formatUser(newUser) as User, token } as AuthResponse }, 201);
 });
 
@@ -51,13 +60,14 @@ authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
   const { email, password } = c.req.valid('json');
   const db = getDb();
 
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const [user] = await db.select().from(users).where(sql`lower(${users.email}) = ${email.trim().toLowerCase()}`).limit(1);
   if (!user) throw new AuthenticationError('Invalid email or password');
 
-  const isValid = await comparePassword(password, user.passwordHash);
+  const isValid = !!user.passwordHash && await comparePassword(password, user.passwordHash);
   if (!isValid) throw new AuthenticationError('Invalid email or password');
 
-  const token = signToken(user.id);
+  const token = isWebSessionRequest(c) ? '' : signToken(user.id);
+  if (isWebSessionRequest(c)) await issueBrowserSession(c, user.id);
   return c.json({ success: true, data: { user: formatUser(user) as User, token } as AuthResponse });
 });
 
@@ -91,7 +101,15 @@ authRouter.post('/refresh', async (c) => {
 
 /** POST /auth/logout - Logout (stateless - just returns success) */
 authRouter.post('/logout', auth, async (c) => {
+  await revokeBrowserSession(c, c.get('sessionId'));
   return c.json({ success: true, message: 'Logged out successfully' });
+});
+
+authRouter.get('/csrf', auth, async (c) => {
+  const sessionId = c.get('sessionId');
+  if (!sessionId) throw new AuthenticationError('Browser session required');
+  const csrfToken = await issueCsrfToken(sessionId);
+  return c.json({ success: true, data: { csrfToken } });
 });
 
 /** GET /auth/me - Get the current authenticated user's profile */
@@ -168,7 +186,7 @@ authRouter.post('/change-password', auth, zValidator('json', changePasswordSchem
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user) throw new AuthenticationError('User not found');
 
-  const isValid = await comparePassword(currentPassword, user.passwordHash);
+  const isValid = !!user.passwordHash && await comparePassword(currentPassword, user.passwordHash);
   if (!isValid) throw new ValidationError('Current password is incorrect', { currentPassword: ['Current password is incorrect'] });
 
   const newPasswordHash = await hashPassword(newPassword);
@@ -182,7 +200,7 @@ authRouter.post('/request-password-reset', zValidator('json', requestPasswordRes
   const { email } = c.req.valid('json');
   const db = getDb();
 
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const [user] = await db.select().from(users).where(sql`lower(${users.email}) = ${email.trim().toLowerCase()}`).limit(1);
   if (user) {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');

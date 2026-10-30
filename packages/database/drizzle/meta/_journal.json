@@ -36,6 +36,41 @@
       "when": 1790869816196,
       "tag": "0004_sticky_eternity",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793361454006,
+      "tag": "0005_polite_colossus",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793362043395,
+      "tag": "0006_chemical_morgan_stark",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793362043396,
+      "tag": "0007_sync_journal_cascade_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793362043397,
+      "tag": "0008_secret_toucan",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793362043398,
+      "tag": "0009_quiet_answer_journal",
+      "breakpoints": true
     }
   ]
 }

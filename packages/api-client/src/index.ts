@@ -55,6 +55,11 @@ export { ApiError, isApiError } from "./errors.js";
 import { createAuthApi, type AuthApi } from "./auth.js";
 export { createAuthApi, type AuthApi };
 
+import { createAccountApi, type AccountDevice, type AccountSession, type AccountIdentity } from "./account.js";
+export { createAccountApi, type AccountDevice, type AccountSession, type AccountIdentity };
+import { createSyncApi, type SyncEntry, type SyncChange, type BootstrapPage, type ChangesPage, type SyncMutationInput, type SyncMutationResult } from "./sync.js";
+export { createSyncApi, type SyncEntry, type SyncChange, type BootstrapPage, type ChangesPage, type SyncMutationInput, type SyncMutationResult };
+
 // Tasks API
 import {
   createTasksApi,
@@ -233,6 +238,8 @@ export function createApi(config: ApiClientConfig) {
     client,
     /** Authentication API methods */
     auth: createAuthApi(client),
+    account: createAccountApi(client),
+    sync: createSyncApi(client),
     /** Tasks API methods */
     tasks: createTasksApi(client),
     /** Academic subjects owned by the signed-in user */
