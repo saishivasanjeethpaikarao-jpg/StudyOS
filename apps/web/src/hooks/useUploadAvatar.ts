@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@open-sunsama/types";
 import { toast } from "@/hooks/use-toast";
+import { sessionFetch } from "@/lib/api";
 
 const AUTH_USER_KEY = "open_sunsama_user";
 
@@ -57,12 +58,6 @@ export function useUploadAvatar() {
         throw new Error(validation.error);
       }
 
-      // Get token from localStorage
-      const token = localStorage.getItem("open_sunsama_token");
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
       // Create FormData
       const formData = new FormData();
       formData.append("file", file);
@@ -71,11 +66,8 @@ export function useUploadAvatar() {
       const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
       // Upload to API
-      const response = await fetch(`${baseUrl}/uploads/avatar`, {
+      const response = await sessionFetch(`${baseUrl}/uploads/avatar`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
 

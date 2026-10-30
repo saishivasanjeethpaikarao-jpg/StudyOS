@@ -59,8 +59,19 @@ export default function LoginPage() {
     <AuthLayout>
       <AuthHeader
         title="Sign in"
-        description="Enter your email and password"
+        description="Continue with Google or sign in with your email and password"
       />
+
+      <Button type="button" variant="outline" className="w-full h-10" onClick={() => {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+        window.location.assign(`${apiUrl}/auth/google/start`);
+      }}>
+        <span aria-hidden="true" className="mr-2 font-bold text-base">G</span>
+        Continue with Google
+      </Button>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" /><span>or use email</span><span className="h-px flex-1 bg-border" />
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
         <div className="grid gap-2">

@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Monitor,
   Repeat,
+  Cloud,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch, useNavigate } from "@tanstack/react-router";
@@ -35,9 +36,11 @@ import {
   CalendarSettings,
   DesktopSettings,
   RoutinesSettings,
+  AccountSyncSettings,
 } from "@/components/settings";
 
 type SettingsTab =
+  | "account"
   | "profile"
   | "security"
   | "appearance"
@@ -50,6 +53,7 @@ type SettingsTab =
   | "mcp";
 
 const TABS: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
+  { id: "account", label: "Account & Sync", icon: Cloud },
   { id: "profile", label: "Profile", icon: User },
   { id: "security", label: "Security", icon: Lock },
   { id: "appearance", label: "Appearance", icon: Palette },
@@ -66,6 +70,8 @@ function SettingsContent({ tab }: { tab: SettingsTab }) {
   switch (tab) {
     case "profile":
       return <ProfileSettings />;
+    case "account":
+      return <AccountSyncSettings />;
     case "security":
       return <PasswordSettings />;
     case "appearance":

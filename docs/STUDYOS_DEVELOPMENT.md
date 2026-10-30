@@ -53,4 +53,9 @@ StudyOS is the user-facing product name. Keep inherited package names, import pa
 
 ## Current phase boundary
 
-Phase 0 established the reproducible development baseline. Phase 1A introduces only the owned Subject and Assignment foundations plus safe user-facing StudyOS branding. Study sessions, resources, notes, AI providers, Telegram, Hermes integration, Android alarms, production cloud deployment and the broader navigation redesign remain deferred until explicitly approved.
+Phase 0 established the reproducible development baseline. Phases 1–3 add the
+academic, planning and learning foundations. Phase 4 adds account sessions,
+device registration and the PostgreSQL-backed sync protocol. Google provider
+credentials and a public deployment are still deployment concerns; native
+durable offline stores, Android alarms, Windows packaging, AI providers,
+Telegram, Hermes integration and production release remain later phases.

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Attachment } from "@open-sunsama/types";
 import { toast } from "@/hooks/use-toast";
+import { sessionFetch } from "@/lib/api";
 import { validateFile } from "./useUploadAttachment";
 
 /**
@@ -38,17 +39,8 @@ export function useTaskAttachments(taskId: string) {
   const { data: attachments = [], isLoading, error, isError } = useQuery({
     queryKey: attachmentKeys.list(taskId),
     queryFn: async (): Promise<Attachment[]> => {
-      const token = localStorage.getItem("open_sunsama_token");
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
       const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
-      const response = await fetch(`${baseUrl}/attachments?taskId=${taskId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await sessionFetch(`${baseUrl}/attachments?taskId=${taskId}`);
 
       // For 404 responses, treat as empty attachments (task has no attachments)
       if (response.status === 404) {
@@ -85,21 +77,13 @@ export function useTaskAttachments(taskId: string) {
         throw new Error(validation.error);
       }
 
-      const token = localStorage.getItem("open_sunsama_token");
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
       const formData = new FormData();
       formData.append("file", file);
       formData.append("taskId", taskId);
 
       const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
-      const response = await fetch(`${baseUrl}/uploads/attachments`, {
+      const response = await sessionFetch(`${baseUrl}/uploads/attachments`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
 
@@ -137,19 +121,11 @@ export function useTaskAttachments(taskId: string) {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (attachmentId: string): Promise<string> => {
-      const token = localStorage.getItem("open_sunsama_token");
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
       const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
-      const response = await fetch(
+      const response = await sessionFetch(
         `${baseUrl}/attachments/${attachmentId}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 

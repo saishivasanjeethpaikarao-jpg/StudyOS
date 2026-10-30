@@ -7,6 +7,7 @@ export { PasswordSettings } from "./password-settings";
 export { TaskReminderDialog } from "./task-reminder-dialog";
 export { EmailNotificationsDialog } from "./email-notifications-dialog";
 export { ProfileSettings } from "./profile-settings";
+export { AccountSyncSettings } from "./account-sync-settings";
 export { AppearanceSettings } from "./appearance-settings";
 export { NotificationSettings } from "./notification-settings";
 export { TaskSettings } from "./task-settings";

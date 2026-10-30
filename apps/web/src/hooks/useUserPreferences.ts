@@ -4,6 +4,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import type { UserPreferences, User } from "@open-sunsama/types";
+import { sessionFetch } from "@/lib/api";
 
 const AUTH_USER_KEY = "open_sunsama_user";
 
@@ -17,18 +18,16 @@ export function useSavePreferences() {
 
   return useMutation({
     mutationFn: async (preferences: UserPreferences) => {
-      const token = localStorage.getItem("open_sunsama_token");
-      if (!token || !user) {
+      if (!user) {
         // Not authenticated, skip saving to server
         return null;
       }
 
       const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
-      const response = await fetch(`${baseUrl}/auth/me`, {
+      const response = await sessionFetch(`${baseUrl}/auth/me`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ preferences }),
       });

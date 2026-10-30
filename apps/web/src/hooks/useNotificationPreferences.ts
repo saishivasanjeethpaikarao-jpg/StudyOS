@@ -4,6 +4,7 @@ import type {
   UpdateNotificationPreferencesInput,
 } from "@open-sunsama/types";
 import { getApi } from "@/lib/api";
+import { sessionFetch } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
 // API base URL for direct fetch calls (push subscription doesn't go through api-client)
@@ -186,13 +187,6 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 async function sendSubscriptionToServer(
   subscription: PushSubscription
 ): Promise<boolean> {
-  const token = localStorage.getItem("open_sunsama_token");
-  
-  if (!token) {
-    console.error("[Push] No auth token available");
-    return false;
-  }
-
   try {
     const p256dh = subscription.getKey("p256dh");
     const auth = subscription.getKey("auth");
@@ -202,11 +196,10 @@ async function sendSubscriptionToServer(
       return false;
     }
 
-    const response = await fetch(`${API_BASE_URL}/push/subscribe`, {
+    const response = await sessionFetch(`${API_BASE_URL}/push/subscribe`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
         endpoint: subscription.endpoint,
@@ -230,18 +223,11 @@ async function sendSubscriptionToServer(
  * Remove push subscription from the backend
  */
 async function removeSubscriptionFromServer(endpoint: string): Promise<boolean> {
-  const token = localStorage.getItem("open_sunsama_token");
-  
-  if (!token) {
-    return false;
-  }
-
   try {
-    const response = await fetch(`${API_BASE_URL}/push/subscribe`, {
+    const response = await sessionFetch(`${API_BASE_URL}/push/subscribe`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({ endpoint }),
     });

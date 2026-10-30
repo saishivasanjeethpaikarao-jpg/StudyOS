@@ -111,7 +111,7 @@ export function useWebSocket(): void {
   }
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated) {
       if (connectedRef.current) {
         wsClient.disconnect();
         connectedRef.current = false;

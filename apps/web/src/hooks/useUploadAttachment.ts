@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
+import { sessionFetch } from "@/lib/api";
 
 // File size limits
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -100,12 +101,6 @@ export function useUploadAttachment() {
         throw new Error(validation.error);
       }
 
-      // Get auth token
-      const token = localStorage.getItem("open_sunsama_token");
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
       // Get API base URL
       const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
@@ -114,11 +109,8 @@ export function useUploadAttachment() {
       formData.append("file", file);
 
       // Upload the file
-      const response = await fetch(`${baseUrl}/uploads/attachments`, {
+      const response = await sessionFetch(`${baseUrl}/uploads/attachments`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
 

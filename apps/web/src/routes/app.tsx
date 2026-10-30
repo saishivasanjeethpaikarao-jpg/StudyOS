@@ -15,6 +15,7 @@ import {
 import { SearchProvider, useSearch } from "@/hooks/useSearch";
 import { UndoRedoProvider } from "@/hooks/useUndoRedo";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { AccountSyncProvider } from "@/hooks/useAccountSync";
 import {
   ShortcutsModal,
   prefetchShortcutsModal,
@@ -39,10 +40,9 @@ import { prefetchRichTextEditor } from "@/components/ui/rich-text-editor.lazy";
 /**
  * Main app layout - requires authentication
  *
- * The presence of a token (set in beforeLoad on the route) is the gate to
- * rendering the shell; the /auth/me request happens in the background and
- * does not block first paint. If the token turns out to be invalid, useAuth
- * clears it and the redirect effect below kicks in.
+ * The HttpOnly server session is checked by the auth provider. Cached profile
+ * data may support first paint during a temporary outage; protected APIs remain
+ * authoritative for every server request.
  */
 export default function AppLayout() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -55,9 +55,7 @@ export default function AppLayout() {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-  // Only show the skeleton on a true cold start: token present, no cached
-  // user, no in-flight result yet. With localStorage seeding this is rare
-  // and brief.
+  // Show the shell skeleton while the browser session is being checked.
   if (isLoading && !user) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -89,6 +87,7 @@ export default function AppLayout() {
   }
 
   return (
+    <AccountSyncProvider>
     <HoveredTaskProvider>
       <ShortcutsProvider>
         <SearchProvider>
@@ -98,6 +97,7 @@ export default function AppLayout() {
         </SearchProvider>
       </ShortcutsProvider>
     </HoveredTaskProvider>
+    </AccountSyncProvider>
   );
 }
 

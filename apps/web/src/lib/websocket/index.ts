@@ -105,6 +105,7 @@ const WS_URL =
 class WebSocketClient {
   private ws: WebSocket | null = null;
   private token: string | null = null;
+  private cookieSession = false;
   private handlers = new Set<EventHandler>();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 10;
@@ -115,7 +116,7 @@ class WebSocketClient {
   /**
    * Connect to the WebSocket server with the provided JWT token
    */
-  connect(token: string): void {
+  connect(token: string | null): void {
     // Don't reconnect if we're already connected with the same token
     if (
       this.ws &&
@@ -131,14 +132,15 @@ class WebSocketClient {
     }
 
     this.token = token;
+    this.cookieSession = token === null;
     this.isIntentionallyClosed = false;
     this.doConnect();
   }
 
   private doConnect(): void {
-    if (!this.token) return;
+    if (!this.token && !this.cookieSession) return;
 
-    const url = `${WS_URL}/ws?token=${encodeURIComponent(this.token)}`;
+    const url = this.token ? `${WS_URL}/ws?token=${encodeURIComponent(this.token)}` : `${WS_URL}/ws`;
 
     try {
       this.ws = new WebSocket(url);

@@ -13,6 +13,7 @@ import { AuthLayout } from "@/components/layout/auth-layout";
 import { AppLogo } from "@/components/settings/app-logo";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
+import { sessionFetch } from "@/lib/api";
 import { useSEO } from "@/hooks/useSEO";
 import { withRedirect } from "@/lib/auth-redirect";
 import { trackGoal } from "@/lib/analytics";
@@ -91,7 +92,7 @@ export default function OAuthConsentPage() {
     noindex: true,
   });
   const navigate = useNavigate();
-  const { user, token, isAuthenticated, isLoading: isAuthLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading, logout } = useAuth();
 
   const params = React.useMemo(() => new URLSearchParams(window.location.search), []);
   const request = params.get("request");
@@ -116,12 +117,12 @@ export default function OAuthConsentPage() {
   }, [request]);
 
   const decide = async (decision: "allow" | "deny") => {
-    if (!request || !token) return;
+    if (!request || !isAuthenticated) return;
     setSubmitting(decision);
     try {
-      const res = await fetch(`${API_URL}/oauth/consent`, {
+      const res = await sessionFetch(`${API_URL}/oauth/consent`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ request, decision }),
       });
       if (res.status === 401) {

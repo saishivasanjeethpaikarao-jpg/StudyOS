@@ -36,20 +36,15 @@ const indexRoute = createRoute({
   path: "/",
   component: lazyRouteComponent(() => import("./routes/landing")),
   beforeLoad: () => {
-    const token = localStorage.getItem("open_sunsama_token");
-
     // On desktop/mobile app (Tauri), skip landing page entirely
     // Both desktop and mobile Tauri apps have __TAURI_INTERNALS__
     const isTauriApp =
       typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
     if (isTauriApp) {
-      throw redirect({ to: token ? "/app" : "/login" });
+      throw redirect({ to: "/login" });
     }
 
     // On web browser, redirect authenticated users to app
-    if (token) {
-      throw redirect({ to: "/app" });
-    }
   },
 });
 
@@ -269,12 +264,6 @@ const appRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/app",
   component: AppLayout,
-  beforeLoad: () => {
-    const token = localStorage.getItem("open_sunsama_token");
-    if (!token) {
-      throw redirect({ to: "/login" });
-    }
-  },
 });
 
 const appIndexRoute = createRoute({
