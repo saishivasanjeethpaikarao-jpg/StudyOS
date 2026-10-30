@@ -14,6 +14,7 @@ import {
   timeBlockKeys,
 } from "@/lib/query-keys";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccountSync } from "@/hooks/useAccountSync";
 
 export function useStudySessions(
   filters: StudySessionFilterInput = {},
@@ -92,6 +93,7 @@ export type StudySessionAction =
 
 export function useStudySessionAction() {
   const queryClient = useQueryClient();
+  const { queueMutation } = useAccountSync();
   return useMutation({
     mutationFn: async ({
       session,
@@ -104,6 +106,56 @@ export function useStudySessionAction() {
       actualMinutes?: number;
       schedule?: RescheduleStudySessionInput;
     }) => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        const payload =
+          action === "delete"
+            ? {}
+            : action === "reschedule"
+              ? { action, ...schedule }
+              : {
+                  action,
+                  ...(actualMinutes === undefined ? {} : { actualMinutes }),
+                };
+        queueMutation({
+          clientMutationId: crypto.randomUUID(),
+          entityType: "study-session",
+          operation: action === "delete" ? "delete" : "update",
+          entityId: session.id,
+          expectedRevision: session.revision,
+          payload,
+        });
+        if (action === "delete") return null;
+        const updatedAt = new Date();
+        if (action === "reschedule" && schedule) {
+          return {
+            ...session,
+            ...schedule,
+            startAt: new Date(schedule.startAt),
+            endAt: new Date(schedule.endAt),
+            status: "planned" as const,
+            actualMinutes: null,
+            completedAt: null,
+            revision: session.revision + 1,
+            updatedAt,
+          };
+        }
+        return {
+          ...session,
+          status:
+            action === "complete"
+              ? ("completed" as const)
+              : action === "skip"
+                ? ("skipped" as const)
+                : ("cancelled" as const),
+          actualMinutes:
+            action === "complete"
+              ? (actualMinutes ?? session.plannedMinutes)
+              : null,
+          completedAt: action === "complete" ? updatedAt : null,
+          revision: session.revision + 1,
+          updatedAt,
+        };
+      }
       const api = getApi().studySessions;
       switch (action) {
         case "complete":

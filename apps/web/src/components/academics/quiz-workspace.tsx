@@ -13,6 +13,7 @@ import { Button, Input, Label } from "@/components/ui";
 import { getApi } from "@/lib/api";
 import { learningKeys } from "@/lib/query-keys";
 import { toast } from "@/hooks/use-toast";
+import { useAccountSync } from "@/hooks/useAccountSync";
 
 const blank = (target: LearningTarget): QuizInput => ({
   title: "",
@@ -34,6 +35,7 @@ const newQuestion = (): QuizQuestionInput => ({
 
 export function QuizWorkspace({ target }: { target: LearningTarget }) {
   const api = getApi().quizzes;
+  const { queueMutation } = useAccountSync();
   const client = useQueryClient();
   const filter = {
     subjectId: target.subjectId ?? undefined,
@@ -110,6 +112,20 @@ export function QuizWorkspace({ target }: { target: LearningTarget }) {
   const save = (status: QuizInput["status"]) => {
     void run(async () => {
       const input = { ...form, status };
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        queueMutation({
+          clientMutationId: crypto.randomUUID(),
+          entityType: "quiz",
+          operation: editing ? "update" : "create",
+          entityId: editing?.id ?? crypto.randomUUID(),
+          ...(editing ? { expectedRevision: editing.revision } : {}),
+          payload: input,
+        });
+        setMode("list");
+        setEditing(null);
+        setForm(blank(target));
+        return;
+      }
       if (editing) await api.update(editing.id, input, editing.revision);
       else await api.create(input);
       await refresh();
@@ -472,6 +488,20 @@ export function QuizWorkspace({ target }: { target: LearningTarget }) {
                     )
                   )
                     void run(async () => {
+                      if (
+                        typeof navigator !== "undefined" &&
+                        !navigator.onLine
+                      ) {
+                        queueMutation({
+                          clientMutationId: crypto.randomUUID(),
+                          entityType: "quiz",
+                          operation: "delete",
+                          entityId: quiz.id,
+                          expectedRevision: quiz.revision,
+                          payload: {},
+                        });
+                        return;
+                      }
                       await api.delete(quiz.id, quiz.revision);
                       await refresh();
                     });

@@ -29,7 +29,7 @@ export type LearningLinks = {
 
 /** Validate every supplied relation through the authenticated owner. */
 export async function validateLearningLinks(
-  db: DbClient,
+  db: Pick<DbClient, "select">,
   userId: string,
   links: LearningLinks
 ) {
@@ -75,7 +75,7 @@ export async function validateLearningLinks(
 }
 
 export async function requireOwnedResource(
-  db: DbClient,
+  db: Pick<DbClient, "select">,
   userId: string,
   id: string
 ) {
@@ -95,7 +95,7 @@ export async function requireOwnedResource(
 }
 
 export async function requireOwnedQuiz(
-  db: DbClient,
+  db: Pick<DbClient, "select">,
   userId: string,
   id: string
 ) {

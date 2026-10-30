@@ -41,24 +41,29 @@ requires a new bootstrap.
 request hash and response atomically with the mutation, so a retry with the
 same content replays the result while reuse with different content returns a
 conflict. Mutations use expected revisions and never silently overwrite a
-newer row. Current supported offline mutation entities are Subject, Assignment
-and Study Note; the canonical CRUD endpoints remain the authority for other
-entities.
+newer row. Supported offline mutation entities are Subject, Assignment,
+Study Note, Study Session, Resource metadata/links, Reminder, Focus Session and
+Quiz authoring. File bytes, quiz attempts and plan confirmation still require
+their canonical online endpoints.
 
 Every user-owned change is journaled with a per-account sequence. Soft deletes
-and hard deletes produce tombstones where the owner is still available. Parent
-deletion is authoritative for cascading child rows. Private resource and
-attachment bytes remain in S3-compatible storage; synchronization carries
-metadata and references, never object keys or file bytes.
+and hard deletes produce tombstones where the owner is still available. The
+server retains the most recent 10,000 changes per account; an older cursor gets
+a `410 BOOTSTRAP_REQUIRED` response. Parent deletion is authoritative for
+cascading child rows. Private resource and attachment bytes remain in
+S3-compatible storage; synchronization carries metadata and references, never
+object keys or file bytes.
 
 The web client registers one browser device, persists its cursor locally and
-polls the change feed to invalidate TanStack Query caches. Subject and
-Assignment creates/updates made while offline are persisted in a browser-local
-queue, replayed with their stable mutation IDs after connectivity returns, and
-shown as pending in Account settings. Conflicts remain pending for review;
-they are never silently overwritten. Deletes and other entity mutations still
-require an active connection. Native durable queues and local databases are
-deferred to the Android and Windows phases.
+polls the change feed to invalidate TanStack Query caches. Subject, Assignment,
+Study Session actions, resource links/metadata, Notes, Reminders, Focus
+Sessions and Quiz authoring mutations made while offline are persisted in an
+account-isolated browser queue, replayed with stable mutation IDs after
+connectivity returns, and shown as pending in Account settings. Conflicts
+remain pending for review; they are never silently overwritten. File uploads
+and operations that require server-side preview validation remain online-only.
+Native durable queues and local databases are deferred to the Android and
+Windows phases.
 
 ## Security boundaries
 

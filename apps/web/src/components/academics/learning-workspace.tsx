@@ -14,9 +14,11 @@ import type {
   StudyNote,
   StudyReminder,
 } from "@open-sunsama/types";
+import type { SyncMutationInput } from "@open-sunsama/api-client";
 import { getApi } from "@/lib/api";
 import { learningKeys } from "@/lib/query-keys";
 import { toast } from "@/hooks/use-toast";
+import { useAccountSync } from "@/hooks/useAccountSync";
 import {
   Button,
   Input,
@@ -34,10 +36,23 @@ import {
 } from "@/components/ui";
 import { QuizWorkspace } from "./quiz-workspace";
 
+type LearningActionInput =
+  | (() => Promise<unknown>)
+  | { run: () => Promise<unknown>; offline?: SyncMutationInput };
+
 function useLearningAction(queryKey: readonly string[]) {
   const client = useQueryClient();
+  const { queueMutation } = useAccountSync();
   return useMutation({
-    mutationFn: (action: () => Promise<unknown>) => action(),
+    mutationFn: (input: LearningActionInput) => {
+      const run = typeof input === "function" ? input : input.run;
+      const offline = typeof input === "function" ? undefined : input.offline;
+      if (offline && typeof navigator !== "undefined" && !navigator.onLine) {
+        queueMutation(offline);
+        return Promise.resolve(null);
+      }
+      return run();
+    },
     onSuccess: () => {
       void client.invalidateQueries({ queryKey });
     },
@@ -143,9 +158,28 @@ function ResourcesTab({ target }: { target: LearningTarget }) {
   const fileRef = React.useRef<HTMLInputElement>(null);
   const saveLink = async (event: React.FormEvent) => {
     event.preventDefault();
-    await action.mutateAsync(() =>
-      api.create({ type, title: title.trim(), url: url.trim(), link: target })
-    );
+    const resourceId = crypto.randomUUID();
+    await action.mutateAsync({
+      run: () =>
+        api.create({
+          type,
+          title: title.trim(),
+          url: url.trim(),
+          link: target,
+        }),
+      offline: {
+        clientMutationId: crypto.randomUUID(),
+        entityType: "resource",
+        operation: "create",
+        entityId: resourceId,
+        payload: {
+          type,
+          title: title.trim(),
+          url: url.trim(),
+          link: target,
+        },
+      },
+    });
     setTitle("");
     setUrl("");
   };
@@ -335,13 +369,22 @@ function ResourcesTab({ target }: { target: LearningTarget }) {
                     : `Mark ${resource.title} complete`
                 }
                 onClick={() =>
-                  void action.mutateAsync(() =>
-                    api.update(
-                      resource.id,
-                      { completed: !resource.completedAt },
-                      resource.revision
-                    )
-                  )
+                  void action.mutateAsync({
+                    run: () =>
+                      api.update(
+                        resource.id,
+                        { completed: !resource.completedAt },
+                        resource.revision
+                      ),
+                    offline: {
+                      clientMutationId: crypto.randomUUID(),
+                      entityType: "resource",
+                      operation: "update",
+                      entityId: resource.id,
+                      expectedRevision: resource.revision,
+                      payload: { completed: !resource.completedAt },
+                    },
+                  })
                 }
               >
                 {resource.completedAt ? (
@@ -361,9 +404,17 @@ function ResourcesTab({ target }: { target: LearningTarget }) {
                       `Remove ${resource.title} from all study work?`
                     )
                   )
-                    void action.mutateAsync(() =>
-                      api.delete(resource.id, resource.revision)
-                    );
+                    void action.mutateAsync({
+                      run: () => api.delete(resource.id, resource.revision),
+                      offline: {
+                        clientMutationId: crypto.randomUUID(),
+                        entityType: "resource",
+                        operation: "delete",
+                        entityId: resource.id,
+                        expectedRevision: resource.revision,
+                        payload: {},
+                      },
+                    });
                 }}
               >
                 <Trash2 aria-hidden="true" />
@@ -374,13 +425,22 @@ function ResourcesTab({ target }: { target: LearningTarget }) {
                   onSubmit={(event) => {
                     event.preventDefault();
                     void action
-                      .mutateAsync(() =>
-                        api.update(
-                          resource.id,
-                          { title: renameTitle.trim() },
-                          resource.revision
-                        )
-                      )
+                      .mutateAsync({
+                        run: () =>
+                          api.update(
+                            resource.id,
+                            { title: renameTitle.trim() },
+                            resource.revision
+                          ),
+                        offline: {
+                          clientMutationId: crypto.randomUUID(),
+                          entityType: "resource",
+                          operation: "update",
+                          entityId: resource.id,
+                          expectedRevision: resource.revision,
+                          payload: { title: renameTitle.trim() },
+                        },
+                      })
                       .then(() => setRenaming(null));
                   }}
                 >
@@ -430,11 +490,21 @@ function NotesTab({ target }: { target: LearningTarget }) {
   };
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
-    await action.mutateAsync(() =>
-      editing
-        ? api.update(editing.id, { title, body }, editing.revision)
-        : api.create({ title, body, ...target })
-    );
+    const noteId = editing?.id ?? crypto.randomUUID();
+    await action.mutateAsync({
+      run: () =>
+        editing
+          ? api.update(editing.id, { title, body }, editing.revision)
+          : api.create({ title, body, ...target }),
+      offline: {
+        clientMutationId: crypto.randomUUID(),
+        entityType: "study-note",
+        operation: editing ? "update" : "create",
+        entityId: noteId,
+        ...(editing ? { expectedRevision: editing.revision } : {}),
+        payload: { title, body, ...target },
+      },
+    });
     reset();
   };
   return (
@@ -512,9 +582,17 @@ function NotesTab({ target }: { target: LearningTarget }) {
                 size="sm"
                 onClick={() => {
                   if (window.confirm(`Delete note ${note.title}?`))
-                    void action.mutateAsync(() =>
-                      api.delete(note.id, note.revision)
-                    );
+                    void action.mutateAsync({
+                      run: () => api.delete(note.id, note.revision),
+                      offline: {
+                        clientMutationId: crypto.randomUUID(),
+                        entityType: "study-note",
+                        operation: "delete",
+                        entityId: note.id,
+                        expectedRevision: note.revision,
+                        payload: {},
+                      },
+                    });
                 }}
               >
                 Delete
@@ -542,9 +620,16 @@ function RemindersTab({ target }: { target: LearningTarget }) {
     event.preventDefault();
     const date = new Date(time);
     if (Number.isNaN(date.getTime())) return;
-    await action.mutateAsync(() =>
-      api.create({ title, remindAt: date.toISOString(), ...target })
-    );
+    await action.mutateAsync({
+      run: () => api.create({ title, remindAt: date.toISOString(), ...target }),
+      offline: {
+        clientMutationId: crypto.randomUUID(),
+        entityType: "study-reminder",
+        operation: "create",
+        entityId: crypto.randomUUID(),
+        payload: { title, remindAt: date.toISOString(), ...target },
+      },
+    });
     setTitle("");
     setTime("");
   };
@@ -600,9 +685,17 @@ function RemindersTab({ target }: { target: LearningTarget }) {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  void action.mutateAsync(() =>
-                    api.dismiss(reminder.id, reminder.revision)
-                  )
+                  void action.mutateAsync({
+                    run: () => api.dismiss(reminder.id, reminder.revision),
+                    offline: {
+                      clientMutationId: crypto.randomUUID(),
+                      entityType: "study-reminder",
+                      operation: "update",
+                      entityId: reminder.id,
+                      expectedRevision: reminder.revision,
+                      payload: { state: "dismissed" },
+                    },
+                  })
                 }
               >
                 Dismiss
@@ -611,9 +704,17 @@ function RemindersTab({ target }: { target: LearningTarget }) {
                 variant="ghost"
                 size="sm"
                 onClick={() =>
-                  void action.mutateAsync(() =>
-                    api.cancel(reminder.id, reminder.revision)
-                  )
+                  void action.mutateAsync({
+                    run: () => api.cancel(reminder.id, reminder.revision),
+                    offline: {
+                      clientMutationId: crypto.randomUUID(),
+                      entityType: "study-reminder",
+                      operation: "delete",
+                      entityId: reminder.id,
+                      expectedRevision: reminder.revision,
+                      payload: {},
+                    },
+                  })
                 }
               >
                 Cancel
@@ -670,9 +771,17 @@ function FocusTab({ target }: { target: LearningTarget }) {
             <Button
               disabled={action.isPending}
               onClick={() =>
-                void action.mutateAsync(() =>
-                  api.finish(active.id, active.revision)
-                )
+                void action.mutateAsync({
+                  run: () => api.finish(active.id, active.revision),
+                  offline: {
+                    clientMutationId: crypto.randomUUID(),
+                    entityType: "focus-session",
+                    operation: "update",
+                    entityId: active.id,
+                    expectedRevision: active.revision,
+                    payload: { action: "finish" },
+                  },
+                })
               }
             >
               Finish focus
@@ -681,9 +790,17 @@ function FocusTab({ target }: { target: LearningTarget }) {
               variant="outline"
               disabled={action.isPending}
               onClick={() =>
-                void action.mutateAsync(() =>
-                  api.cancel(active.id, active.revision)
-                )
+                void action.mutateAsync({
+                  run: () => api.cancel(active.id, active.revision),
+                  offline: {
+                    clientMutationId: crypto.randomUUID(),
+                    entityType: "focus-session",
+                    operation: "update",
+                    entityId: active.id,
+                    expectedRevision: active.revision,
+                    payload: { action: "cancel" },
+                  },
+                })
               }
             >
               Cancel
@@ -694,7 +811,18 @@ function FocusTab({ target }: { target: LearningTarget }) {
         <Button
           className="h-11"
           disabled={action.isPending}
-          onClick={() => void action.mutateAsync(() => api.start(target))}
+          onClick={() =>
+            void action.mutateAsync({
+              run: () => api.start(target),
+              offline: {
+                clientMutationId: crypto.randomUUID(),
+                entityType: "focus-session",
+                operation: "create",
+                entityId: crypto.randomUUID(),
+                payload: target,
+              },
+            })
+          }
         >
           Start focus
         </Button>

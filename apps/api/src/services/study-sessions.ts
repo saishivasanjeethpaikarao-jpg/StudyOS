@@ -123,7 +123,7 @@ function blockTitle(assignmentTitle: string) {
   return `Study: ${assignmentTitle}`.slice(0, 255);
 }
 
-async function insertProjection(
+export async function insertProjection(
   tx: DbTransaction,
   userId: string,
   sessionId: string,
@@ -153,7 +153,7 @@ async function insertProjection(
   return { type: "created", id: block.id, date: block.date };
 }
 
-async function updateProjection(
+export async function updateProjection(
   tx: DbTransaction,
   userId: string,
   sessionId: string,
@@ -210,7 +210,7 @@ async function updateProjection(
   };
 }
 
-async function removeProjection(
+export async function removeProjection(
   tx: DbTransaction,
   userId: string,
   sessionId: string,
@@ -278,7 +278,8 @@ export async function createPlannedSessionInTransaction(
   userId: string,
   assignment: { id: string; userId: string; title: string },
   schedule: SessionScheduleInput,
-  planApplicationId?: string
+  planApplicationId?: string,
+  sessionId?: string
 ): Promise<CreatedPlannedSession> {
   if (assignment.userId !== userId) {
     throw new NotFoundError("Assignment", assignment.id);
@@ -287,6 +288,7 @@ export async function createPlannedSessionInTransaction(
   const [session] = await tx
     .insert(studySessions)
     .values({
+      ...(sessionId ? { id: sessionId } : {}),
       userId,
       assignmentId: assignment.id,
       startAt: new Date(schedule.startAt),
