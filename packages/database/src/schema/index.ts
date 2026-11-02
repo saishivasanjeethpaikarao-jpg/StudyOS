@@ -1,6 +1,7 @@
 // Schema exports
 export * from "./learning";
 export * from "./account-sync";
+export * from "./ai";
 export {
   users,
   usersRelations,

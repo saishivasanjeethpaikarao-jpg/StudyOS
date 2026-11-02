@@ -218,3 +218,4 @@ export type {
   ReorderIdeaSubtasksInput,
 } from "./idea.js";
 export * from "./learning";
+export * from "./ai";
