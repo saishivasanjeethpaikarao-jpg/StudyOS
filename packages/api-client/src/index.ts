@@ -122,6 +122,10 @@ export {
   type EnhancedStudyPlanSuggestionResult,
 };
 
+// Integrations API
+import { createIntegrationsApi } from "./integrations.js";
+export { createIntegrationsApi };
+
 // API Keys API
 import { createApiKeysApi, type ApiKeysApi } from "./api-keys.js";
 export { createApiKeysApi, type ApiKeysApi };
@@ -267,6 +271,8 @@ export function createApi(config: ApiClientConfig) {
     ...createLearningApi(client),
     /** AI Study Planner, Quiz Generator, Learning Assistant, and Provider Settings */
     ai: createAiApi(client),
+    /** External Integrations & Hermes Agent Bridge */
+    integrations: createIntegrationsApi(client),
     /** Subtasks API methods */
     subtasks: createSubtasksApi(client),
     /** Time blocks API methods */

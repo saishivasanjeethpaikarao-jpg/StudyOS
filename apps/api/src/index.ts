@@ -41,6 +41,7 @@ import { studyRemindersRouter } from "./routes/study-reminders.js";
 import { focusSessionsRouter } from "./routes/focus-sessions.js";
 import { quizzesRouter, quizAttemptsRouter } from "./routes/quizzes.js";
 import { aiRouter } from "./routes/ai.js";
+import { integrationsRouter } from "./routes/integrations.js";
 import { webhooksRouter } from "./routes/webhooks.js";
 import { oauthRouter } from "./routes/oauth.js";
 import { wellKnownRouter } from "./routes/well-known.js";
@@ -244,6 +245,7 @@ app.route("/focus-sessions", focusSessionsRouter);
 app.route("/quizzes", quizzesRouter);
 app.route("/quiz-attempts", quizAttemptsRouter);
 app.route("/ai", aiRouter);
+app.route("/integrations", integrationsRouter);
 // Public — no auth (provider webhooks). Identity verified by per-
 // channel state stored when we registered the watch.
 app.route("/webhooks", webhooksRouter);
