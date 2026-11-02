@@ -121,9 +121,11 @@ describe("offline sync queue", () => {
     };
     enqueueSyncMutation("user-a", mutation);
     const [queued] = listQueuedSyncMutations("user-a");
+    if (!queued || !queued.input.payload)
+      throw new Error("Mutation was not queued");
     expect(queued.input).toMatchObject({
       entityType: "subtask",
-      payload: { taskId: mutation.payload.taskId },
+      payload: { taskId: "00000000-0000-4000-8000-000000000023" },
     });
   });
 });

@@ -754,19 +754,22 @@ export function useBatchDeleteTasks() {
   return useMutation({
     mutationFn: async (ids: string[]): Promise<string[]> => {
       if (isBrowserOffline()) {
-        for (const id of ids) {
+        const loaded = ids.map((id) => {
           const task = queryClient.getQueryData<Task>(taskKeys.detail(id));
-          if (!task) {
-            throw new Error(
-              "Tasks must be loaded before deleting them offline"
-            );
-          }
+          if (!task) return null;
+          return { id, task };
+        });
+        if (loaded.some((entry) => entry === null)) {
+          throw new Error("Tasks must be loaded before deleting them offline");
+        }
+        for (const entry of loaded) {
+          if (!entry) continue;
           queueMutation({
             clientMutationId: mutationId(),
             entityType: "task",
             operation: "delete",
-            entityId: id,
-            expectedRevision: task.revision,
+            entityId: entry.id,
+            expectedRevision: entry.task.revision,
             payload: {},
           });
         }
@@ -1254,31 +1257,36 @@ export function useReorderTasks() {
     }): Promise<Task[]> => {
       if (isBrowserOffline()) {
         const targetScheduledDate = date === "backlog" ? null : date;
-        return taskIds.map((id, position) => {
+        const loaded = taskIds.map((id) => {
           const task =
             queryClient.getQueryData<Task>(taskKeys.detail(id)) ??
             queryClient
               .getQueriesData<Task[]>({ queryKey: taskKeys.lists() })
               .flatMap(([, list]) => list ?? [])
               .find((candidate) => candidate.id === id);
-          if (!task) {
-            throw new Error(
-              "Tasks must be loaded before reordering them offline"
-            );
-          }
+          return task ? { id, task } : null;
+        });
+        if (loaded.some((entry) => entry === null)) {
+          throw new Error(
+            "Tasks must be loaded before reordering them offline"
+          );
+        }
+        return loaded.map((entry, position) => {
+          if (!entry)
+            throw new Error("Task is unavailable for offline reorder");
           queueMutation({
             clientMutationId: mutationId(),
             entityType: "task",
             operation: "update",
-            entityId: id,
-            expectedRevision: task.revision,
+            entityId: entry.id,
+            expectedRevision: entry.task.revision,
             payload: { scheduledDate: targetScheduledDate, position },
           });
           return {
-            ...task,
+            ...entry.task,
             scheduledDate: targetScheduledDate,
             position,
-            revision: task.revision + 1,
+            revision: entry.task.revision + 1,
             updatedAt: new Date(),
           };
         });
