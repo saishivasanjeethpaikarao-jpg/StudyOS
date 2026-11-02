@@ -39,7 +39,9 @@ export interface SyncMutationInput {
     | "resource"
     | "study-reminder"
     | "focus-session"
-    | "quiz";
+    | "quiz"
+    | "task"
+    | "subtask";
   operation: "create" | "update" | "delete";
   entityId: string;
   expectedRevision?: number;

@@ -25,6 +25,8 @@ import {
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import {
+  tasks,
+  subtasks,
   assignments,
   subjects,
   studyNotes,
@@ -44,6 +46,11 @@ import {
   createAssignmentSchema,
   updateAssignmentSchema,
 } from "../validation/assignments.js";
+import { createTaskSchema, updateTaskSchema } from "../validation/tasks.js";
+import {
+  createSubtaskSchema,
+  updateSubtaskSchema,
+} from "../validation/subtasks.js";
 import {
   createSubjectSchema,
   updateSubjectSchema,
@@ -94,6 +101,8 @@ const mutationSchema = z
       "study-reminder",
       "focus-session",
       "quiz",
+      "task",
+      "subtask",
     ]),
     operation: z.enum(["create", "update", "delete"]),
     entityId: uuidSchema,
@@ -573,7 +582,237 @@ router.post("/mutations", zValidator("json", mutationSchema), async (c) => {
     let data: Record<string, unknown> = {};
     const events: Array<{ type: WebSocketEventType; payload: unknown }> = [];
     const now = new Date();
-    if (input.entityType === "subject") {
+    if (input.entityType === "task") {
+      if (input.operation === "create") {
+        const values = createTaskSchema.parse(input.payload);
+        let position = values.position;
+        if (position === undefined) {
+          const [maxPosition] = await tx
+            .select({ max: sql<number>`COALESCE(MAX(${tasks.position}), -1)` })
+            .from(tasks)
+            .where(
+              and(
+                eq(tasks.userId, userId),
+                values.scheduledDate === null ||
+                  values.scheduledDate === undefined
+                  ? isNull(tasks.scheduledDate)
+                  : eq(tasks.scheduledDate, values.scheduledDate)
+              )
+            );
+          position = (maxPosition?.max ?? -1) + 1;
+        }
+        const [row] = await tx
+          .insert(tasks)
+          .values({
+            id: input.entityId,
+            userId,
+            title: values.title,
+            notes: values.notes ?? null,
+            scheduledDate: values.scheduledDate ?? null,
+            estimatedMins: values.estimatedMins ?? null,
+            priority: values.priority ?? "P2",
+            position,
+          })
+          .returning();
+        if (!row) throw new Error("Task creation failed");
+        data = row;
+        events.push({ type: "task:created", payload: { taskId: row.id } });
+      } else {
+        const expectedRevision = input.expectedRevision;
+        if (!expectedRevision)
+          throw new ValidationError("An expected task revision is required");
+        const [current] = await tx
+          .select()
+          .from(tasks)
+          .where(and(eq(tasks.id, input.entityId), eq(tasks.userId, userId)))
+          .limit(1)
+          .for("update");
+        if (!current) throw new NotFoundError("Task");
+        if (current.revision !== expectedRevision) {
+          await tx
+            .delete(syncMutationReceipts)
+            .where(eq(syncMutationReceipts.id, reservation.id));
+          return {
+            replayed: false,
+            conflict: { entityType: "task", current },
+            events: [],
+          };
+        }
+        if (input.operation === "delete") {
+          const [deleted] = await tx
+            .delete(tasks)
+            .where(
+              and(
+                eq(tasks.id, input.entityId),
+                eq(tasks.userId, userId),
+                eq(tasks.revision, expectedRevision)
+              )
+            )
+            .returning();
+          if (!deleted)
+            throw new ConflictError("Task changed. Refresh and retry.");
+          data = deleted;
+          events.push({
+            type: "task:deleted",
+            payload: {
+              taskId: input.entityId,
+              scheduledDate: current.scheduledDate,
+            },
+          });
+        } else {
+          const values = updateTaskSchema.parse(input.payload);
+          const [row] = await tx
+            .update(tasks)
+            .set({
+              ...(values.title === undefined ? {} : { title: values.title }),
+              ...(values.notes === undefined ? {} : { notes: values.notes }),
+              ...(values.scheduledDate === undefined
+                ? {}
+                : { scheduledDate: values.scheduledDate }),
+              ...(values.estimatedMins === undefined
+                ? {}
+                : { estimatedMins: values.estimatedMins }),
+              ...(values.actualMins === undefined
+                ? {}
+                : { actualMins: values.actualMins }),
+              ...(values.priority === undefined
+                ? {}
+                : { priority: values.priority }),
+              ...(values.completedAt === undefined
+                ? {}
+                : {
+                    completedAt: values.completedAt
+                      ? new Date(values.completedAt)
+                      : null,
+                  }),
+              ...(values.position === undefined
+                ? {}
+                : { position: values.position }),
+              ...(values.subtasksHidden === undefined
+                ? {}
+                : { subtasksHidden: values.subtasksHidden }),
+              revision: current.revision + 1,
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(tasks.id, input.entityId),
+                eq(tasks.userId, userId),
+                eq(tasks.revision, expectedRevision)
+              )
+            )
+            .returning();
+          if (!row) throw new ConflictError("Task changed. Refresh and retry.");
+          data = row;
+          events.push({
+            type: values.completedAt ? "task:completed" : "task:updated",
+            payload: { taskId: row.id, scheduledDate: row.scheduledDate },
+          });
+        }
+      }
+    } else if (input.entityType === "subtask") {
+      if (input.operation === "create") {
+        const taskId =
+          typeof input.payload.taskId === "string"
+            ? input.payload.taskId
+            : undefined;
+        if (!taskId) throw new ValidationError("A parent task is required");
+        const { taskId: _parentTaskId, ...subtaskPayload } = input.payload;
+        const values = createSubtaskSchema.parse(subtaskPayload);
+        const [parent] = await tx
+          .select({ id: tasks.id })
+          .from(tasks)
+          .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+          .limit(1);
+        if (!parent) throw new NotFoundError("Task");
+        let position = values.position;
+        if (position === undefined) {
+          const [maxPosition] = await tx
+            .select({
+              max: sql<number>`COALESCE(MAX(${subtasks.position}), -1)`,
+            })
+            .from(subtasks)
+            .where(eq(subtasks.taskId, taskId));
+          position = (maxPosition?.max ?? -1) + 1;
+        }
+        const [row] = await tx
+          .insert(subtasks)
+          .values({ id: input.entityId, taskId, title: values.title, position })
+          .returning();
+        if (!row) throw new Error("Subtask creation failed");
+        data = row;
+        events.push({ type: "task:updated", payload: { taskId } });
+      } else {
+        const expectedRevision = input.expectedRevision;
+        if (!expectedRevision)
+          throw new ValidationError("An expected subtask revision is required");
+        const [current] = await tx
+          .select({ subtask: subtasks, task: tasks })
+          .from(subtasks)
+          .innerJoin(tasks, eq(subtasks.taskId, tasks.id))
+          .where(and(eq(subtasks.id, input.entityId), eq(tasks.userId, userId)))
+          .limit(1)
+          .for("update");
+        if (!current) throw new NotFoundError("Subtask");
+        if (current.subtask.revision !== expectedRevision) {
+          await tx
+            .delete(syncMutationReceipts)
+            .where(eq(syncMutationReceipts.id, reservation.id));
+          return {
+            replayed: false,
+            conflict: { entityType: "subtask", current: current.subtask },
+            events: [],
+          };
+        }
+        if (input.operation === "delete") {
+          const [deleted] = await tx
+            .delete(subtasks)
+            .where(
+              and(
+                eq(subtasks.id, input.entityId),
+                eq(subtasks.revision, expectedRevision)
+              )
+            )
+            .returning();
+          if (!deleted)
+            throw new ConflictError("Subtask changed. Refresh and retry.");
+          data = deleted;
+          events.push({
+            type: "task:updated",
+            payload: { taskId: current.subtask.taskId },
+          });
+        } else {
+          const values = updateSubtaskSchema.parse(input.payload);
+          const [row] = await tx
+            .update(subtasks)
+            .set({
+              ...(values.title === undefined ? {} : { title: values.title }),
+              ...(values.completed === undefined
+                ? {}
+                : { completed: values.completed }),
+              ...(values.position === undefined
+                ? {}
+                : { position: values.position }),
+              revision: current.subtask.revision + 1,
+              updatedAt: now,
+            })
+            .where(
+              and(
+                eq(subtasks.id, input.entityId),
+                eq(subtasks.revision, expectedRevision)
+              )
+            )
+            .returning();
+          if (!row)
+            throw new ConflictError("Subtask changed. Refresh and retry.");
+          data = row;
+          events.push({
+            type: "task:updated",
+            payload: { taskId: row.taskId },
+          });
+        }
+      }
+    } else if (input.entityType === "subject") {
       if (input.operation === "create") {
         const values = createSubjectSchema.parse(input.payload);
         const [row] = await tx

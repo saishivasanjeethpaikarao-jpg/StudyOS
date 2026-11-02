@@ -4,6 +4,7 @@ import {
   useQueryClient,
   type QueryClient,
 } from "@tanstack/react-query";
+import { useMemo } from "react";
 import type {
   Task,
   CreateTaskInput,
@@ -18,6 +19,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { trackGoal } from "@/lib/analytics";
 import { taskKeys, timeBlockKeys } from "@/lib/query-keys";
+import { useAccountSync } from "@/hooks/useAccountSync";
+
+function isBrowserOffline(): boolean {
+  return typeof navigator !== "undefined" && navigator.onLine === false;
+}
+
+function mutationId(): string {
+  return crypto.randomUUID();
+}
 
 /**
  * Write an authoritative task into every cache that can hold it: the detail
@@ -222,9 +232,44 @@ export function useTask(id: string) {
 export function useCreateTask() {
   const queryClient = useQueryClient();
   const { record } = useUndoRedo();
+  const { queueMutation } = useAccountSync();
+  const offlineIds = useMemo(() => new WeakMap<object, string>(), []);
 
   return useMutation({
     mutationFn: async (data: CreateTaskInput): Promise<Task> => {
+      if (isBrowserOffline()) {
+        const id = offlineIds.get(data as object) ?? crypto.randomUUID();
+        offlineIds.set(data as object, id);
+        const now = new Date();
+        const optimistic: Task = {
+          id,
+          userId: "",
+          title: data.title,
+          notes: data.notes ?? null,
+          scheduledDate: data.scheduledDate ?? null,
+          estimatedMins: data.estimatedMins ?? null,
+          actualMins: 0,
+          priority: data.priority ?? "P2",
+          position: Number.MAX_SAFE_INTEGER,
+          completedAt: null,
+          subtasksHidden: false,
+          revision: 1,
+          seriesId: null,
+          seriesInstanceNumber: null,
+          timerStartedAt: null,
+          timerAccumulatedSeconds: 0,
+          createdAt: now,
+          updatedAt: now,
+        };
+        queueMutation({
+          clientMutationId: mutationId(),
+          entityType: "task",
+          operation: "create",
+          entityId: id,
+          payload: data as unknown as Record<string, unknown>,
+        });
+        return optimistic;
+      }
       const api = getApi();
       return await api.tasks.create(data);
     },
@@ -236,7 +281,8 @@ export function useCreateTask() {
         queryKey: taskKeys.lists(),
       });
 
-      const tempId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const tempId = offlineIds.get(data as object) ?? crypto.randomUUID();
+      offlineIds.set(data as object, tempId);
       const now = new Date();
       const optimisticTask: Task = {
         id: tempId,
@@ -250,6 +296,7 @@ export function useCreateTask() {
         position: Number.MAX_SAFE_INTEGER,
         completedAt: null,
         subtasksHidden: false,
+        revision: 1,
         seriesId: null,
         seriesInstanceNumber: null,
         timerStartedAt: null,
@@ -384,6 +431,7 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const queryClient = useQueryClient();
   const { record } = useUndoRedo();
+  const { queueMutation } = useAccountSync();
 
   return useMutation({
     mutationFn: async ({
@@ -393,6 +441,28 @@ export function useUpdateTask() {
       id: string;
       data: UpdateTaskInput;
     }): Promise<Task> => {
+      if (isBrowserOffline()) {
+        const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
+        if (!current)
+          throw new Error("Task must be loaded before editing offline");
+        const next = {
+          ...current,
+          ...Object.fromEntries(
+            Object.entries(data).filter(([, value]) => value !== undefined)
+          ),
+          revision: current.revision + 1,
+          updatedAt: new Date(),
+        } as Task;
+        queueMutation({
+          clientMutationId: mutationId(),
+          entityType: "task",
+          operation: "update",
+          entityId: id,
+          expectedRevision: current.revision,
+          payload: data as Record<string, unknown>,
+        });
+        return next;
+      }
       const api = getApi();
       return await api.tasks.update(id, data);
     },
@@ -417,9 +487,9 @@ export function useUpdateTask() {
 
       const baseTask: Task | undefined =
         previousTask ??
-        (previousQueries
+        previousQueries
           .map(([, list]) => list?.find((t) => t.id === id))
-          .find((t): t is Task => t !== undefined));
+          .find((t): t is Task => t !== undefined);
 
       const nextTask: Task | null = baseTask
         ? ({ ...baseTask, ...cleanedPatch, updatedAt: new Date() } as Task)
@@ -433,8 +503,10 @@ export function useUpdateTask() {
       // caches — drop it from its source list and inject it into the
       // destination list. Otherwise just update it in place wherever it
       // currently lives.
-      const isMovingDate =
-        Object.prototype.hasOwnProperty.call(data, "scheduledDate");
+      const isMovingDate = Object.prototype.hasOwnProperty.call(
+        data,
+        "scheduledDate"
+      );
 
       if (isMovingDate && nextTask) {
         const targetDate = data.scheduledDate ?? null;
@@ -538,9 +610,24 @@ export function useUpdateTask() {
 export function useDeleteTask() {
   const queryClient = useQueryClient();
   const { record } = useUndoRedo();
+  const { queueMutation } = useAccountSync();
 
   return useMutation({
     mutationFn: async (id: string): Promise<string> => {
+      if (isBrowserOffline()) {
+        const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
+        if (!current)
+          throw new Error("Task must be loaded before deleting offline");
+        queueMutation({
+          clientMutationId: mutationId(),
+          entityType: "task",
+          operation: "delete",
+          entityId: id,
+          expectedRevision: current.revision,
+          payload: {},
+        });
+        return id;
+      }
       const api = getApi();
       await api.tasks.delete(id);
       return id;
@@ -662,9 +749,29 @@ export function useDeleteTask() {
  */
 export function useBatchDeleteTasks() {
   const queryClient = useQueryClient();
+  const { queueMutation } = useAccountSync();
 
   return useMutation({
     mutationFn: async (ids: string[]): Promise<string[]> => {
+      if (isBrowserOffline()) {
+        for (const id of ids) {
+          const task = queryClient.getQueryData<Task>(taskKeys.detail(id));
+          if (!task) {
+            throw new Error(
+              "Tasks must be loaded before deleting them offline"
+            );
+          }
+          queueMutation({
+            clientMutationId: mutationId(),
+            entityType: "task",
+            operation: "delete",
+            entityId: id,
+            expectedRevision: task.revision,
+            payload: {},
+          });
+        }
+        return ids;
+      }
       const api = getApi();
       await api.tasks.batchDelete(ids);
       return ids;
@@ -757,6 +864,7 @@ export function useBatchDeleteTasks() {
 export function useCompleteTask() {
   const queryClient = useQueryClient();
   const { record } = useUndoRedo();
+  const { queueMutation } = useAccountSync();
 
   return useMutation({
     mutationFn: async ({
@@ -766,6 +874,42 @@ export function useCompleteTask() {
       id: string;
       completed: boolean;
     }): Promise<Task> => {
+      if (isBrowserOffline()) {
+        const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
+        if (!current)
+          throw new Error(
+            "Task must be loaded before changing completion offline"
+          );
+        const today = format(new Date(), "yyyy-MM-dd");
+        const payload: UpdateTaskInput = {
+          completedAt: completed ? new Date() : null,
+          ...(completed &&
+          current.scheduledDate &&
+          current.scheduledDate !== today
+            ? { scheduledDate: today }
+            : {}),
+        };
+        queueMutation({
+          clientMutationId: mutationId(),
+          entityType: "task",
+          operation: "update",
+          entityId: id,
+          expectedRevision: current.revision,
+          payload: {
+            ...payload,
+            completedAt:
+              payload.completedAt instanceof Date
+                ? payload.completedAt.toISOString()
+                : payload.completedAt,
+          } as Record<string, unknown>,
+        });
+        return {
+          ...current,
+          ...payload,
+          revision: current.revision + 1,
+          updatedAt: new Date(),
+        };
+      }
       const api = getApi();
 
       if (!completed) {
@@ -779,7 +923,10 @@ export function useCompleteTask() {
       // scheduled for a different day (e.g. tomorrow), move it to today so it
       // lands in today's Done list rather than staying on its planned day.
       const today = format(new Date(), "yyyy-MM-dd");
-      if (completedTask.scheduledDate && completedTask.scheduledDate !== today) {
+      if (
+        completedTask.scheduledDate &&
+        completedTask.scheduledDate !== today
+      ) {
         return await api.tasks.update(id, { scheduledDate: today });
       }
       return completedTask;
@@ -948,6 +1095,7 @@ export function useCompleteTask() {
 export function useMoveTask() {
   const queryClient = useQueryClient();
   const { record } = useUndoRedo();
+  const { queueMutation } = useAccountSync();
 
   return useMutation({
     mutationFn: async ({
@@ -959,6 +1107,29 @@ export function useMoveTask() {
       targetDate: string | null;
       position?: number;
     }): Promise<Task> => {
+      if (isBrowserOffline()) {
+        const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
+        if (!current)
+          throw new Error("Task must be loaded before moving offline");
+        queueMutation({
+          clientMutationId: mutationId(),
+          entityType: "task",
+          operation: "update",
+          entityId: id,
+          expectedRevision: current.revision,
+          payload: {
+            scheduledDate: targetDate,
+            ...(position === undefined ? {} : { position }),
+          },
+        });
+        return {
+          ...current,
+          scheduledDate: targetDate,
+          ...(position === undefined ? {} : { position }),
+          revision: current.revision + 1,
+          updatedAt: new Date(),
+        };
+      }
       const api = getApi();
       return await api.tasks.update(id, {
         scheduledDate: targetDate, // Pass null directly to clear scheduledDate (move to backlog)
@@ -1071,6 +1242,7 @@ export function useMoveTask() {
 export function useReorderTasks() {
   const queryClient = useQueryClient();
   const { record } = useUndoRedo();
+  const { queueMutation } = useAccountSync();
 
   return useMutation({
     mutationFn: async ({
@@ -1080,6 +1252,37 @@ export function useReorderTasks() {
       date: string; // "backlog" for backlog tasks, or "YYYY-MM-DD" for scheduled tasks
       taskIds: string[];
     }): Promise<Task[]> => {
+      if (isBrowserOffline()) {
+        const targetScheduledDate = date === "backlog" ? null : date;
+        return taskIds.map((id, position) => {
+          const task =
+            queryClient.getQueryData<Task>(taskKeys.detail(id)) ??
+            queryClient
+              .getQueriesData<Task[]>({ queryKey: taskKeys.lists() })
+              .flatMap(([, list]) => list ?? [])
+              .find((candidate) => candidate.id === id);
+          if (!task) {
+            throw new Error(
+              "Tasks must be loaded before reordering them offline"
+            );
+          }
+          queueMutation({
+            clientMutationId: mutationId(),
+            entityType: "task",
+            operation: "update",
+            entityId: id,
+            expectedRevision: task.revision,
+            payload: { scheduledDate: targetScheduledDate, position },
+          });
+          return {
+            ...task,
+            scheduledDate: targetScheduledDate,
+            position,
+            revision: task.revision + 1,
+            updatedAt: new Date(),
+          };
+        });
+      }
       const api = getApi();
       const input: ReorderTasksInput = { date, taskIds };
       return await api.tasks.reorder(input);

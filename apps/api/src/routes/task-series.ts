@@ -796,6 +796,7 @@ taskSeriesRouter.post(
         notes: series.notes,
         estimatedMins: series.estimatedMins,
         priority: series.priority,
+        revision: sql`${tasks.revision} + 1`,
         updatedAt: new Date(),
       })
       .where(

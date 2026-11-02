@@ -9,6 +9,7 @@ import {
   index,
   boolean,
   uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -36,6 +37,9 @@ export const tasks = pgTable(
     completedAt: timestamp("completed_at"),
     position: integer("position").notNull().default(0),
     subtasksHidden: boolean("subtasks_hidden").notNull().default(false),
+    // Revision is advanced on every user-visible mutation so offline clients
+    // can detect stale task writes without relying on timestamps.
+    revision: integer("revision").notNull().default(1),
 
     // Recurring task fields
     /**
@@ -81,6 +85,7 @@ export const tasks = pgTable(
     index("tasks_active_timer_idx")
       .on(table.userId)
       .where(sql`${table.timerStartedAt} IS NOT NULL`),
+    check("tasks_revision_check", sql`${table.revision} >= 1`),
   ]
 );
 

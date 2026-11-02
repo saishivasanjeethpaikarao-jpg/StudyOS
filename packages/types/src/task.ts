@@ -69,6 +69,9 @@ export interface Task {
    */
   subtasksHidden: boolean;
 
+  /** Monotonic revision used by account synchronization. */
+  revision: number;
+
   /**
    * ID of the task series this instance belongs to.
    * Null for regular (non-recurring) tasks.

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import type {
   Subtask,
   CreateSubtaskInput,
@@ -8,6 +9,15 @@ import { getApi } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { subtaskKeys } from "@/lib/query-keys";
+import { useAccountSync } from "@/hooks/useAccountSync";
+
+function isBrowserOffline(): boolean {
+  return typeof navigator !== "undefined" && navigator.onLine === false;
+}
+
+function mutationId(): string {
+  return crypto.randomUUID();
+}
 
 /**
  * Create a subtask. Optimistically inserts a placeholder so the new row
@@ -15,6 +25,8 @@ import { subtaskKeys } from "@/lib/query-keys";
  */
 export function useCreateSubtask() {
   const queryClient = useQueryClient();
+  const { queueMutation } = useAccountSync();
+  const offlineIds = useMemo(() => new WeakMap<object, string>(), []);
 
   return useMutation({
     mutationFn: async ({
@@ -24,6 +36,32 @@ export function useCreateSubtask() {
       taskId: string;
       data: Omit<CreateSubtaskInput, "taskId">;
     }): Promise<Subtask> => {
+      if (isBrowserOffline()) {
+        const id = offlineIds.get(data as object) ?? crypto.randomUUID();
+        offlineIds.set(data as object, id);
+        const nowIso = new Date().toISOString();
+        const current = queryClient.getQueryData<Subtask[]>(
+          subtaskKeys.list(taskId)
+        );
+        const optimistic: Subtask = {
+          id,
+          taskId,
+          title: data.title,
+          completed: false,
+          position: data.position ?? current?.length ?? 0,
+          revision: 1,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        };
+        queueMutation({
+          clientMutationId: mutationId(),
+          entityType: "subtask",
+          operation: "create",
+          entityId: id,
+          payload: { taskId, ...data },
+        });
+        return optimistic;
+      }
       const api = getApi();
       return await api.subtasks.create(taskId, data);
     },
@@ -33,7 +71,8 @@ export function useCreateSubtask() {
         subtaskKeys.list(taskId)
       );
 
-      const tempId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const tempId = offlineIds.get(data as object) ?? crypto.randomUUID();
+      offlineIds.set(data as object, tempId);
       const nowIso = new Date().toISOString();
       const optimistic: Subtask = {
         id: tempId,
@@ -41,14 +80,15 @@ export function useCreateSubtask() {
         title: data.title,
         completed: false,
         position: previous?.length ?? 0,
+        revision: 1,
         createdAt: nowIso,
         updatedAt: nowIso,
       };
 
-      queryClient.setQueryData<Subtask[]>(
-        subtaskKeys.list(taskId),
-        (old) => [...(old ?? []), optimistic]
-      );
+      queryClient.setQueryData<Subtask[]>(subtaskKeys.list(taskId), (old) => [
+        ...(old ?? []),
+        optimistic,
+      ]);
 
       return { previous, tempId };
     },
@@ -63,24 +103,21 @@ export function useCreateSubtask() {
       });
     },
     onSuccess: (newSubtask, { taskId }, context) => {
-      queryClient.setQueryData<Subtask[]>(
-        subtaskKeys.list(taskId),
-        (old) => {
-          if (!old) return [newSubtask];
-          if (context?.tempId) {
-            const idx = old.findIndex((st) => st.id === context.tempId);
-            if (idx >= 0) {
-              const next = old.slice();
-              next[idx] = newSubtask;
-              return next;
-            }
+      queryClient.setQueryData<Subtask[]>(subtaskKeys.list(taskId), (old) => {
+        if (!old) return [newSubtask];
+        if (context?.tempId) {
+          const idx = old.findIndex((st) => st.id === context.tempId);
+          if (idx >= 0) {
+            const next = old.slice();
+            next[idx] = newSubtask;
+            return next;
           }
-          // Fallback if optimistic entry was not present
-          return old.some((st) => st.id === newSubtask.id)
-            ? old
-            : [...old, newSubtask];
         }
-      );
+        // Fallback if optimistic entry was not present
+        return old.some((st) => st.id === newSubtask.id)
+          ? old
+          : [...old, newSubtask];
+      });
     },
   });
 }
@@ -91,6 +128,7 @@ export function useCreateSubtask() {
 export function useUpdateSubtask() {
   const queryClient = useQueryClient();
   const { record } = useUndoRedo();
+  const { queueMutation } = useAccountSync();
 
   return useMutation({
     mutationFn: async ({
@@ -102,6 +140,27 @@ export function useUpdateSubtask() {
       subtaskId: string;
       data: UpdateSubtaskInput;
     }): Promise<Subtask> => {
+      if (isBrowserOffline()) {
+        const current = queryClient
+          .getQueryData<Subtask[]>(subtaskKeys.list(taskId))
+          ?.find((st) => st.id === subtaskId);
+        if (!current)
+          throw new Error("Subtask must be loaded before editing offline");
+        queueMutation({
+          clientMutationId: mutationId(),
+          entityType: "subtask",
+          operation: "update",
+          entityId: subtaskId,
+          expectedRevision: current.revision,
+          payload: data as Record<string, unknown>,
+        });
+        return {
+          ...current,
+          ...data,
+          revision: current.revision + 1,
+          updatedAt: new Date().toISOString(),
+        };
+      }
       const api = getApi();
       return await api.subtasks.update(taskId, subtaskId, data);
     },
@@ -186,6 +245,7 @@ export function useUpdateSubtask() {
  */
 export function useDeleteSubtask() {
   const queryClient = useQueryClient();
+  const { queueMutation } = useAccountSync();
 
   return useMutation({
     mutationFn: async ({
@@ -195,6 +255,22 @@ export function useDeleteSubtask() {
       taskId: string;
       subtaskId: string;
     }): Promise<string> => {
+      if (isBrowserOffline()) {
+        const current = queryClient
+          .getQueryData<Subtask[]>(subtaskKeys.list(taskId))
+          ?.find((st) => st.id === subtaskId);
+        if (!current)
+          throw new Error("Subtask must be loaded before deleting offline");
+        queueMutation({
+          clientMutationId: mutationId(),
+          entityType: "subtask",
+          operation: "delete",
+          entityId: subtaskId,
+          expectedRevision: current.revision,
+          payload: {},
+        });
+        return subtaskId;
+      }
       const api = getApi();
       await api.subtasks.delete(taskId, subtaskId);
       return subtaskId;

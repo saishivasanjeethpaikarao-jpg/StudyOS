@@ -4,7 +4,14 @@
  */
 
 import { Hono } from "hono";
-import { getDb, eq, users, attachments } from "@open-sunsama/database";
+import {
+  getDb,
+  eq,
+  and,
+  users,
+  tasks,
+  attachments,
+} from "@open-sunsama/database";
 import { ValidationError, NotFoundError } from "@open-sunsama/utils";
 import { auth, type AuthVariables } from "../middleware/auth.js";
 import {
@@ -106,6 +113,7 @@ uploadsRouter.post("/attachments", auth, async (c) => {
 
   const file = body["file"];
   const taskId = body["taskId"];
+  const db = getDb();
 
   // Validate file presence
   if (!file || !(file instanceof File)) {
@@ -142,6 +150,14 @@ uploadsRouter.post("/attachments", auth, async (c) => {
         taskId: ["taskId must be a valid UUID"],
       });
     }
+    const [ownedTask] = await db
+      .select({ id: tasks.id })
+      .from(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+      .limit(1);
+    if (!ownedTask) {
+      throw new NotFoundError("Task", taskId);
+    }
   }
 
   // Generate unique key and upload to S3
@@ -150,7 +166,6 @@ uploadsRouter.post("/attachments", auth, async (c) => {
   const url = await uploadToS3(key, buffer, file.type);
 
   // Save attachment metadata to database
-  const db = getDb();
   const [attachment] = await db
     .insert(attachments)
     .values({
@@ -191,7 +206,8 @@ uploadsRouter.get("/*", auth, async (c) => {
   // All inherited avatar/attachment objects are private; their key embeds the
   // owning user ID and the API never exposes a permanent public object URL.
   const keyParts = key.split("/");
-  if (keyParts.length < 3 || keyParts[1] !== userId) throw new NotFoundError("File");
+  if (keyParts.length < 3 || keyParts[1] !== userId)
+    throw new NotFoundError("File");
 
   // Fetch from S3
   const result = await getS3Object(key);

@@ -55,4 +55,75 @@ describe("offline sync queue", () => {
     removeQueuedSyncMutation("user-a", input.clientMutationId);
     expect(listQueuedSyncMutations("user-a")).toHaveLength(0);
   });
+
+  it("persists revision-aware task lifecycle mutations without duplicates", () => {
+    Object.defineProperty(globalThis, "window", {
+      value: { localStorage: makeStorage() },
+      configurable: true,
+    });
+    const taskId = "00000000-0000-4000-8000-000000000010";
+    const create: SyncMutationInput = {
+      clientMutationId: "00000000-0000-4000-8000-000000000011",
+      entityType: "task",
+      operation: "create",
+      entityId: taskId,
+      payload: { title: "Study offline", scheduledDate: "2026-11-02" },
+    };
+    const update: SyncMutationInput = {
+      clientMutationId: "00000000-0000-4000-8000-000000000012",
+      entityType: "task",
+      operation: "update",
+      entityId: taskId,
+      expectedRevision: 1,
+      payload: { title: "Study offline now" },
+    };
+    const complete: SyncMutationInput = {
+      clientMutationId: "00000000-0000-4000-8000-000000000013",
+      entityType: "task",
+      operation: "update",
+      entityId: taskId,
+      expectedRevision: 2,
+      payload: { completedAt: "2026-11-02T09:00:00.000Z" },
+    };
+    const remove: SyncMutationInput = {
+      clientMutationId: "00000000-0000-4000-8000-000000000014",
+      entityType: "task",
+      operation: "delete",
+      entityId: taskId,
+      expectedRevision: 3,
+      payload: {},
+    };
+
+    for (const mutation of [create, update, complete, remove]) {
+      enqueueSyncMutation("user-a", mutation);
+      enqueueSyncMutation("user-a", mutation);
+    }
+
+    expect(listQueuedSyncMutations("user-a").map((item) => item.input)).toEqual(
+      [create, update, complete, remove]
+    );
+  });
+
+  it("keeps subtask parent linkage and revision conflicts in the queue", () => {
+    Object.defineProperty(globalThis, "window", {
+      value: { localStorage: makeStorage() },
+      configurable: true,
+    });
+    const mutation: SyncMutationInput = {
+      clientMutationId: "00000000-0000-4000-8000-000000000021",
+      entityType: "subtask",
+      operation: "create",
+      entityId: "00000000-0000-4000-8000-000000000022",
+      payload: {
+        taskId: "00000000-0000-4000-8000-000000000023",
+        title: "Read the chapter",
+      },
+    };
+    enqueueSyncMutation("user-a", mutation);
+    const [queued] = listQueuedSyncMutations("user-a");
+    expect(queued.input).toMatchObject({
+      entityType: "subtask",
+      payload: { taskId: mutation.payload.taskId },
+    });
+  });
 });

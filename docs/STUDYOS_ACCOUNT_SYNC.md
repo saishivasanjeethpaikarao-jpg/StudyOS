@@ -41,7 +41,7 @@ requires a new bootstrap.
 request hash and response atomically with the mutation, so a retry with the
 same content replays the result while reuse with different content returns a
 conflict. Mutations use expected revisions and never silently overwrite a
-newer row. Supported offline mutation entities are Subject, Assignment,
+newer row. Supported offline mutation entities are Task, Subtask, Subject, Assignment,
 Study Note, Study Session, Resource metadata/links, Reminder, Focus Session and
 Quiz authoring. File bytes, quiz attempts and plan confirmation still require
 their canonical online endpoints.
@@ -55,7 +55,7 @@ S3-compatible storage; synchronization carries metadata and references, never
 object keys or file bytes.
 
 The web client registers one browser device, persists its cursor locally and
-polls the change feed to invalidate TanStack Query caches. Subject, Assignment,
+polls the change feed to invalidate TanStack Query caches. Task/Subtask, Subject, Assignment,
 Study Session actions, resource links/metadata, Notes, Reminders, Focus
 Sessions and Quiz authoring mutations made while offline are persisted in an
 account-isolated browser queue, replayed with stable mutation IDs after

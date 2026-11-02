@@ -1,21 +1,32 @@
-import { pgTable, uuid, varchar, boolean, integer, timestamp, index } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { z } from 'zod';
-import { tasks } from './tasks';
+import {
+  pgTable,
+  uuid,
+  varchar,
+  boolean,
+  integer,
+  timestamp,
+  index,
+  check,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
+import { tasks } from "./tasks";
 
 export const subtasks = pgTable(
-  'subtasks',
+  "subtasks",
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    taskId: uuid('task_id')
+    id: uuid("id").primaryKey().defaultRandom(),
+    taskId: uuid("task_id")
       .notNull()
-      .references(() => tasks.id, { onDelete: 'cascade' }),
-    title: varchar('title', { length: 500 }).notNull(),
-    completed: boolean('completed').notNull().default(false),
-    position: integer('position').notNull().default(0),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 500 }).notNull(),
+    completed: boolean("completed").notNull().default(false),
+    position: integer("position").notNull().default(0),
+    revision: integer("revision").notNull().default(1),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => ({
     // PostgreSQL doesn't auto-create indices for foreign keys. Without
@@ -23,7 +34,11 @@ export const subtasks = pgTable(
     // every `WHERE task_id IN (...)` (subtasks-batch + the new
     // `?includeSubtasks=true` join in /tasks) does a sequential scan over
     // the entire subtasks table.
-    taskIdIdx: index('subtasks_task_id_idx').on(table.taskId),
+    taskIdIdx: index("subtasks_task_id_idx").on(table.taskId),
+    revisionCheck: check(
+      "subtasks_revision_check",
+      sql`${table.revision} >= 1`
+    ),
   })
 );
 
@@ -36,7 +51,7 @@ export const subtasksRelations = relations(subtasks, ({ one }) => ({
 
 // Zod schemas for validation
 export const insertSubtaskSchema = createInsertSchema(subtasks, {
-  title: z.string().min(1, 'Title is required').max(500),
+  title: z.string().min(1, "Title is required").max(500),
   completed: z.boolean().optional(),
   position: z.number().int().nonnegative().optional(),
 });
@@ -44,7 +59,9 @@ export const insertSubtaskSchema = createInsertSchema(subtasks, {
 export const selectSubtaskSchema = createSelectSchema(subtasks);
 
 // Partial update schema (all fields optional)
-export const updateSubtaskSchema = insertSubtaskSchema.partial().omit({ taskId: true });
+export const updateSubtaskSchema = insertSubtaskSchema
+  .partial()
+  .omit({ taskId: true });
 
 // Type exports
 export type Subtask = typeof subtasks.$inferSelect;

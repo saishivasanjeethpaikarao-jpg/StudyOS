@@ -71,6 +71,13 @@
       "when": 1793362043398,
       "tag": "0009_quiet_answer_journal",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793595105289,
+      "tag": "0010_task_revisions",
+      "breakpoints": true
     }
   ]
 }

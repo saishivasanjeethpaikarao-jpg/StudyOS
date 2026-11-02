@@ -28,6 +28,9 @@ export interface Subtask {
 
   /** Timestamp when the subtask was last updated */
   updatedAt: string;
+
+  /** Monotonic revision used by account synchronization. */
+  revision: number;
 }
 
 /**

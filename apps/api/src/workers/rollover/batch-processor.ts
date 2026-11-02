@@ -209,6 +209,7 @@ export async function processUserBatchRollover(
               .set({
                 scheduledDate: newScheduledDate,
                 position: basePosition + index * POSITION_GAP,
+                revision: sql`${tasks.revision} + 1`,
                 updatedAt: new Date(),
               })
               .where(eq(tasks.id, taskId))

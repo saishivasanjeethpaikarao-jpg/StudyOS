@@ -114,8 +114,9 @@ tasksRouter.get(
     // so the client can hydrate every visible day's task cards plus their
     // subtask previews in a single round-trip — no follow-up
     // `subtasks-batch` call needed.
-    let withSubtasks: Array<typeof results[number] & { subtasks?: unknown[] }> =
-      results;
+    let withSubtasks: Array<
+      (typeof results)[number] & { subtasks?: unknown[] }
+    > = results;
     if (filters.includeSubtasks === "true" && results.length > 0) {
       const ids = results.map((t) => t.id);
       const allSubtasks = await db
@@ -203,22 +204,18 @@ tasksRouter.post(
 );
 
 /** GET /tasks/timer/active - Get the currently active timer task */
-tasksRouter.get(
-  "/timer/active",
-  requireScopes("tasks:read"),
-  async (c) => {
-    const userId = c.get("userId");
-    const db = getDb();
+tasksRouter.get("/timer/active", requireScopes("tasks:read"), async (c) => {
+  const userId = c.get("userId");
+  const db = getDb();
 
-    const [activeTask] = await db
-      .select()
-      .from(tasks)
-      .where(and(eq(tasks.userId, userId), isNotNull(tasks.timerStartedAt)))
-      .limit(1);
+  const [activeTask] = await db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.userId, userId), isNotNull(tasks.timerStartedAt)))
+    .limit(1);
 
-    return c.json({ success: true, data: activeTask ?? null });
-  }
-);
+  return c.json({ success: true, data: activeTask ?? null });
+});
 
 /** POST /tasks/:id/timer/start - Start the focus timer for a task */
 tasksRouter.post(
@@ -261,6 +258,7 @@ tasksRouter.post(
           timerStartedAt: null,
           timerAccumulatedSeconds: 0,
           updatedAt: new Date(),
+          revision: sql`${tasks.revision} + 1`,
         })
         .where(eq(tasks.id, runningTask.id))
         .returning();
@@ -282,6 +280,7 @@ tasksRouter.post(
         timerStartedAt: new Date(),
         timerAccumulatedSeconds: (task.actualMins ?? 0) * 60,
         updatedAt: new Date(),
+        revision: sql`${tasks.revision} + 1`,
       })
       .where(and(eq(tasks.id, id), eq(tasks.userId, userId)))
       .returning();
@@ -346,6 +345,7 @@ tasksRouter.post(
         timerStartedAt: null,
         timerAccumulatedSeconds: 0,
         updatedAt: new Date(),
+        revision: sql`${tasks.revision} + 1`,
       })
       .where(and(eq(tasks.id, id), eq(tasks.userId, userId)))
       .returning();
@@ -402,7 +402,10 @@ tasksRouter.patch(
       .limit(1);
     if (!existing) throw new NotFoundError("Task", id);
 
-    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    const updateData: Record<string, unknown> = {
+      updatedAt: new Date(),
+      revision: sql`${tasks.revision} + 1`,
+    };
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.notes !== undefined) updateData.notes = updates.notes;
     if (updates.scheduledDate !== undefined)
@@ -543,6 +546,7 @@ tasksRouter.post(
     const updateData: Record<string, unknown> = {
       completedAt: new Date(),
       updatedAt: new Date(),
+      revision: sql`${tasks.revision} + 1`,
     };
 
     if (existing.timerStartedAt) {
@@ -600,7 +604,11 @@ tasksRouter.post(
 
     const [updatedTask] = await db
       .update(tasks)
-      .set({ completedAt: null, updatedAt: new Date() })
+      .set({
+        completedAt: null,
+        updatedAt: new Date(),
+        revision: sql`${tasks.revision} + 1`,
+      })
       .where(and(eq(tasks.id, id), eq(tasks.userId, userId)))
       .returning();
 
@@ -639,6 +647,7 @@ tasksRouter.post(
             position: index,
             scheduledDate: targetDate,
             updatedAt: new Date(),
+            revision: sql`${tasks.revision} + 1`,
           })
           .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
       )
@@ -863,6 +872,7 @@ tasksRouter.post("/rollover", requireScopes("tasks:write"), async (c) => {
           scheduledDate: newScheduledDate,
           position: basePosition + index * POSITION_GAP,
           updatedAt: new Date(),
+          revision: sql`${tasks.revision} + 1`,
         })
         .where(eq(tasks.id, taskId))
     )

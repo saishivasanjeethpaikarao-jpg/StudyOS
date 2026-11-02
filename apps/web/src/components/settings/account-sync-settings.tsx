@@ -169,7 +169,7 @@ export function AccountSyncSettings() {
             <p className="mt-1 text-sm text-destructive">{error}</p>
           )}
           <p className="mt-1 text-xs text-muted-foreground">
-            Subject and Assignment changes made offline are saved in this
+            Task, Subject and Assignment changes made offline are saved in this
             browser and retried when you reconnect. Other changes still require
             an active connection.
           </p>

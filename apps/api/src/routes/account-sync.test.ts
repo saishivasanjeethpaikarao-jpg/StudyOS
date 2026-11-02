@@ -13,6 +13,8 @@ import {
   resources,
   studyReminders,
   studySessions,
+  tasks,
+  subtasks,
   subjects,
   syncChanges,
   users,
@@ -342,6 +344,22 @@ describe.skipIf(!testDatabaseUrl)(
       expect(response.status).toBe(404);
     });
 
+    it("rejects attachment uploads linked to another user's task", async () => {
+      const [foreignTask] = await db
+        .insert(tasks)
+        .values({ userId: otherId, title: "Private attachment task" })
+        .returning({ id: tasks.id });
+      const body = new FormData();
+      body.set("taskId", foreignTask!.id);
+      body.set("file", new File(["hello"], "note.txt", { type: "text/plain" }));
+      const response = await app.request("/uploads/attachments", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${ownerToken}` },
+        body,
+      });
+      expect(response.status).toBe(404);
+    });
+
     it("applies cross-entity offline mutations with ownership and idempotency", async () => {
       const [subject] = await db
         .insert(subjects)
@@ -607,6 +625,143 @@ describe.skipIf(!testDatabaseUrl)(
             )
         ).at(-1)?.operation
       ).toBe("delete");
+    });
+
+    it("applies revisioned offline task and subtask mutations safely", async () => {
+      const taskId = randomUUID();
+      const create = {
+        clientMutationId: randomUUID(),
+        entityType: "task",
+        operation: "create",
+        entityId: taskId,
+        payload: { title: "Offline task", scheduledDate: "2035-02-01" },
+      } as const;
+      expect(
+        (await request("/sync/mutations", ownerToken, "POST", create)).status
+      ).toBe(200);
+      expect(
+        (await request("/sync/mutations", ownerToken, "POST", create)).status
+      ).toBe(200);
+      const [created] = await db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.id, taskId));
+      expect(created?.revision).toBe(1);
+
+      const update = {
+        clientMutationId: randomUUID(),
+        entityType: "task",
+        operation: "update",
+        entityId: taskId,
+        expectedRevision: created!.revision,
+        payload: { title: "Edited offline" },
+      } as const;
+      expect(
+        (await request("/sync/mutations", ownerToken, "POST", update)).status
+      ).toBe(200);
+      const [edited] = await db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.id, taskId));
+      expect(edited?.title).toBe("Edited offline");
+      expect(edited?.revision).toBe(2);
+      expect(
+        (
+          await request("/sync/mutations", ownerToken, "POST", {
+            ...update,
+            clientMutationId: randomUUID(),
+          })
+        ).status
+      ).toBe(409);
+
+      const subtaskId = randomUUID();
+      const subtaskCreate = {
+        clientMutationId: randomUUID(),
+        entityType: "subtask",
+        operation: "create",
+        entityId: subtaskId,
+        payload: { taskId, title: "Offline step" },
+      } as const;
+      expect(
+        (await request("/sync/mutations", ownerToken, "POST", subtaskCreate))
+          .status
+      ).toBe(200);
+      const [createdSubtask] = await db
+        .select()
+        .from(subtasks)
+        .where(eq(subtasks.id, subtaskId));
+      expect(createdSubtask?.revision).toBe(1);
+      expect(
+        (
+          await request("/sync/mutations", ownerToken, "POST", {
+            clientMutationId: randomUUID(),
+            entityType: "subtask",
+            operation: "update",
+            entityId: subtaskId,
+            expectedRevision: createdSubtask!.revision,
+            payload: { completed: true },
+          })
+        ).status
+      ).toBe(200);
+
+      expect(
+        (
+          await request("/sync/mutations", ownerToken, "POST", {
+            clientMutationId: randomUUID(),
+            entityType: "task",
+            operation: "update",
+            entityId: taskId,
+            expectedRevision: 2,
+            payload: { completedAt: "2035-02-01T12:00:00.000Z" },
+          })
+        ).status
+      ).toBe(200);
+      const [completed] = await db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.id, taskId));
+      expect(completed?.completedAt).not.toBeNull();
+      expect(completed?.revision).toBe(3);
+
+      const foreignTaskId = randomUUID();
+      await db
+        .insert(tasks)
+        .values({ id: foreignTaskId, userId: otherId, title: "Private task" });
+      expect(
+        (
+          await request("/sync/mutations", ownerToken, "POST", {
+            clientMutationId: randomUUID(),
+            entityType: "task",
+            operation: "update",
+            entityId: foreignTaskId,
+            expectedRevision: 1,
+            payload: { title: "stolen" },
+          })
+        ).status
+      ).toBe(404);
+
+      expect(
+        (
+          await request("/sync/mutations", ownerToken, "POST", {
+            clientMutationId: randomUUID(),
+            entityType: "task",
+            operation: "delete",
+            entityId: taskId,
+            expectedRevision: completed!.revision,
+            payload: {},
+          })
+        ).status
+      ).toBe(200);
+      expect(
+        await db.select().from(tasks).where(eq(tasks.id, taskId))
+      ).toHaveLength(0);
+      const tombstones = await db
+        .select()
+        .from(syncChanges)
+        .where(
+          and(eq(syncChanges.userId, ownerId), eq(syncChanges.entityId, taskId))
+        );
+      expect(tombstones.at(-1)?.operation).toBe("delete");
     });
   }
 );

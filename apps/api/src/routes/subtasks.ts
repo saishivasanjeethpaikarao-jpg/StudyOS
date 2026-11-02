@@ -2,9 +2,9 @@
  * Subtask routes for Open Sunsama API
  * Handles CRUD operations for subtasks within tasks
  */
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
 import {
   getDb,
   eq,
@@ -14,27 +14,35 @@ import {
   subtasks,
   tasks,
   sql,
-} from '@open-sunsama/database';
-import { NotFoundError } from '@open-sunsama/utils';
-import { auth, requireScopes, type AuthVariables } from '../middleware/auth.js';
+} from "@open-sunsama/database";
+import { NotFoundError } from "@open-sunsama/utils";
+import { auth, requireScopes, type AuthVariables } from "../middleware/auth.js";
 import {
   createSubtaskSchema,
   updateSubtaskSchema,
   reorderSubtasksSchema,
   taskIdParamSchema,
   subtaskIdParamSchema,
-} from '../validation/subtasks.js';
-import { publishEvent } from '../lib/websocket/index.js';
+} from "../validation/subtasks.js";
+import { publishEvent } from "../lib/websocket/index.js";
 
 const subtasksRouter = new Hono<{ Variables: AuthVariables }>();
-subtasksRouter.use('*', auth);
+subtasksRouter.use("*", auth);
 
 /**
  * Helper function to verify task ownership
  */
-async function verifyTaskOwnership(db: ReturnType<typeof getDb>, taskId: string, userId: string) {
-  const [task] = await db.select().from(tasks).where(and(eq(tasks.id, taskId), eq(tasks.userId, userId))).limit(1);
-  if (!task) throw new NotFoundError('Task', taskId);
+async function verifyTaskOwnership(
+  db: ReturnType<typeof getDb>,
+  taskId: string,
+  userId: string
+) {
+  const [task] = await db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+    .limit(1);
+  if (!task) throw new NotFoundError("Task", taskId);
   return task;
 }
 
@@ -53,12 +61,12 @@ const batchListSchema = z.object({
   taskIds: z.array(z.string().uuid()).max(500),
 });
 subtasksRouter.post(
-  '/subtasks-batch',
-  requireScopes('tasks:read'),
-  zValidator('json', batchListSchema),
+  "/subtasks-batch",
+  requireScopes("tasks:read"),
+  zValidator("json", batchListSchema),
   async (c) => {
-    const userId = c.get('userId');
-    const { taskIds } = c.req.valid('json');
+    const userId = c.get("userId");
+    const { taskIds } = c.req.valid("json");
     const db = getDb();
 
     if (taskIds.length === 0) {
@@ -74,15 +82,10 @@ subtasksRouter.post(
       })
       .from(subtasks)
       .innerJoin(tasks, eq(subtasks.taskId, tasks.id))
-      .where(
-        and(
-          eq(tasks.userId, userId),
-          inArray(subtasks.taskId, taskIds)
-        )
-      )
+      .where(and(eq(tasks.userId, userId), inArray(subtasks.taskId, taskIds)))
       .orderBy(asc(subtasks.position), asc(subtasks.createdAt));
 
-    const grouped: Record<string, typeof rows[number]['subtask'][]> = {};
+    const grouped: Record<string, (typeof rows)[number]["subtask"][]> = {};
     for (const id of taskIds) {
       grouped[id] = [];
     }
@@ -97,12 +100,12 @@ subtasksRouter.post(
 
 /** GET /tasks/:taskId/subtasks - List subtasks for a task */
 subtasksRouter.get(
-  '/:taskId/subtasks',
-  requireScopes('tasks:read'),
-  zValidator('param', taskIdParamSchema),
+  "/:taskId/subtasks",
+  requireScopes("tasks:read"),
+  zValidator("param", taskIdParamSchema),
   async (c) => {
-    const userId = c.get('userId');
-    const { taskId } = c.req.valid('param');
+    const userId = c.get("userId");
+    const { taskId } = c.req.valid("param");
     const db = getDb();
 
     // Verify task ownership
@@ -120,14 +123,14 @@ subtasksRouter.get(
 
 /** POST /tasks/:taskId/subtasks - Create a subtask */
 subtasksRouter.post(
-  '/:taskId/subtasks',
-  requireScopes('tasks:write'),
-  zValidator('param', taskIdParamSchema),
-  zValidator('json', createSubtaskSchema),
+  "/:taskId/subtasks",
+  requireScopes("tasks:write"),
+  zValidator("param", taskIdParamSchema),
+  zValidator("json", createSubtaskSchema),
   async (c) => {
-    const userId = c.get('userId');
-    const { taskId } = c.req.valid('param');
-    const data = c.req.valid('json');
+    const userId = c.get("userId");
+    const { taskId } = c.req.valid("param");
+    const data = c.req.valid("json");
     const db = getDb();
 
     // Verify task ownership
@@ -154,8 +157,12 @@ subtasksRouter.post(
 
     // Publish realtime event (fire and forget) - subtask change affects parent task
     // Get parent task's scheduledDate for the event payload
-    const [parentTask] = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
-    publishEvent(userId, 'task:updated', {
+    const [parentTask] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, taskId))
+      .limit(1);
+    publishEvent(userId, "task:updated", {
       taskId,
       scheduledDate: parentTask?.scheduledDate ?? null,
     });
@@ -166,14 +173,14 @@ subtasksRouter.post(
 
 /** PATCH /tasks/:taskId/subtasks/:id - Update a subtask */
 subtasksRouter.patch(
-  '/:taskId/subtasks/:id',
-  requireScopes('tasks:write'),
-  zValidator('param', subtaskIdParamSchema),
-  zValidator('json', updateSubtaskSchema),
+  "/:taskId/subtasks/:id",
+  requireScopes("tasks:write"),
+  zValidator("param", subtaskIdParamSchema),
+  zValidator("json", updateSubtaskSchema),
   async (c) => {
-    const userId = c.get('userId');
-    const { taskId, id } = c.req.valid('param');
-    const updates = c.req.valid('json');
+    const userId = c.get("userId");
+    const { taskId, id } = c.req.valid("param");
+    const updates = c.req.valid("json");
     const db = getDb();
 
     // Verify task ownership
@@ -185,23 +192,28 @@ subtasksRouter.patch(
       .from(subtasks)
       .where(and(eq(subtasks.id, id), eq(subtasks.taskId, taskId)))
       .limit(1);
-    if (!existing) throw new NotFoundError('Subtask', id);
+    if (!existing) throw new NotFoundError("Subtask", id);
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
     if (updates.title !== undefined) updateData.title = updates.title;
-    if (updates.completed !== undefined) updateData.completed = updates.completed;
+    if (updates.completed !== undefined)
+      updateData.completed = updates.completed;
     if (updates.position !== undefined) updateData.position = updates.position;
 
     const [updatedSubtask] = await db
       .update(subtasks)
-      .set(updateData)
+      .set({ ...updateData, revision: sql`${subtasks.revision} + 1` })
       .where(and(eq(subtasks.id, id), eq(subtasks.taskId, taskId)))
       .returning();
 
     // Publish realtime event (fire and forget) - subtask change affects parent task
     // Get parent task's scheduledDate for the event payload
-    const [parentTask] = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
-    publishEvent(userId, 'task:updated', {
+    const [parentTask] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, taskId))
+      .limit(1);
+    publishEvent(userId, "task:updated", {
       taskId,
       scheduledDate: parentTask?.scheduledDate ?? null,
     });
@@ -212,12 +224,12 @@ subtasksRouter.patch(
 
 /** DELETE /tasks/:taskId/subtasks/:id - Delete a subtask */
 subtasksRouter.delete(
-  '/:taskId/subtasks/:id',
-  requireScopes('tasks:write'),
-  zValidator('param', subtaskIdParamSchema),
+  "/:taskId/subtasks/:id",
+  requireScopes("tasks:write"),
+  zValidator("param", subtaskIdParamSchema),
   async (c) => {
-    const userId = c.get('userId');
-    const { taskId, id } = c.req.valid('param');
+    const userId = c.get("userId");
+    const { taskId, id } = c.req.valid("param");
     const db = getDb();
 
     // Verify task ownership
@@ -229,32 +241,38 @@ subtasksRouter.delete(
       .from(subtasks)
       .where(and(eq(subtasks.id, id), eq(subtasks.taskId, taskId)))
       .limit(1);
-    if (!existing) throw new NotFoundError('Subtask', id);
+    if (!existing) throw new NotFoundError("Subtask", id);
 
-    await db.delete(subtasks).where(and(eq(subtasks.id, id), eq(subtasks.taskId, taskId)));
+    await db
+      .delete(subtasks)
+      .where(and(eq(subtasks.id, id), eq(subtasks.taskId, taskId)));
 
     // Publish realtime event (fire and forget) - subtask change affects parent task
     // Get parent task's scheduledDate for the event payload
-    const [parentTask] = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
-    publishEvent(userId, 'task:updated', {
+    const [parentTask] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, taskId))
+      .limit(1);
+    publishEvent(userId, "task:updated", {
       taskId,
       scheduledDate: parentTask?.scheduledDate ?? null,
     });
 
-    return c.json({ success: true, message: 'Subtask deleted successfully' });
+    return c.json({ success: true, message: "Subtask deleted successfully" });
   }
 );
 
 /** POST /tasks/:taskId/subtasks/reorder - Reorder subtasks */
 subtasksRouter.post(
-  '/:taskId/subtasks/reorder',
-  requireScopes('tasks:write'),
-  zValidator('param', taskIdParamSchema),
-  zValidator('json', reorderSubtasksSchema),
+  "/:taskId/subtasks/reorder",
+  requireScopes("tasks:write"),
+  zValidator("param", taskIdParamSchema),
+  zValidator("json", reorderSubtasksSchema),
   async (c) => {
-    const userId = c.get('userId');
-    const { taskId } = c.req.valid('param');
-    const { subtaskIds } = c.req.valid('json');
+    const userId = c.get("userId");
+    const { taskId } = c.req.valid("param");
+    const { subtaskIds } = c.req.valid("json");
     const db = getDb();
 
     // Verify task ownership
@@ -265,7 +283,11 @@ subtasksRouter.post(
       subtaskIds.map((subtaskId, index) =>
         db
           .update(subtasks)
-          .set({ position: index, updatedAt: new Date() })
+          .set({
+            position: index,
+            updatedAt: new Date(),
+            revision: sql`${subtasks.revision} + 1`,
+          })
           .where(and(eq(subtasks.id, subtaskId), eq(subtasks.taskId, taskId)))
       )
     );
@@ -277,7 +299,11 @@ subtasksRouter.post(
       .where(eq(subtasks.taskId, taskId))
       .orderBy(asc(subtasks.position));
 
-    return c.json({ success: true, data: updatedSubtasks, message: 'Subtasks reordered successfully' });
+    return c.json({
+      success: true,
+      data: updatedSubtasks,
+      message: "Subtasks reordered successfully",
+    });
   }
 );
 
