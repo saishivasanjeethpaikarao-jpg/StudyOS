@@ -1,9 +1,10 @@
 import * as React from "react";
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, Sparkles } from "lucide-react";
 import type { LearningTarget } from "@open-sunsama/types";
 import { useSubjects } from "@/hooks/useSubjects";
 import { useAssignments } from "@/hooks/useAssignments";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
@@ -16,11 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { QuizWorkspace } from "./quiz-workspace";
+import { QuizGeneratorModal } from "./quiz-generator-modal";
 
 export function QuizzesPage() {
   const { data: activeSubjects = [] } = useSubjects({ archived: false });
   const [selectedSubjectId, setSelectedSubjectId] = React.useState<string>("all");
   const [selectedAssignmentId, setSelectedAssignmentId] = React.useState<string>("all");
+  const [isAiGenOpen, setIsAiGenOpen] = React.useState(false);
 
   const { data: assignmentsData } = useAssignments({
     subjectId: selectedSubjectId !== "all" ? selectedSubjectId : undefined,
@@ -85,6 +88,14 @@ export function QuizzesPage() {
               ))}
             </SelectContent>
           </Select>
+
+          <Button
+            onClick={() => setIsAiGenOpen(true)}
+            size="sm"
+            className="h-9 gap-1.5"
+          >
+            <Sparkles className="h-4 w-4" /> Generate with AI
+          </Button>
         </div>
       </div>
 
@@ -92,6 +103,12 @@ export function QuizzesPage() {
       <Card className="p-6">
         <QuizWorkspace target={activeTarget} />
       </Card>
+
+      <QuizGeneratorModal
+        open={isAiGenOpen}
+        onOpenChange={setIsAiGenOpen}
+        preselectedSubjectId={selectedSubjectId !== "all" ? selectedSubjectId : undefined}
+      />
     </div>
   );
 }

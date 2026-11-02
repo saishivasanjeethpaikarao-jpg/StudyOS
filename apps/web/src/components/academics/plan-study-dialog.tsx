@@ -1,5 +1,6 @@
 import * as React from "react";
 import { addDays, format, startOfDay } from "date-fns";
+import { Sparkles } from "lucide-react";
 import { isApiError } from "@open-sunsama/api-client";
 import type { Assignment, StudyPlanInput } from "@open-sunsama/types";
 import {
@@ -17,6 +18,7 @@ import {
   useConfirmStudyPlan,
   usePreviewStudyPlan,
 } from "@/hooks/useStudySessions";
+import { AiPlanAssistantDialog } from "./ai-plan-assistant-dialog";
 
 function initialDates(dueAt: Date) {
   const today = startOfDay(new Date());
@@ -51,6 +53,7 @@ export function PlanStudyDialog({
   const preview = usePreviewStudyPlan();
   const confirm = useConfirmStudyPlan();
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [isAiOpen, setIsAiOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -146,7 +149,18 @@ export function PlanStudyDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Plan study for {assignment.title}</DialogTitle>
+          <div className="flex items-center justify-between gap-3">
+            <DialogTitle>Plan study for {assignment.title}</DialogTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAiOpen(true)}
+              className="h-8 gap-1.5 text-xs text-primary border-primary/30 shrink-0"
+            >
+              <Sparkles className="h-3.5 w-3.5" /> AI Suggestion
+            </Button>
+          </div>
           <DialogDescription>
             Preview available study times before adding anything to your
             calendar.
@@ -297,6 +311,12 @@ export function PlanStudyDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <AiPlanAssistantDialog
+        open={isAiOpen}
+        onOpenChange={setIsAiOpen}
+        assignment={assignment}
+      />
     </Dialog>
   );
 }

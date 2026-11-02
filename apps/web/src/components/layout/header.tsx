@@ -18,6 +18,7 @@ import {
   FileText,
   CheckSquare,
   Bell,
+  Sparkles,
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +27,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { isDesktop } from "@/lib/desktop";
 import { prefetchCommandPalette } from "@/components/command-palette/command-palette.lazy";
 import { DesktopUpdateMenuItem } from "@/components/desktop-update-menu-item";
+import { AiLearningAssistantDrawer } from "@/components/academics/ai-learning-assistant-drawer";
 import { cn, getAvatarUrl } from "@/lib/utils";
 import {
   Button,
@@ -50,6 +52,7 @@ export function Header({ className }: HeaderProps) {
   const { openSearch } = useSearch();
   const { themeMode, setThemeMode } = useTheme();
   const isDesktopApp = React.useMemo(() => isDesktop(), []);
+  const [isAssistantOpen, setIsAssistantOpen] = React.useState(false);
 
   const userInitials = React.useMemo(() => {
     if (!user?.name) return user?.email?.charAt(0).toUpperCase() ?? "U";
@@ -217,6 +220,18 @@ export function Header({ className }: HeaderProps) {
             </button>
           </div>
 
+          {/* AI Learning Assistant Trigger */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsAssistantOpen(true)}
+            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+            title="AI Learning Assistant"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="hidden lg:inline text-[11px]">AI Tutor</span>
+          </Button>
+
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -260,6 +275,12 @@ export function Header({ className }: HeaderProps) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="text-[13px] py-1.5">
+                <Link to="/app/settings" search={{ tab: "ai" }} className="w-full cursor-pointer">
+                  <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
+                  AI &amp; Providers
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="text-[13px] py-1.5">
                 <a
                   href="/docs"
                   target="_blank"
@@ -291,6 +312,11 @@ export function Header({ className }: HeaderProps) {
           </DropdownMenu>
         </div>
       </div>
+
+      <AiLearningAssistantDrawer
+        open={isAssistantOpen}
+        onOpenChange={setIsAssistantOpen}
+      />
     </header>
   );
 }
