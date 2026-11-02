@@ -61,5 +61,5 @@ StudyOS is the user-facing product name. Keep inherited package names, import pa
 - Phase 5 — Android App: IMPLEMENTATION COMPLETE (real-device acceptance pending)
 - Phase 6 — Windows Desktop: IMPLEMENTATION COMPLETE (native Windows runtime acceptance pending)
 - Phase 7 — AI Study Planner: COMPLETE (multi-provider AI router, AES-256-GCM secret storage, PDF/YouTube/notes ingestion pipeline, candidate-validated quiz generation, deterministic planning assistant integration, and contextual learning assistant)
-- Phase 8 — Integrations & Agent: NOT STARTED
+- Phase 8 — Integrations & Agent: COMPLETE (unified integration architecture, AES-256-GCM encrypted credentials, Google Calendar export with idempotency, Google Drive secure file ingestion, Telegram bot linking and quiet hours, Hermes Agent bridge with proposal confirmation gate, 17 MCP academic tools, and productivity automations)
 - Phase 9 — Production Release: NOT STARTED
