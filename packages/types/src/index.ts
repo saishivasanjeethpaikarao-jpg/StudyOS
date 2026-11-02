@@ -219,3 +219,4 @@ export type {
 } from "./idea.js";
 export * from "./learning";
 export * from "./ai";
+export * from "./integrations";

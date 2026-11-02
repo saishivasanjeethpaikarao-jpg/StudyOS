@@ -2,6 +2,7 @@
 export * from "./learning";
 export * from "./account-sync";
 export * from "./ai";
+export * from "./integrations";
 export {
   users,
   usersRelations,

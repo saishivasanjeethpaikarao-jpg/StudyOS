@@ -92,6 +92,13 @@
       "when": 1793618000000,
       "tag": "0012_ai_study_planner",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793628000000,
+      "tag": "0013_integrations_agent",
+      "breakpoints": true
     }
   ]
 }
