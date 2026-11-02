@@ -39,7 +39,10 @@ describe("Phase 8 Cryptographic Storage Unit Tests", () => {
 
   it("detects and rejects tampered ciphertext or tags", () => {
     const encrypted = encryptCredential("confidential_oauth_token");
-    const [ivHex, tagHex, cipherHex] = encrypted.split(":");
+    const parts = encrypted.split(":");
+    const ivHex = parts[0]!;
+    const tagHex = parts[1]!;
+    const cipherHex = parts[2]!;
     // Tamper with last character of ciphertext
     const tamperedCipher = cipherHex.slice(0, -2) + (cipherHex.endsWith("0") ? "1" : "0");
     const tampered = `${ivHex}:${tagHex}:${tamperedCipher}`;
@@ -76,7 +79,7 @@ describe.skipIf(!testDatabaseUrl)("Phase 8 Integrations & Agent API against Post
         timezone: "UTC",
       })
       .returning();
-    ownerAId = userA.id;
+    ownerAId = userA!.id;
     tokenA = signToken(ownerAId);
 
     // Create User B (for multi-tenant isolation tests)
@@ -88,7 +91,7 @@ describe.skipIf(!testDatabaseUrl)("Phase 8 Integrations & Agent API against Post
         timezone: "UTC",
       })
       .returning();
-    ownerBId = userB.id;
+    ownerBId = userB!.id;
     tokenB = signToken(ownerBId);
 
     // Create an assignment and study session for User A
@@ -105,7 +108,7 @@ describe.skipIf(!testDatabaseUrl)("Phase 8 Integrations & Agent API against Post
 
     await db.insert(studySessions).values({
       userId: ownerAId,
-      assignmentId: assignment.id,
+      assignmentId: assignment!.id,
       startAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
       endAt: new Date(Date.now() + 3 * 60 * 60 * 1000),
       timezone: "UTC",
