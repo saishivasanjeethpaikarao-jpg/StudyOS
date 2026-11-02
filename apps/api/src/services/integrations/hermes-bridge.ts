@@ -332,6 +332,16 @@ export class HermesBridgeService {
       throw new Error("Proposal not found or already processed");
     }
 
+    // Check proposal expiration (proposals expire after 7 days)
+    const proposalAge = Date.now() - proposal.createdAt.getTime();
+    if (proposalAge > 7 * 24 * 60 * 60 * 1000) {
+      await db
+        .update(agentProposals)
+        .set({ status: "rejected", reviewedAt: new Date() })
+        .where(eq(agentProposals.id, proposal.id));
+      throw new Error("Proposal has expired (proposals are valid for 7 days)");
+    }
+
     if (proposal.proposedAction === "create_reminder") {
       const payload = proposal.payload as { title: string; remindAt: string };
       await db.insert(studyReminders).values({
@@ -347,6 +357,70 @@ export class HermesBridgeService {
         title: payload.title || proposal.title,
         body: payload.body || payload.content || "Study note created via Hermes Agent recommendation.",
       });
+    } else if (proposal.proposedAction === "create_session") {
+      const payload = proposal.payload as {
+        assignmentId?: string;
+        startAt?: string;
+        suggestedDate?: string;
+        endAt?: string;
+        plannedMinutes?: number;
+      };
+
+      let targetAssignmentId = payload.assignmentId;
+      if (targetAssignmentId) {
+        const [validAssign] = await db
+          .select({ id: assignments.id })
+          .from(assignments)
+          .where(and(eq(assignments.id, targetAssignmentId), eq(assignments.userId, userId)))
+          .limit(1);
+        if (!validAssign) targetAssignmentId = undefined;
+      }
+
+      if (!targetAssignmentId) {
+        const [activeAssign] = await db
+          .select({ id: assignments.id })
+          .from(assignments)
+          .where(and(eq(assignments.userId, userId), eq(assignments.status, "in_progress")))
+          .limit(1);
+        targetAssignmentId = activeAssign?.id;
+      }
+
+      if (targetAssignmentId) {
+        const start = payload.startAt
+          ? new Date(payload.startAt)
+          : payload.suggestedDate
+          ? new Date(payload.suggestedDate)
+          : new Date(Date.now() + 2 * 60 * 60 * 1000);
+        const mins = payload.plannedMinutes ?? 45;
+        const end = payload.endAt ? new Date(payload.endAt) : new Date(start.getTime() + mins * 60 * 1000);
+
+        await db.insert(studySessions).values({
+          userId,
+          assignmentId: targetAssignmentId,
+          startAt: start,
+          endAt: end,
+          timezone: "UTC",
+          plannedMinutes: mins,
+          status: "planned",
+        });
+      }
+    } else if (proposal.proposedAction === "update_assignment") {
+      const payload = proposal.payload as {
+        assignmentId?: string;
+        title?: string;
+        status?: "in_progress" | "completed" | "cancelled";
+      };
+
+      if (payload.assignmentId) {
+        await db
+          .update(assignments)
+          .set({
+            ...(payload.title ? { title: payload.title } : {}),
+            ...(payload.status ? { status: payload.status } : {}),
+            updatedAt: new Date(),
+          })
+          .where(and(eq(assignments.id, payload.assignmentId), eq(assignments.userId, userId)));
+      }
     }
 
     await db

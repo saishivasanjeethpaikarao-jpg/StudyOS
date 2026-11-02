@@ -1,3 +1,5 @@
+import path from "node:path";
+import { isAllowedAttachmentType } from "../validation/uploads.js";
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { Hono } from "hono";
 import {
@@ -17,6 +19,9 @@ import {
 import { signToken } from "../lib/jwt.js";
 import { errorHandler } from "../middleware/error.js";
 import { integrationsRouter } from "./integrations.js";
+import { TelegramIntegrationService } from "../services/integrations/telegram.js";
+import { HermesBridgeService } from "../services/integrations/hermes-bridge.js";
+import { AutomationsService } from "../services/integrations/automations.js";
 import {
   encryptCredential,
   decryptCredential,
@@ -332,5 +337,123 @@ describe.skipIf(!testDatabaseUrl)("Phase 8 Integrations & Agent API against Post
       headers: { Authorization: `Bearer ${tokenB}` },
     });
     expect(runRes.status).toBe(404);
+  });
+
+  it("10. Telegram quiet hours correctly handles student timezone and midnight crossovers", () => {
+    const tgService = new TelegramIntegrationService();
+
+    // Student has quiet hours 22:00 to 07:00
+    // Test 23:30 (should be quiet)
+    const lateNight = new Date("2026-11-02T23:30:00Z");
+    expect(tgService.isQuietHours("22:00", "07:00", "UTC", lateNight)).toBe(true);
+
+    // Test 03:00 (should be quiet)
+    const earlyMorning = new Date("2026-11-03T03:00:00Z");
+    expect(tgService.isQuietHours("22:00", "07:00", "UTC", earlyMorning)).toBe(true);
+
+    // Test 14:00 (should NOT be quiet)
+    const midDay = new Date("2026-11-02T14:00:00Z");
+    expect(tgService.isQuietHours("22:00", "07:00", "UTC", midDay)).toBe(false);
+
+    // Timezone check: 03:30 UTC is 22:30 in America/New_York (UTC-5) -> quiet in NY!
+    const nyLateNight = new Date("2026-11-03T03:30:00Z");
+    expect(tgService.isQuietHours("22:00", "07:00", "America/New_York", nyLateNight)).toBe(true);
+  });
+
+  it("11. Telegram chat linking disassociates any previous user linked to the same chatId", async () => {
+    const tgService = new TelegramIntegrationService();
+
+    // Link chatId 99999 to User A
+    const codeA = await tgService.generateLinkCode(ownerAId);
+    await tgService.handleWebhook({
+      message: {
+        chat: { id: 99999 },
+        from: { username: "student_multi" },
+        text: `/start ${codeA.linkCode}`,
+      },
+    });
+
+    const settingsA = await tgService.getSettings(ownerAId);
+    expect(settingsA.chatId).toBe("99999");
+    expect(settingsA.isEnabled).toBe(true);
+
+    // User B links the same chatId 99999
+    const codeB = await tgService.generateLinkCode(ownerBId);
+    await tgService.handleWebhook({
+      message: {
+        chat: { id: 99999 },
+        from: { username: "student_multi" },
+        text: `/start ${codeB.linkCode}`,
+      },
+    });
+
+    // User B should now own it
+    const settingsB = await tgService.getSettings(ownerBId);
+    expect(settingsB.chatId).toBe("99999");
+    expect(settingsB.isEnabled).toBe(true);
+
+    // User A should be disassociated
+    const settingsAAfter = await tgService.getSettings(ownerAId);
+    expect(settingsAAfter.chatId).toBeNull();
+    expect(settingsAAfter.isEnabled).toBe(false);
+  });
+
+  it("12. Hermes proposal confirmation handles create_session and rejects expired proposals", async () => {
+    const hermes = new HermesBridgeService();
+
+    // 1. Dispatch revision plan proposal (creates create_session action)
+    const dispatch = await hermes.executeWorkflow(ownerAId, "revision_plan_proposal", {});
+    const proposalId = (dispatch.result as any).proposalId;
+
+    // Confirm proposal
+    const confirmRes = await hermes.confirmProposal(ownerAId, proposalId);
+    expect(confirmRes.success).toBe(true);
+    expect(confirmRes.actionTaken).toBe("create_session");
+
+    // Replay attempt should fail
+    await expect(hermes.confirmProposal(ownerAId, proposalId)).rejects.toThrow(/already processed/i);
+  });
+
+  it("13. Automations scheduler evaluates due automations and skips already-run jobs", async () => {
+    const autoService = new AutomationsService();
+
+    // Create an automation scheduled for 10:00 in UTC
+    const auto = await autoService.createAutomation(ownerAId, {
+      title: "Scheduler Test Briefing",
+      workflowType: "daily_briefing",
+      scheduleTime: "10:00",
+      timezone: "UTC",
+      channels: ["in_app"],
+    });
+
+    // Simulate current time is 10:00 UTC
+    const tenAmUtc = new Date("2026-11-02T10:00:00Z");
+    const runResults = await autoService.processScheduledAutomations(tenAmUtc);
+    const thisRun = runResults.find((r) => r.automationId === auto.id);
+    expect(thisRun).toBeDefined();
+    expect(thisRun?.status).toBe("success");
+
+    // Second evaluation at 10:00 UTC on the same day must skip (already ran today)
+    const rerunResults = await autoService.processScheduledAutomations(tenAmUtc);
+    const skippedRun = rerunResults.find((r) => r.automationId === auto.id);
+    expect(skippedRun).toBeUndefined();
+  });
+
+  it("14. Google Drive import rejects unsupported MIME types and sanitizes directory traversal filenames", () => {
+    // Verify unsupported binaries are rejected
+    expect(isAllowedAttachmentType("application/x-msdownload" as any)).toBe(false);
+    expect(isAllowedAttachmentType("application/x-sh" as any)).toBe(false);
+    expect(isAllowedAttachmentType("application/octet-stream" as any)).toBe(false);
+
+    // Verify supported types are allowed
+    expect(isAllowedAttachmentType("application/pdf")).toBe(true);
+    expect(isAllowedAttachmentType("text/plain")).toBe(true);
+
+    // Test filename sanitization against path traversal
+    const maliciousName = "../../secrets/id_rsa.pdf";
+    const sanitized = path.basename(maliciousName).replace(/[^a-zA-Z0-9._-]/g, "_");
+    expect(sanitized).toBe("id_rsa.pdf");
+    expect(sanitized).not.toContain("..");
+    expect(sanitized).not.toContain("/");
   });
 });

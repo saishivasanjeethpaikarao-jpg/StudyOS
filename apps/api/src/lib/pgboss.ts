@@ -207,6 +207,8 @@ export const JOBS = {
   RECURRING_TASK_CHECK: "recurring-task-check",
   /** Generates a single recurring task instance */
   GENERATE_RECURRING_TASK: "generate-recurring-task",
+  /** Runs every minute to evaluate and execute scheduled automations across timezones */
+  AUTOMATION_SCHEDULE_CHECK: "automation-schedule-check",
 } as const;
 
 export type JobName = (typeof JOBS)[keyof typeof JOBS];

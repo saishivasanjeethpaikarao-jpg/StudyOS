@@ -1,3 +1,4 @@
+import path from "node:path";
 import {
   getDb,
   eq,
@@ -145,7 +146,10 @@ export class GoogleDriveIntegrationService {
 
     let downloadUrl = `${GOOGLE_DRIVE_API}/files/${encodeURIComponent(payload.fileId)}?alt=media`;
     let targetMimeType = metadata.mimeType;
-    let fileName = payload.fileName || metadata.name;
+
+    // Sanitize filename against directory traversal and control characters
+    const rawFileName = payload.fileName || metadata.name;
+    let fileName = path.basename(rawFileName).replace(/[^a-zA-Z0-9._-]/g, "_");
 
     // Handle Google Docs export to PDF
     if (metadata.mimeType === "application/vnd.google-apps.document") {
@@ -154,6 +158,12 @@ export class GoogleDriveIntegrationService {
       if (!fileName.toLowerCase().endsWith(".pdf")) {
         fileName = `${fileName}.pdf`;
       }
+    }
+
+    // Validate MIME type against allowed attachment types
+    const isAllowed = isAllowedAttachmentType(targetMimeType) || targetMimeType === "text/markdown";
+    if (!isAllowed) {
+      throw new Error(`Unsupported file type: ${targetMimeType}. Only documents, text, and images are permitted.`);
     }
 
     // Check size limit if provided in metadata

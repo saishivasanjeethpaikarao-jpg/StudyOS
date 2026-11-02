@@ -2,6 +2,7 @@ import {
   getDb,
   eq,
   and,
+  like,
   studySessions,
   assignments,
   subjects,
@@ -125,17 +126,55 @@ export class GoogleCalendarIntegrationService {
       `View in StudyOS: ${webAppUrl}/app/study-sessions/${session.id}`,
     ].join("\n");
 
-    // Check if session was already exported to avoid duplicates
-    const [existingEvent] = await db
+    // Check if session was already exported with dual ownership verification:
+    // 1. Check calendarEvents table for matching tag and userId
+    let [existingEvent] = await db
       .select()
       .from(calendarEvents)
       .where(
         and(
           eq(calendarEvents.userId, userId),
-          eq(calendarEvents.description, `[studyos_session:${sessionId}]`)
+          like(calendarEvents.description, `%[studyos_session:${sessionId}]%`)
         )
       )
       .limit(1);
+
+    // 2. If not found by tag, check integrationAuditLogs for audited externalEventId link
+    if (!existingEvent) {
+      const auditRows = await db
+        .select()
+        .from(integrationAuditLogs)
+        .where(
+          and(
+            eq(integrationAuditLogs.userId, userId),
+            eq(integrationAuditLogs.action, "create_session_event"),
+            eq(integrationAuditLogs.status, "success")
+          )
+        )
+        .orderBy(integrationAuditLogs.createdAt);
+
+      const matchingAudit = auditRows.reverse().find(
+        (r) => (r.details as Record<string, unknown>)?.sessionId === sessionId
+      );
+
+      if (matchingAudit && (matchingAudit.details as Record<string, unknown>)?.externalEventId) {
+        const auditedExtId = String((matchingAudit.details as Record<string, unknown>).externalEventId);
+        const [eventByAudit] = await db
+          .select()
+          .from(calendarEvents)
+          .where(
+            and(
+              eq(calendarEvents.userId, userId),
+              eq(calendarEvents.externalId, auditedExtId)
+            )
+          )
+          .limit(1);
+
+        if (eventByAudit) {
+          existingEvent = eventByAudit;
+        }
+      }
+    }
 
     try {
       if (session.status === "cancelled") {

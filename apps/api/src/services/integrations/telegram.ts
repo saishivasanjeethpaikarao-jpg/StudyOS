@@ -4,6 +4,8 @@ import {
   eq,
   and,
   gte,
+  ne,
+  users,
   studySessions,
   assignments,
   telegramLinkRequests,
@@ -220,6 +222,21 @@ export class TelegramIntegrationService {
         return { handled: true, action: "link_failed" };
       }
 
+      // Disassociate any other user's telegram settings linked to this chatId
+      await db
+        .update(telegramSettings)
+        .set({
+          chatId: null,
+          isEnabled: false,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(telegramSettings.chatId, chatId),
+            ne(telegramSettings.userId, linkReq.userId)
+          )
+        );
+
       // Mark request as consumed and save chatId
       await db
         .update(telegramLinkRequests)
@@ -320,8 +337,16 @@ export class TelegramIntegrationService {
     if (category === "due_date" && !settings.notifyDueDates) return false;
     if (category === "briefing" && !settings.notifyDailyBriefing) return false;
 
-    // Check quiet hours
-    if (this.isQuietHours(settings.quietHoursStart, settings.quietHoursEnd)) {
+    const [user] = await getDb()
+      .select({ timezone: users.timezone })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const userTimezone = user?.timezone || "UTC";
+
+    // Check quiet hours against student's timezone
+    if (this.isQuietHours(settings.quietHoursStart, settings.quietHoursEnd, userTimezone)) {
       return false;
     }
 
@@ -338,10 +363,30 @@ export class TelegramIntegrationService {
     return sent;
   }
 
-  private isQuietHours(start?: string | null, end?: string | null): boolean {
+  isQuietHours(
+    start?: string | null,
+    end?: string | null,
+    userTimezone?: string | null,
+    now = new Date()
+  ): boolean {
     if (!start || !end) return false;
-    const now = new Date();
-    const currentMins = now.getUTCHours() * 60 + now.getUTCMinutes();
+    let currentMins = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+    if (userTimezone) {
+      try {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: userTimezone,
+          hour: "numeric",
+          minute: "numeric",
+          hour12: false,
+        }).formatToParts(now);
+        const h = Number(parts.find((p) => p.type === "hour")?.value ?? now.getUTCHours());
+        const m = Number(parts.find((p) => p.type === "minute")?.value ?? now.getUTCMinutes());
+        currentMins = h * 60 + m;
+      } catch {
+        currentMins = now.getUTCHours() * 60 + now.getUTCMinutes();
+      }
+    }
 
     const sParts = start.split(":").map(Number);
     const eParts = end.split(":").map(Number);

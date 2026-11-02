@@ -6,6 +6,7 @@ import { registerRolloverWorkers } from "./rollover/index.js";
 import { registerEmailWorkers } from "./email/index.js";
 import { registerCalendarSyncWorkers } from "./calendar-sync/index.js";
 import { registerRecurringWorkers } from "./recurring/index.js";
+import { registerAutomationsWorkers } from "./automations/index.js";
 import { setWorkerRegistrationFn } from "../lib/pgboss.js";
 
 /**
@@ -22,6 +23,7 @@ export async function registerAllWorkers(): Promise<void> {
   await registerEmailWorkers();
   await registerCalendarSyncWorkers();
   await registerRecurringWorkers();
+  await registerAutomationsWorkers();
 
   console.log("[Workers] All workers registered");
 }
@@ -30,3 +32,4 @@ export { registerRolloverWorkers };
 export { registerEmailWorkers };
 export { registerCalendarSyncWorkers };
 export { registerRecurringWorkers };
+export { registerAutomationsWorkers };

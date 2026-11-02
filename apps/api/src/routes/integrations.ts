@@ -425,6 +425,11 @@ integrationsRouter.delete("/automations/:id", async (c) => {
   return c.json({ success: true, message: "Automation deleted" });
 });
 
+integrationsRouter.post("/automations/tick", async (c) => {
+  const data = await automationsService.processScheduledAutomations();
+  return c.json({ success: true, count: data.length, data });
+});
+
 integrationsRouter.post("/automations/:id/run", async (c) => {
   const userId = c.get("userId");
   const id = c.req.param("id");

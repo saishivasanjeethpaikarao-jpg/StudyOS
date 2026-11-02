@@ -256,4 +256,91 @@ export class AutomationsService {
       executedAt: r.executedAt.toISOString(),
     }));
   }
+
+  /**
+   * Process all scheduled automations across timezones.
+   * Runs periodically (e.g. every minute) to evaluate due automations.
+   */
+  async processScheduledAutomations(
+    now = new Date(),
+    options?: { forceRun?: boolean }
+  ): Promise<Array<{ automationId: string; userId: string; status: string; summary: string }>> {
+    const db = getDb();
+    const activeList = await db
+      .select()
+      .from(automationDefinitions)
+      .where(eq(automationDefinitions.isActive, true));
+
+    const results: Array<{ automationId: string; userId: string; status: string; summary: string }> = [];
+
+    for (const auto of activeList) {
+      const tz = auto.timezone || "UTC";
+      let currentTimeStr = "00:00";
+      let currentDateStr = "1970-01-01";
+
+      try {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: tz,
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).formatToParts(now);
+
+        const h = parts.find((p) => p.type === "hour")?.value ?? "00";
+        const m = parts.find((p) => p.type === "minute")?.value ?? "00";
+        currentTimeStr = `${h}:${m}`;
+        const y = parts.find((p) => p.type === "year")?.value ?? "1970";
+        const mo = parts.find((p) => p.type === "month")?.value ?? "01";
+        const d = parts.find((p) => p.type === "day")?.value ?? "01";
+        currentDateStr = `${y}-${mo}-${d}`;
+      } catch {
+        const h = String(now.getUTCHours()).padStart(2, "0");
+        const m = String(now.getUTCMinutes()).padStart(2, "0");
+        currentTimeStr = `${h}:${m}`;
+        currentDateStr = now.toISOString().slice(0, 10);
+      }
+
+      // Check if already executed today in this timezone
+      if (auto.lastRunAt && !options?.forceRun) {
+        try {
+          const lastRunDateStr = new Intl.DateTimeFormat("en-US", {
+            timeZone: tz,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(new Date(auto.lastRunAt));
+
+          const curFormatted = new Intl.DateTimeFormat("en-US", {
+            timeZone: tz,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(now);
+
+          if (lastRunDateStr === curFormatted) {
+            continue; // Already ran today
+          }
+        } catch {
+          // fallback comparison
+        }
+      }
+
+      // Check if schedule time matches
+      const isDue = options?.forceRun || currentTimeStr === auto.scheduleTime;
+      if (isDue) {
+        const runRes = await this.runAutomation(auto.userId, auto.id);
+        results.push({
+          automationId: auto.id,
+          userId: auto.userId,
+          status: runRes.status,
+          summary: runRes.summary,
+        });
+      }
+    }
+
+    return results;
+  }
 }
