@@ -13,6 +13,7 @@ import {
   Repeat,
   Cloud,
   Sparkles,
+  Share2,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch, useNavigate } from "@tanstack/react-router";
@@ -39,11 +40,13 @@ import {
   RoutinesSettings,
   AccountSyncSettings,
   AiSettings,
+  IntegrationsSettings,
 } from "@/components/settings";
 
 type SettingsTab =
   | "account"
   | "ai"
+  | "integrations"
   | "profile"
   | "security"
   | "appearance"
@@ -58,6 +61,7 @@ type SettingsTab =
 const TABS: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
   { id: "account", label: "Account & Sync", icon: Cloud },
   { id: "ai", label: "AI & Providers", icon: Sparkles },
+  { id: "integrations", label: "Integrations & Agent", icon: Share2 },
   { id: "profile", label: "Profile", icon: User },
   { id: "security", label: "Security", icon: Lock },
   { id: "appearance", label: "Appearance", icon: Palette },
@@ -78,6 +82,8 @@ function SettingsContent({ tab }: { tab: SettingsTab }) {
       return <AccountSyncSettings />;
     case "ai":
       return <AiSettings />;
+    case "integrations":
+      return <IntegrationsSettings />;
     case "security":
       return <PasswordSettings />;
     case "appearance":
