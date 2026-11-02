@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, useColorScheme } from 'react-native';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { AccountSyncProvider } from '@/lib/sync';
 
 // Create a query client for React Query
 const queryClient = new QueryClient({
@@ -52,12 +53,14 @@ export default function RootLayout() {
     <GestureHandlerRootView style={[styles.container, isDark && styles.containerDark]}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AuthGuard>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(app)" options={{ headerShown: false }} />
-            </Stack>
-          </AuthGuard>
+          <AccountSyncProvider>
+            <AuthGuard>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(app)" options={{ headerShown: false }} />
+              </Stack>
+            </AuthGuard>
+          </AccountSyncProvider>
           <StatusBar style={isDark ? 'light' : 'dark'} />
         </AuthProvider>
       </QueryClientProvider>

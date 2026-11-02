@@ -23,8 +23,8 @@ config.resolver.extraNodeModules = {
 
 // Resolve .js imports to .ts files (ESM imports in workspace packages)
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  const isFromWorkspacePackage = context.originModulePath && 
-    context.originModulePath.includes('/packages/');
+  const isFromWorkspacePackage = context.originModulePath &&
+    /[\\/]packages[\\/]/.test(context.originModulePath);
   
   if (isFromWorkspacePackage && moduleName.startsWith('.') && moduleName.endsWith('.js')) {
     const tsModuleName = moduleName.replace(/\.js$/, '.ts');

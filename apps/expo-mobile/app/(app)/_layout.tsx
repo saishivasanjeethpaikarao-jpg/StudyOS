@@ -6,9 +6,11 @@ import { View, Text, StyleSheet, useColorScheme } from 'react-native';
  */
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const icons: Record<string, string> = {
-    index: focused ? '[ ]' : '[ ]',
-    calendar: focused ? '[=]' : '[=]',
-    settings: focused ? '[*]' : '[*]',
+    index: 'Today',
+    plan: 'Plan',
+    assignments: 'Learn',
+    focus: 'Focus',
+    settings: 'More',
   };
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -16,7 +18,7 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   return (
     <View style={styles.iconContainer}>
       <Text style={[styles.icon, isDark && styles.iconDark, focused && (isDark ? styles.iconFocusedDark : styles.iconFocused)]}>
-        {icons[name] || '[ ]'}
+        {icons[name] || '•'}
       </Text>
     </View>
   );
@@ -44,24 +46,45 @@ export default function AppLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tasks',
+          title: 'Today',
           tabBarIcon: ({ focused }) => <TabIcon name="index" focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="calendar"
+        name="plan"
         options={{
-          title: 'Calendar',
-          tabBarIcon: ({ focused }) => <TabIcon name="calendar" focused={focused} />,
+          title: 'Plan',
+          tabBarIcon: ({ focused }) => <TabIcon name="plan" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="assignments"
+        options={{
+          title: 'Learn',
+          tabBarIcon: ({ focused }) => <TabIcon name="assignments" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="focus"
+        options={{
+          title: 'Focus',
+          tabBarIcon: ({ focused }) => <TabIcon name="focus" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: 'More',
           tabBarIcon: ({ focused }) => <TabIcon name="settings" focused={focused} />,
         }}
       />
+      <Tabs.Screen name="calendar" options={{ href: null, title: 'Calendar' }} />
+      <Tabs.Screen name="assignment/[id]" options={{ href: null, title: 'Assignment' }} />
+      <Tabs.Screen name="resources" options={{ href: null, title: 'Resources' }} />
+      <Tabs.Screen name="notes" options={{ href: null, title: 'Notes' }} />
+      <Tabs.Screen name="quizzes" options={{ href: null, title: 'Knowledge checks' }} />
+      <Tabs.Screen name="quiz/[id]" options={{ href: null, title: 'Quiz' }} />
+      <Tabs.Screen name="reminders" options={{ href: null, title: 'Reminders' }} />
     </Tabs>
   );
 }

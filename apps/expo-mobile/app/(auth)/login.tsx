@@ -13,6 +13,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
 import { useAuth } from '@/lib/auth';
+import { API_URL } from '@/lib/api';
+import * as ExpoLinking from 'expo-linking';
 
 /**
  * Login screen
@@ -55,6 +57,15 @@ export default function LoginScreen() {
 
           {/* Form */}
           <View style={styles.form}>
+            <TouchableOpacity
+              style={styles.googleButton}
+              onPress={() => void ExpoLinking.openURL(`${API_URL}/auth/google/start?mobile_redirect_uri=${encodeURIComponent(ExpoLinking.createURL('auth/callback'))}`)}
+              disabled={isLoading}
+            >
+              <Text style={styles.googleButtonText}>Continue with Google</Text>
+            </TouchableOpacity>
+            <Text style={styles.providerNote}>Google sign-in opens the secure StudyOS provider flow. It requires the deployed API to have Google OAuth configured.</Text>
+            <View style={styles.divider}><View style={styles.dividerLine} /><Text style={styles.dividerText}>or use email</Text><View style={styles.dividerLine} /></View>
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
               <TextInput
@@ -178,6 +189,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
+  googleButton: {
+    height: 48,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  googleButtonText: { fontSize: 16, fontWeight: '600', color: '#1f2937' },
+  providerNote: { color: '#6b7280', fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: -8 },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#e5e7eb' },
+  dividerText: { color: '#9ca3af', fontSize: 12 },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',

@@ -14,6 +14,9 @@ import { useTasks } from '@/hooks/useTasks';
 import { TaskCard } from '@/components/TaskCard';
 import { CreateTaskModal } from '@/components/CreateTaskModal';
 import type { Task } from '@open-sunsama/types';
+import { SyncBanner } from '@/components/SyncBanner';
+import { useStudySessions } from '@/hooks/useStudyOS';
+import { formatInZone } from '@/lib/date';
 
 /**
  * Tasks screen - shows tasks for the selected date
@@ -26,6 +29,8 @@ export default function TasksScreen() {
   const { data: tasks, isLoading, refetch, isRefetching } = useTasks({
     scheduledDate: dateString,
   });
+  const { data: sessions = [] } = useStudySessions();
+  const todaySessions = sessions.filter((session) => session.status === 'planned' && formatInZone(session.startAt, session.timezone, { year: 'numeric', month: '2-digit', day: '2-digit' }) === formatInZone(selectedDate, session.timezone, { year: 'numeric', month: '2-digit', day: '2-digit' }));
 
   const goToPreviousDay = useCallback(() => {
     setSelectedDate((prev) => subDays(prev, 1));
@@ -65,6 +70,7 @@ export default function TasksScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
+      <SyncBanner />
       {/* Date Navigation */}
       <View style={styles.dateNav}>
         <TouchableOpacity onPress={goToPreviousDay} style={styles.navButton}>
@@ -94,6 +100,8 @@ export default function TasksScreen() {
           {completedTasks.length > 0 && ` | ${completedTasks.length} done`}
         </Text>
       </View>
+
+      {todaySessions.length > 0 && <View style={styles.sessionStrip}><Text style={styles.sessionStripTitle}>Study sessions</Text>{todaySessions.map((session) => <Text key={session.id} style={styles.sessionStripItem}>{formatInZone(session.startAt, session.timezone, { hour: 'numeric', minute: '2-digit' })} · {session.plannedMinutes} min</Text>)}</View>}
 
       {/* Task List */}
       <FlatList
@@ -195,6 +203,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6b7280',
   },
+  sessionStrip: { marginHorizontal: 16, marginTop: 10, padding: 13, borderRadius: 12, backgroundColor: '#fff7ed' },
+  sessionStripTitle: { color: '#9a3412', fontWeight: '800', fontSize: 12, marginBottom: 4 },
+  sessionStripItem: { color: '#c2410c', fontSize: 13, marginTop: 2 },
   listContent: {
     padding: 16,
     paddingBottom: 100,
