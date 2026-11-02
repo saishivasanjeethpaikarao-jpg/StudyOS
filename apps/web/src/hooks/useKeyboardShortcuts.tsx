@@ -227,6 +227,30 @@ export const SHORTCUTS: Record<string, ShortcutDefinition> = {
     description: "Go to Calendar",
     category: "desktop",
   },
+  desktopAssignments: {
+    key: "3",
+    modifiers: { cmd: true },
+    description: "Go to Assignments",
+    category: "desktop",
+  },
+  desktopSubjects: {
+    key: "4",
+    modifiers: { cmd: true },
+    description: "Go to Subjects",
+    category: "desktop",
+  },
+  desktopResources: {
+    key: "5",
+    modifiers: { cmd: true },
+    description: "Go to Resources",
+    category: "desktop",
+  },
+  desktopNotes: {
+    key: "6",
+    modifiers: { cmd: true },
+    description: "Go to Notes",
+    category: "desktop",
+  },
 };
 
 // Format shortcut for display (e.g., "Shift + Space", "Cmd + Delete")

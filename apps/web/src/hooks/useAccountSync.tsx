@@ -2,6 +2,7 @@ import * as React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { getApi } from "@/lib/api";
+import { isDesktop } from "@/lib/desktop";
 import type {
   AccountDevice,
   SyncMutationInput,
@@ -152,9 +153,14 @@ export function AccountSyncProvider({
           cause instanceof Error
             ? cause.message
             : "StudyOS could not save this change";
+        const isConflict =
+          (cause as { status?: number })?.status === 409 ||
+          message.toLowerCase().includes("conflict");
         updateQueuedSyncMutation(userId, item.id, {
           attempts: item.attempts + 1,
-          lastError: message,
+          lastError: isConflict
+            ? `Revision conflict: newer data exists on server. (${message})`
+            : message,
         });
         firstError ??= message;
       }
@@ -173,10 +179,11 @@ export function AccountSyncProvider({
         const api = getApi();
         const clientDeviceId = getClientDeviceId();
         setClientDeviceId(clientDeviceId);
+        const desktopApp = isDesktop();
         const device = await api.account.registerDevice({
           clientDeviceId,
-          platform: "web",
-          displayName: "This browser",
+          platform: desktopApp ? "desktop" : "web",
+          displayName: desktopApp ? "Windows Desktop" : "This browser",
         });
         const list = await api.account.devices();
         setDevices(list);

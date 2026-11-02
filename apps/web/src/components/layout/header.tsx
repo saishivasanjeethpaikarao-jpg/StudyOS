@@ -15,11 +15,15 @@ import {
   BookOpen,
   ClipboardList,
   GraduationCap,
+  FileText,
+  CheckSquare,
+  Bell,
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearch } from "@/hooks/useSearch";
 import { useTheme } from "@/hooks/useTheme";
+import { isDesktop } from "@/lib/desktop";
 import { prefetchCommandPalette } from "@/components/command-palette/command-palette.lazy";
 import { DesktopUpdateMenuItem } from "@/components/desktop-update-menu-item";
 import { cn, getAvatarUrl } from "@/lib/utils";
@@ -41,16 +45,11 @@ interface HeaderProps {
   className?: string;
 }
 
-// Check if running in Tauri desktop app
-function isTauriApp(): boolean {
-  return typeof window !== "undefined" && "__TAURI__" in window;
-}
-
 export function Header({ className }: HeaderProps) {
   const { user, logout } = useAuth();
   const { openSearch } = useSearch();
   const { themeMode, setThemeMode } = useTheme();
-  const isDesktopApp = React.useMemo(() => isTauriApp(), []);
+  const isDesktopApp = React.useMemo(() => isDesktop(), []);
 
   const userInitials = React.useMemo(() => {
     if (!user?.name) return user?.email?.charAt(0).toUpperCase() ?? "U";
@@ -84,13 +83,19 @@ export function Header({ className }: HeaderProps) {
           </Link>
         </div>
 
-        {/* Navigation - Hidden on mobile (using bottom nav instead) */}
-        <nav className="hidden lg:flex items-center gap-0.5">
+        {/* Navigation - High-density student workspace */}
+        <nav className="hidden lg:flex items-center gap-0.5 overflow-x-auto [scrollbar-width:none]">
           <NavLink
             href="/app/board"
             icon={<LayoutGrid className="h-3.5 w-3.5" />}
           >
             Today
+          </NavLink>
+          <NavLink
+            href="/app/calendar"
+            icon={<Calendar className="h-3.5 w-3.5" />}
+          >
+            Planner
           </NavLink>
           <NavLink
             href="/app/assignments"
@@ -104,14 +109,32 @@ export function Header({ className }: HeaderProps) {
           >
             Subjects
           </NavLink>
-          <NavLink href="/app/tasks" icon={<List className="h-3.5 w-3.5" />}>
-            Tasks
+          <NavLink
+            href="/app/resources"
+            icon={<BookOpen className="h-3.5 w-3.5" />}
+          >
+            Resources
           </NavLink>
           <NavLink
-            href="/app/calendar"
-            icon={<Calendar className="h-3.5 w-3.5" />}
+            href="/app/notes"
+            icon={<FileText className="h-3.5 w-3.5" />}
           >
-            Calendar
+            Notes
+          </NavLink>
+          <NavLink
+            href="/app/quizzes"
+            icon={<CheckSquare className="h-3.5 w-3.5" />}
+          >
+            Knowledge Checks
+          </NavLink>
+          <NavLink
+            href="/app/reminders"
+            icon={<Bell className="h-3.5 w-3.5" />}
+          >
+            Reminders
+          </NavLink>
+          <NavLink href="/app/tasks" icon={<List className="h-3.5 w-3.5" />}>
+            Tasks
           </NavLink>
           <NavLink
             href="/app/ideas"
@@ -143,7 +166,7 @@ export function Header({ className }: HeaderProps) {
           <ShortcutHint shortcutKey="search" />
         </button>
 
-        {/* Global Shortcut Hint - Hidden on mobile */}
+        {/* Global Shortcut Hint */}
         <div className="mr-3 hidden items-center text-[10px] text-muted-foreground/50 2xl:flex">
           Press{" "}
           <kbd className="mx-1 rounded border border-border/40 bg-muted/50 px-1 py-0.5 text-[9px] font-medium">
@@ -154,7 +177,7 @@ export function Header({ className }: HeaderProps) {
 
         {/* Actions */}
         <div className="flex items-center gap-1">
-          {/* Theme Toggle - Icon-only segmented control (hidden on mobile) */}
+          {/* Theme Toggle */}
           <div className="hidden lg:inline-flex items-center rounded border border-border/40 bg-muted/30 p-0.5">
             <button
               onClick={() => setThemeMode("system")}
@@ -251,7 +274,7 @@ export function Header({ className }: HeaderProps) {
                 <DropdownMenuItem asChild className="text-[13px] py-1.5">
                   <a href="/download" className="w-full cursor-pointer">
                     <Download className="mr-2 h-3.5 w-3.5" />
-                    Desktop app coming soon
+                    Download Windows App
                   </a>
                 </DropdownMenuItem>
               )}
@@ -278,6 +301,10 @@ interface NavLinkProps {
     | "/app/tasks"
     | "/app/assignments"
     | "/app/subjects"
+    | "/app/resources"
+    | "/app/notes"
+    | "/app/quizzes"
+    | "/app/reminders"
     | "/app/calendar"
     | "/app/ideas";
   icon?: React.ReactNode;
@@ -285,8 +312,6 @@ interface NavLinkProps {
 }
 
 function NavLink({ href, icon, children }: NavLinkProps) {
-  // Reactive active state via the router — a plain <a> would hard-reload the
-  // whole SPA on every tab switch (the flicker), so use a client-side <Link>.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isActive =
     href === "/app/board"
@@ -297,7 +322,7 @@ function NavLink({ href, icon, children }: NavLinkProps) {
     <Link
       to={href}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded px-2 py-1 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+        "inline-flex items-center gap-1.5 rounded px-2 py-1 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground shrink-0",
         isActive && "bg-accent text-accent-foreground"
       )}
     >

@@ -333,6 +333,30 @@ const appSubjectsRoute = createRoute({
   component: lazyRouteComponent(() => import("./routes/app/subjects")),
 });
 
+const appResourcesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/resources",
+  component: lazyRouteComponent(() => import("./routes/app/resources")),
+});
+
+const appNotesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/notes",
+  component: lazyRouteComponent(() => import("./routes/app/notes")),
+});
+
+const appQuizzesRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/quizzes",
+  component: lazyRouteComponent(() => import("./routes/app/quizzes")),
+});
+
+const appRemindersRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/reminders",
+  component: lazyRouteComponent(() => import("./routes/app/reminders")),
+});
+
 const appFocusRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/focus/$taskId",
@@ -409,6 +433,10 @@ const routeTree = rootRoute.addChildren([
     appTasksListRoute,
     appAssignmentsRoute,
     appSubjectsRoute,
+    appResourcesRoute,
+    appNotesRoute,
+    appQuizzesRoute,
+    appRemindersRoute,
     appFocusRoute,
     appFocusCompleteRoute,
     appMoreRoute,
