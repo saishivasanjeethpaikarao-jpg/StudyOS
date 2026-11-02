@@ -80,6 +80,29 @@ const TOOL_METADATA: Record<string, ToolMetadata> = {
   // User
   get_user_profile: { title: "Get profile", scopes: ["user:read"], readOnly: true },
   update_user_profile: { title: "Update profile", scopes: ["user:write"], idempotent: true },
+
+  // StudyOS Academic Read Tools
+  list_subjects: { title: "List subjects", scopes: ["tasks:read"], readOnly: true },
+  list_assignments: { title: "List assignments", scopes: ["tasks:read"], readOnly: true },
+  get_assignment: { title: "Get assignment", scopes: ["tasks:read"], readOnly: true },
+  list_study_sessions: { title: "List study sessions", scopes: ["time-blocks:read"], readOnly: true },
+  get_today_schedule: { title: "Get today schedule", scopes: ["time-blocks:read"], readOnly: true },
+  list_resources: { title: "List resources", scopes: ["tasks:read"], readOnly: true },
+  search_resources: { title: "Search resources", scopes: ["tasks:read"], readOnly: true },
+  list_notes: { title: "List notes", scopes: ["tasks:read"], readOnly: true },
+  get_study_progress: { title: "Get study progress", scopes: ["tasks:read"], readOnly: true },
+
+  // StudyOS Propose Tools
+  suggest_study_plan: { title: "Suggest study plan", scopes: ["tasks:read"], readOnly: true },
+  prepare_reminder: { title: "Prepare reminder", scopes: ["tasks:read"], readOnly: true },
+  prepare_assignment_update: { title: "Prepare assignment update", scopes: ["tasks:read"], readOnly: true },
+  prepare_daily_briefing: { title: "Prepare daily briefing", scopes: ["tasks:read"], readOnly: true },
+
+  // StudyOS Write Tools
+  create_reminder: { title: "Create reminder", scopes: ["tasks:write"] },
+  update_assignment: { title: "Update assignment", scopes: ["tasks:write"], idempotent: true },
+  create_note: { title: "Create note", scopes: ["tasks:write"] },
+  create_study_session: { title: "Create study session", scopes: ["time-blocks:write"] },
 };
 
 /** Union of every scope any tool needs — what an MCP client should request. */

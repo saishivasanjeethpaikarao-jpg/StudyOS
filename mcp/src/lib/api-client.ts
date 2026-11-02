@@ -47,7 +47,7 @@ export class ApiClient {
     this.fetchImpl = config.fetch ?? globalThis.fetch;
   }
 
-  private async request<T, M = PaginationMeta>(
+  async request<T, M = PaginationMeta>(
     method: string,
     path: string,
     body?: unknown,
