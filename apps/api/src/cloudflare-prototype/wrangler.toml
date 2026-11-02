@@ -1,0 +1,24 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "studyos-api-edge"
+main = "index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+CORS_ORIGIN = "http://localhost:3000,https://app.studyos.com"
+
+# PostgreSQL Connection Pooling via Cloudflare Hyperdrive
+# Connects to Supabase PostgreSQL free tier on port 6543 (Supavisor)
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "studyos-supabase-hyperdrive"
+
+# Cloudflare R2 Bucket for StudyOS file uploads & attachments
+[[r2_buckets]]
+binding = "R2_STORAGE"
+bucket_name = "studyos-files"
+
+# Background Job Cron Triggers (1-minute schedule for automations & rollover)
+[triggers]
+crons = ["* * * * *"]

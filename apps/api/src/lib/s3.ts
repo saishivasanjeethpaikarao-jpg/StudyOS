@@ -139,11 +139,14 @@ export async function deleteFromS3(key: string): Promise<void> {
  * Removes/replaces characters that could cause issues
  */
 function sanitizeFilename(filename: string): string {
-  return filename
+  // Strip any leading path components to eliminate directory traversal attempts
+  const base = filename.replace(/^.*[\\\/]/, '');
+  return base
     .toLowerCase()
     .replace(/[^a-z0-9.-]/g, '-') // Replace non-alphanumeric chars with hyphens
+    .replace(/\.{2,}/g, '.') // Collapse multiple dots
     .replace(/-+/g, '-') // Collapse multiple hyphens
-    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+    .replace(/^[-.]+|[-.]+$/g, ''); // Remove leading/trailing hyphens and dots
 }
 
 /**
