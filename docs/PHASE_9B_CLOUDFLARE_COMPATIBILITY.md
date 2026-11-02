@@ -23,8 +23,10 @@ All previous architectural flaws identified in the preliminary review have been 
 1. **Password Hashing Remediation:** The preliminary proposal of using PBKDF2-HMAC-SHA256 with 5,000–10,000 iterations has been **completely rejected and removed**. We do NOT weaken password storage parameters to fit edge limits. Standard `bcrypt` (cost 12, ~180ms CPU) is retained in full strength for Node.js/Docker deployments. On Cloudflare Workers Free (10ms CPU limit), **Google OAuth 2.0 / OIDC** is the primary, fully verified zero-CPU cryptographic authentication pathway (<1.5ms CPU via `jose.jwtVerify`). Password authentication on Cloudflare is documented as an architectural constraint (**LIMITATION**) requiring either Node.js hosting, an external auth proxy, or paid compute tiers, rather than implementing weak hashing.
 2. **Supabase Availability Realism:** We have removed any unsupported claim that a 1-minute automated database query guarantees Supabase Free Tier will remain active indefinitely. We document Supabase's actual 7-day inactivity pause rules, recovery procedures, and an independent zero-cost backup strategy using `pg_dump` and Cloudflare R2.
 3. **Background Scheduler Adapter:** Preserved `pg-boss` for Node.js/Docker deployments; verified a separate Cloudflare Cron Trigger adapter (`* * * * *`) with idempotent execution, timezone awareness, and audit logging.
-4. **S3/R2 Path Traversal & Sanitization:** Enhanced filename sanitization in `apps/api/src/lib/s3.ts` to strictly strip directory traversal components (`..`, `/`, `\`) and verified user-scoped private file ownership.
-5. **Empirical Verification:** 105+ automated tests passing across authentication, database transactions, scheduler idempotency, S3/R2 security, AI provider routing, and account sync.
+4. **S3/R2 Path Traversal & Sanitization:** Enhanced filename sanitization in `apps/api/src/lib/s3.ts` to strictly strip directory traversal components (`..`, `/`, `\`) and verified user-scoped private file ownership via unit tests (live R2 network calls remain NOT VERIFIED).
+5. **Empirical Verification:** 112 automated tests verified passing across all 13 test suites (98 pre-Phase 9B regression tests + 14 new Phase 9B tests), covering authentication, database transactions, scheduler idempotency, S3/R2 security, AI provider routing, and account sync.
+6. **Worker Runtime Status:** Cloudflare Worker prototype bundle successfully generated via esbuild (64.1 KB). Runtime execution inside Wrangler's Cloudflare-compatible runtime (`workerd` / miniflare) remains NOT VERIFIED.
+7. **Database & Infrastructure Testing Scope:** Database tests executed against local PostgreSQL 16 (Docker). Live Cloudflare Hyperdrive, live Supabase PostgreSQL, and live Cloudflare R2 remain NOT VERIFIED pending Phase 10 external credentials.
 
 ---
 
@@ -42,7 +44,7 @@ An inspection of the workspace confirmed the integrity of the codebase:
 - **Active Frameworks & Engines:**
   - API Framework: `hono` v4.13.8 (configured in `apps/api/src/index.ts`)
   - Database ORM: `drizzle-orm` v0.45.3 with `postgres` v3.4.9 driver (`packages/database`)
-  - Test Suite: `vitest` v3.2.7 and `bun test` (105+ tests verified passing)
+  - Test Suite: `vitest` v3.2.7 and `bun test` (112 tests verified passing: 98 regression + 14 Phase 9B)
   - Frontend Client: Next.js 15 (`apps/web`) with Turbopack and React 19
   - Mobile Client: Expo React Native (`apps/expo-mobile`)
   - MCP Architecture: `@open-sunsama/mcp` with 17 verified tools
@@ -109,6 +111,12 @@ StudyOS supports two distinct authentication pathways:
 | `pdf-parse` | 2.4.5 | **Requires Architectural Change** | Heavy CPU; offloaded to client-side extraction. |
 | `@hono/node-server` | 1.19.17 | **Not Applicable to Edge** | Used exclusively for local Node.js entry point. |
 
+### 4.2 Worker Bundling vs Runtime Execution Status
+- **Worker Prototype Entry Point:** `apps/api/src/cloudflare-prototype/index.ts`
+- **Bundle Generation (`esbuild`):** **PASS** — esbuild compiled the prototype to `apps/api/dist/worker-bundle.js` (64.1 KB) with 0 errors in 61ms, confirming no unresolvable Node.js native dependencies in the prototype module tree.
+- **Wrangler Runtime Execution (`workerd` / Miniflare):** **NOT VERIFIED** — The Worker was NOT executed in Wrangler's local runtime (`wrangler dev`). When running Wrangler commands in this monorepo layout, Wrangler encounters path resolution anomalies on Windows (`D:\StudyOS-Project\studyos\apps\api\D:\StudyOS-Project...`) and framework auto-detection conflicts.
+- **Worker Acceptance Status:** Strictly classified as **`BUNDLED (STATIC ANALYSIS / ESBUILD)`** and **`RUNTIME EXECUTION NOT VERIFIED`**.
+
 ---
 
 ## 5. Step 4: Database Connectivity & Cloudflare Hyperdrive
@@ -120,8 +128,8 @@ StudyOS supports two distinct authentication pathways:
 - **Migration Strategy:** Migrations (`drizzle-kit migrate`) are executed at build/deployment time via CI/CD, NEVER inside the Worker request lifecycle.
 
 ### 5.2 Verification Status
-- **PostgreSQL 16 & Drizzle Integration:** **PASS** (Verified with 5 automated tests covering reads, writes, atomic transactions, rollbacks, concurrent requests, and raw SQL in `src/services/__tests__/postgres-hyperdrive-integration.test.ts`).
-- **Live Supabase & Hyperdrive Connection:** **NOT VERIFIED** (Live Supabase credentials and Cloudflare Hyperdrive bindings have not yet been provisioned; requires external credentials in Phase 10).
+- **PostgreSQL 16 & Drizzle Integration:** **PASS (Local Test Environment)** (Verified with 5 automated tests covering reads, writes, atomic transactions, rollbacks, concurrent requests, and raw SQL in `src/services/__tests__/postgres-hyperdrive-integration.test.ts`). **Note:** These tests executed strictly against the local Docker PostgreSQL 16 instance (`127.0.0.1:5431`), NOT against a live Cloudflare Hyperdrive connection or Supabase.
+- **Live Supabase & Hyperdrive Connection:** **NOT VERIFIED** (Live Supabase credentials and Cloudflare Hyperdrive bindings have not been provisioned; external verification pending Phase 10).
 
 ---
 
@@ -134,12 +142,13 @@ StudyOS supports two distinct authentication pathways:
    - `POST /workers/rollover/tick` (Moves incomplete tasks to today at local midnight)
    - Handlers protected by `X-Cron-Secret` header validation.
 
-### 6.2 Idempotency & Concurrency Verification
+### 6.2 Idempotency & Edge Condition Audit
 Automated test suite (`src/services/integrations/__tests__/cloudflare-scheduler.test.ts`):
 - **Due Automation Discovery:** **PASS** (Correctly matches scheduled times in student timezones).
 - **Idempotency & Duplicate Prevention:** **PASS** (Multiple triggers within the same minute/day safely skip execution).
 - **Timezone Awareness:** **PASS** (Tested with UTC and Asia/Kolkata +5:30).
 - **Inactive Automation Filtering:** **PASS** (Paused automations never execute).
+- **Unverified Edge Conditions:** The test suite verifies deterministic unit-level scheduling logic. **Concurrent overlapping worker invocations**, **mid-execution process interruptions**, and **database connection drops during execution** were NOT tested and remain unverified edge conditions.
 
 ---
 
@@ -154,11 +163,11 @@ Automated test suite (`src/services/integrations/__tests__/cloudflare-scheduler.
 - **Backup Mechanism:** Automated nightly or weekly schema and data export via `pg_dump`.
 - **Storage Target:** Encrypted SQL backup pushed to Cloudflare R2 (10 GB free storage, zero egress cost).
 - **Restoration Test Evidence:**
-  - Performed full `pg_dump` from PostgreSQL 16.
-  - Successfully piped into a disposable test database (`studyos_restore_test`).
+  - Performed full local `pg_dump` from PostgreSQL 16 Docker container.
+  - Successfully piped into a local disposable test database (`studyos_restore_test`).
   - Verified 100% table and row count integrity across `users`, `tasks`, `subjects`, `assignments`, and `study_sessions`.
-  - Dropped temporary database cleanly.
-- **Live Supabase Restoration:** **NOT VERIFIED** (Requires production project credentials in Phase 10).
+  - Dropped temporary local database cleanly.
+- **Live Supabase Backup & Cloud Restoration:** **NOT VERIFIED** (Live Supabase database backups and automatic pushes to Cloudflare R2 have not been executed; requires production project credentials and API tokens in Phase 10).
 
 ---
 
@@ -170,7 +179,7 @@ Automated test suite (`src/services/integrations/__tests__/cloudflare-scheduler.
   - Storage keys strictly embed the owning `userId`: `{folder}/{userId}/{timestamp}-{filename}`.
   - `GET /uploads/*` validates that `keyParts[1] === userId`. Foreign users receive `NotFoundError: File`.
   - Student documents are **NEVER publicly readable by default**.
-- **Verification Status:** **PASS** (Verified with 5 automated security tests in `src/services/__tests__/s3-r2-security.test.ts`). Live R2 upload marked **NOT VERIFIED** pending Phase 10 API tokens.
+- **Verification Status:** **PASS (Unit Logic Only)** (Verified with 5 automated unit tests in `src/services/__tests__/s3-r2-security.test.ts` covering path traversal stripping, MIME whitelist parameters, and private key formats). **Live R2 network operations (upload/download/presigned URLs) are NOT VERIFIED** pending Phase 10 API tokens.
 
 ---
 
@@ -229,14 +238,14 @@ Automated test suite (`src/services/integrations/__tests__/cloudflare-scheduler.
 | :---: | :--- | :--- | :---: |
 | **G1** | Password Hashing Design | Insecure low-iteration PBKDF2 removed; bcrypt retained for Node.js; Google OAuth verified for edge. | **PASS** |
 | **G2** | Google OAuth Security | Verified PKCE, state/nonce validation, issuer check, replay prevention, and mobile handoff (7 tests). | **PASS** |
-| **G3** | Worker Runtime Build | Verified esbuild bundling of Cloudflare prototype (64.1 KB, 0 errors, no native modules). | **PASS** |
-| **G4** | Hyperdrive / DB Integration | PostgreSQL 16 read/write, transactions, rollbacks, concurrency verified (5 tests). Live Supabase pending. | **PASS WITH LIMITATIONS** |
-| **G5** | Automation Scheduler | Verified due discovery, timezone handling, idempotency, retry safety, and inactive filtering (4 tests). | **PASS** |
+| **G3** | Worker Runtime Build | Verified esbuild bundling of Cloudflare prototype (64.1 KB, 0 errors). Runtime execution in Wrangler NOT VERIFIED. | **BUNDLED (RUNTIME UNVERIFIED)** |
+| **G4** | Hyperdrive / DB Integration | PostgreSQL 16 local read/write, transactions, rollbacks, concurrency verified (5 tests). Live Hyperdrive NOT VERIFIED. | **PASS (LOCAL) / NOT VERIFIED (LIVE)** |
+| **G5** | Automation Scheduler | Verified due discovery, timezone handling, idempotency, retry safety (4 tests). Concurrency/interruption unverified. | **PASS (UNIT LOGIC)** |
 | **G6** | Supabase Availability | Accurately documented 7-day inactivity pause rules; removed false 1-minute query guarantee. | **PASS** |
-| **G7** | Backup & Recovery | Verified full `pg_dump` export and restoration into disposable test database with 100% schema integrity. | **PASS** |
-| **G8** | R2 Object Storage | Verified path traversal prevention, private user keys, MIME whitelists, and size limits (5 tests). | **PASS** |
+| **G7** | Backup & Recovery | Verified local `pg_dump` export and restoration into disposable database (100% integrity). Live cloud backup NOT VERIFIED. | **PASS (LOCAL) / NOT VERIFIED (LIVE)** |
+| **G8** | R2 Object Storage | Verified path traversal prevention, private user keys, and MIME whitelists (5 tests). Live R2 network NOT VERIFIED. | **PASS (UNIT LOGIC) / NOT VERIFIED (LIVE)** |
 | **G9** | AI & Integration Security | Server-side credentials, AES-256-GCM encryption, Telegram secret tokens, and hybrid Hermes model. | **PASS** |
-| **G10** | Regression Test Suite | 105+ unit and integration tests passing across all StudyOS domain modules. | **PASS** |
+| **G10** | Regression Test Suite | 112 unit and integration tests passing across all 13 test suites (98 regression + 14 Phase 9B). | **PASS** |
 | **G11** | Platform Architecture | Android, Windows, and Node.js architectures preserved intact. | **PASS** |
 | **G12** | Cost Target | ₹0/month operating cost strictly observed; no paid services or billing introduced. | **PASS** |
 
