@@ -42,7 +42,17 @@ function cursorKey(userId: string, deviceId: string) {
 
 function invalidationKeys(entityType: string): readonly unknown[][] {
   if (entityType === "profile") return [["auth"]];
-  if (["task", "subtask", "time-block", "task-series"].includes(entityType))
+  if (
+    [
+      "task",
+      "tasks",
+      "subtask",
+      "subtasks",
+      "time-block",
+      "time-blocks",
+      "task-series",
+    ].includes(entityType)
+  )
     return [["tasks"], ["timeBlocks"]];
   if (entityType === "subject") return [["subjects"], ["assignments"]];
   if (entityType === "assignment" || entityType === "study-session")
@@ -82,6 +92,30 @@ function invalidationKeys(entityType: string): readonly unknown[][] {
   if (entityType.startsWith("idea")) return [["ideas"]];
   if (entityType === "attachment") return [["attachments"]];
   return [];
+}
+
+/**
+ * Apply one server change batch before its cursor is persisted. Keeping this
+ * ordering in a small exported function makes the retry invariant testable:
+ * a rejected invalidation means the caller must retain the previous cursor.
+ */
+export async function applySyncChanges(
+  queryClient: Pick<ReturnType<typeof useQueryClient>, "invalidateQueries">,
+  changes: ReadonlyArray<{ entityType: string }>
+): Promise<void> {
+  for (const change of changes) {
+    const keys = invalidationKeys(change.entityType);
+    if (keys.length) {
+      for (const queryKey of keys) {
+        await queryClient.invalidateQueries(
+          { queryKey },
+          { throwOnError: true }
+        );
+      }
+    } else {
+      await queryClient.invalidateQueries(undefined, { throwOnError: true });
+    }
+  }
 }
 
 export function AccountSyncProvider({
@@ -165,10 +199,12 @@ export function AccountSyncProvider({
               pageToken: page.nextPageToken,
             });
           }
+          await queryClient.invalidateQueries(undefined, {
+            throwOnError: true,
+          });
           cursor = page.nextCursor;
           if (!cursor) throw new Error("Initial sync did not return a cursor");
           localStorage.setItem(key, cursor);
-          await queryClient.invalidateQueries();
         }
         let hasMore = true;
         while (hasMore) {
@@ -177,13 +213,10 @@ export function AccountSyncProvider({
             deviceId: device.id,
             limit: 500,
           });
-          for (const change of changes.changes) {
-            const keys = invalidationKeys(change.entityType);
-            if (keys.length)
-              for (const queryKey of keys)
-                void queryClient.invalidateQueries({ queryKey });
-            else void queryClient.invalidateQueries();
-          }
+          // The cursor must not advance until this completes. If an
+          // invalidation rejects, the outer sync handler retains the previous
+          // cursor and the batch is replayed on reconnect.
+          await applySyncChanges(queryClient, changes.changes);
           cursor = changes.nextCursor;
           localStorage.setItem(key, cursor);
           hasMore = changes.hasMore;
