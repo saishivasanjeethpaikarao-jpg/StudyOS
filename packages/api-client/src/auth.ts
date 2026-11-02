@@ -17,6 +17,8 @@ import type { OpenSunsamaClient, RequestOptions } from "./client.js";
  * Authentication API interface
  */
 export interface AuthApi {
+  /** Exchange a one-time native Google OAuth handoff code for a StudyOS JWT. */
+  exchangeMobileHandoff(code: string, options?: RequestOptions): Promise<{ token: string }>;
   /**
    * Register a new user account
    * @param input User registration data
@@ -103,6 +105,12 @@ interface ApiResponseWrapper<T> {
 
 export function createAuthApi(client: OpenSunsamaClient): AuthApi {
   return {
+    async exchangeMobileHandoff(code, options) {
+      const response = await client.post<ApiResponseWrapper<{ token: string }>>(
+        "auth/google/mobile/exchange", { code }, options,
+      );
+      return response.data;
+    },
     async register(
       input: CreateUserInput,
       options?: RequestOptions

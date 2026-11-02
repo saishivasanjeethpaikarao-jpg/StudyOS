@@ -2,10 +2,14 @@ import { createHash, randomBytes } from "node:crypto";
 import { Hono, type Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { createRemoteJWKSet, jwtVerify } from "jose";
-import { and, eq, getDb, googleOAuthTransactions, gt, sql, userIdentities, users } from "@open-sunsama/database";
+import { and, eq, getDb, googleOAuthTransactions, gt, sql, userIdentities, users, mobileAuthHandoffs, isNull } from "@open-sunsama/database";
 import type { AuthVariables } from "../middleware/auth.js";
 import { auth } from "../middleware/auth.js";
 import { getBrowserSession, issueBrowserSession, SESSION_COOKIE } from "../lib/account-sessions.js";
+import { signToken } from "../lib/jwt.js";
+import { AuthenticationError } from "@open-sunsama/utils";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
 
 const router = new Hono<{ Variables: AuthVariables }>();
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -31,6 +35,22 @@ function appRedirect(result: "success" | "unavailable" | "failed") {
   return url.toString();
 }
 
+function safeMobileRedirect(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol === "opensunsama:") {
+      const path = (url.host ? `${url.host}${url.pathname}` : url.pathname.replace(/^\/\//, "")).toLowerCase();
+      return path.startsWith("auth/callback") || path === "auth/callback" ? value : null;
+    }
+    const allowed = (process.env.MOBILE_OAUTH_REDIRECT_URIS || "")
+      .split(",").map((item) => item.trim()).filter(Boolean);
+    return allowed.includes(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 function sameSiteBrowserRequest(c: Context): boolean {
   const fetchSite = c.req.header("Sec-Fetch-Site");
   if (fetchSite && !["same-origin", "same-site", "none"].includes(fetchSite)) return false;
@@ -41,7 +61,7 @@ function sameSiteBrowserRequest(c: Context): boolean {
   return allowed.includes(origin);
 }
 
-async function start(c: Context<{ Variables: AuthVariables }>, intent: "login" | "link", userId?: string) {
+async function start(c: Context<{ Variables: AuthVariables }>, intent: "login" | "link", userId?: string, mobileRedirectUri?: string | null) {
   let oauth;
   try { oauth = config(); } catch { return c.json({ success: false, error: "Google sign-in is unavailable" }, 503); }
   const state = randomToken();
@@ -51,6 +71,7 @@ async function start(c: Context<{ Variables: AuthVariables }>, intent: "login" |
   await getDb().insert(googleOAuthTransactions).values({
     stateHash: sha256(state), nonceHash: sha256(nonce), userId: userId ?? null, intent,
     expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    mobileRedirectUri: mobileRedirectUri ?? null,
   });
   setCookie(c, PKCE_COOKIE, verifier, { httpOnly: true, secure: isSecure(), sameSite: "Lax", path: "/auth/google/callback", maxAge: 300 });
   const target = new URL(GOOGLE_AUTH);
@@ -66,7 +87,7 @@ async function start(c: Context<{ Variables: AuthVariables }>, intent: "login" |
   return c.redirect(target.toString(), 302);
 }
 
-router.get("/start", async (c) => start(c, "login"));
+router.get("/start", async (c) => start(c, "login", undefined, safeMobileRedirect(c.req.query("mobile_redirect_uri"))));
 router.get("/link", auth, async (c) => {
   if (c.get("authMethod") !== "cookie") return c.json({ success: false, error: "Sign in with a browser session to link Google" }, 401);
   if (!sameSiteBrowserRequest(c)) return c.json({ success: false, error: "Browser origin not allowed" }, 403);
@@ -152,12 +173,42 @@ router.get("/callback", async (c) => {
       userId = created.id;
     }
     if (!userId) return c.redirect(appRedirect("failed"));
+    if (transaction.mobileRedirectUri) {
+      const handoff = randomToken();
+      await db.insert(mobileAuthHandoffs).values({
+        userId,
+        codeHash: sha256(handoff),
+        expiresAt: new Date(Date.now() + 60 * 1000),
+      });
+      const target = new URL(transaction.mobileRedirectUri);
+      target.searchParams.set("code", handoff);
+      return c.redirect(target.toString());
+    }
     await issueBrowserSession(c, userId);
     return c.redirect(appRedirect("success"));
   } catch {
     // Provider/verification failures intentionally do not log tokens or claims.
     return c.redirect(appRedirect("failed"));
   }
+});
+
+router.post("/mobile/exchange", zValidator("json", z.object({ code: z.string().min(20).max(256) }).strict()), async (c) => {
+  const { code } = c.req.valid("json");
+  const db = getDb();
+  const [handoff] = await db.transaction(async (tx) => {
+    const [row] = await tx.select().from(mobileAuthHandoffs).where(and(
+      eq(mobileAuthHandoffs.codeHash, sha256(code)),
+      gt(mobileAuthHandoffs.expiresAt, new Date()),
+      isNull(mobileAuthHandoffs.consumedAt),
+    )).limit(1).for("update");
+    if (!row) return [];
+    const [consumed] = await tx.update(mobileAuthHandoffs).set({ consumedAt: new Date() }).where(and(
+      eq(mobileAuthHandoffs.id, row.id), isNull(mobileAuthHandoffs.consumedAt),
+    )).returning({ userId: mobileAuthHandoffs.userId });
+    return consumed ? [consumed] : [];
+  });
+  if (!handoff) throw new AuthenticationError("Invalid or expired Google sign-in handoff");
+  return c.json({ success: true, data: { token: signToken(handoff.userId) } });
 });
 
 export { router as googleAuthRouter };

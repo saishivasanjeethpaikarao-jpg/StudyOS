@@ -220,6 +220,7 @@ export const googleOAuthTransactions = pgTable(
     nonceHash: varchar("nonce_hash", { length: 64 }).notNull(),
     userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     intent: varchar("intent", { length: 16 }).notNull().default("login"),
+    mobileRedirectUri: varchar("mobile_redirect_uri", { length: 512 }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -231,5 +232,22 @@ export const googleOAuthTransactions = pgTable(
       "google_oauth_transactions_intent_check",
       sql`${t.intent} IN ('login','link')`
     ),
+  ]
+);
+
+/** One-time handoff codes used when a native client completes Google OIDC in a system browser. */
+export const mobileAuthHandoffs = pgTable(
+  "mobile_auth_handoffs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    codeHash: varchar("code_hash", { length: 64 }).notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("mobile_auth_handoffs_expiry_idx").on(t.expiresAt),
+    index("mobile_auth_handoffs_user_idx").on(t.userId),
   ]
 );

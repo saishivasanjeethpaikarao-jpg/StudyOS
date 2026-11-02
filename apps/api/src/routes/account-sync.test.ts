@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Hono } from "hono";
 import {
   and,
+  asc,
   assignments,
   eq,
   focusSessions,
@@ -623,6 +624,7 @@ describe.skipIf(!testDatabaseUrl)(
                 eq(syncChanges.entityId, assignment!.id)
               )
             )
+            .orderBy(asc(syncChanges.sequence))
         ).at(-1)?.operation
       ).toBe("delete");
     });
@@ -760,7 +762,8 @@ describe.skipIf(!testDatabaseUrl)(
         .from(syncChanges)
         .where(
           and(eq(syncChanges.userId, ownerId), eq(syncChanges.entityId, taskId))
-        );
+        )
+        .orderBy(asc(syncChanges.sequence));
       expect(tombstones.at(-1)?.operation).toBe("delete");
     });
   }
