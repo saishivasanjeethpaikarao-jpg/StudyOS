@@ -53,9 +53,13 @@ StudyOS is the user-facing product name. Keep inherited package names, import pa
 
 ## Current phase boundary
 
-Phase 0 established the reproducible development baseline. Phases 1–3 add the
-academic, planning and learning foundations. Phase 4 adds account sessions,
-device registration and the PostgreSQL-backed sync protocol. Google provider
-credentials and a public deployment are still deployment concerns; native
-durable offline stores, Android alarms, Windows packaging, AI providers,
-Telegram, Hermes integration and production release remain later phases.
+- Phase 0 — Development Foundation: COMPLETE
+- Phase 1 — StudyOS Foundation: COMPLETE
+- Phase 2 — Study Planning Engine: COMPLETE
+- Phase 3 — Resources & Productivity: COMPLETE
+- Phase 4 — Accounts & Cloud Sync: COMPLETE
+- Phase 5 — Android App: IMPLEMENTATION COMPLETE (real-device acceptance pending)
+- Phase 6 — Windows Desktop: IMPLEMENTATION COMPLETE (native Windows runtime acceptance pending)
+- Phase 7 — AI Study Planner: COMPLETE (multi-provider AI router, AES-256-GCM secret storage, PDF/YouTube/notes ingestion pipeline, candidate-validated quiz generation, deterministic planning assistant integration, and contextual learning assistant)
+- Phase 8 — Integrations & Agent: NOT STARTED
+- Phase 9 — Production Release: NOT STARTED
