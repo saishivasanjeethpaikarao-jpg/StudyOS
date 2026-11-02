@@ -106,6 +106,22 @@ export {
 import { createLearningApi } from "./learning.js";
 export { createLearningApi };
 
+// AI API
+import {
+  createAiApi,
+  type AiApi,
+  type AISettingsResponse,
+  type AIProviderListItem,
+  type EnhancedStudyPlanSuggestionResult,
+} from "./ai.js";
+export {
+  createAiApi,
+  type AiApi,
+  type AISettingsResponse,
+  type AIProviderListItem,
+  type EnhancedStudyPlanSuggestionResult,
+};
+
 // API Keys API
 import { createApiKeysApi, type ApiKeysApi } from "./api-keys.js";
 export { createApiKeysApi, type ApiKeysApi };
@@ -249,6 +265,8 @@ export function createApi(config: ApiClientConfig) {
     /** Study Session CRUD, transitions, and derived Assignment progress */
     studySessions: createStudySessionsApi(client),
     ...createLearningApi(client),
+    /** AI Study Planner, Quiz Generator, Learning Assistant, and Provider Settings */
+    ai: createAiApi(client),
     /** Subtasks API methods */
     subtasks: createSubtasksApi(client),
     /** Time blocks API methods */
