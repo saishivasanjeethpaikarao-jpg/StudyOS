@@ -7,6 +7,8 @@ import type {
 } from '@open-sunsama/types';
 import { getApi } from '@/lib/api';
 import * as Haptics from 'expo-haptics';
+import { useAccountSync } from '@/lib/sync';
+import { newClientId } from '@/lib/ids';
 
 /**
  * Query key factory for tasks
@@ -23,12 +25,21 @@ export const taskKeys = {
  * Fetch all tasks with optional filters
  */
 export function useTasks(filters?: TaskFilterInput) {
+  const sync = useAccountSync();
   return useQuery({
     queryKey: taskKeys.list(filters ?? {}),
     queryFn: async () => {
       const api = getApi();
-      const response = await api.tasks.list(filters);
-      return response.data ?? [];
+      try {
+        const response = await api.tasks.list(filters);
+        return response.data ?? [];
+      } catch {
+        const cached = await sync.getCached<Task>('tasks');
+        const values = Array.isArray(cached) ? cached : [];
+        return values
+          .map((task) => ({ ...task, completedAt: task.completedAt ? new Date(task.completedAt) : null, createdAt: new Date(task.createdAt), updatedAt: new Date(task.updatedAt) }))
+          .filter((task) => !filters?.scheduledDate || task.scheduledDate === filters.scheduledDate);
+      }
     },
   });
 }
@@ -52,11 +63,22 @@ export function useTask(id: string) {
  */
 export function useCreateTask() {
   const queryClient = useQueryClient();
+  const sync = useAccountSync();
 
   return useMutation({
     mutationFn: async (data: CreateTaskInput): Promise<Task> => {
-      const api = getApi();
-      return await api.tasks.create(data);
+      const id = newClientId();
+      const now = new Date();
+      const optimistic: Task = {
+        id, userId: 'pending', title: data.title, notes: data.notes ?? null,
+        scheduledDate: data.scheduledDate ?? null, estimatedMins: data.estimatedMins ?? null,
+        actualMins: null, priority: data.priority ?? 'P2', completedAt: null,
+        position: 0, subtasksHidden: false, revision: 1, seriesId: null,
+        seriesInstanceNumber: null, timerStartedAt: null, timerAccumulatedSeconds: 0,
+        createdAt: now, updatedAt: now,
+      };
+      await sync.enqueueMutation({ entityType: 'task', operation: 'create', entityId: id, payload: data as unknown as Record<string, unknown> });
+      return optimistic;
     },
     onSuccess: (newTask) => {
       // Invalidate and refetch task lists
@@ -80,11 +102,13 @@ export function useCreateTask() {
  */
 export function useUpdateTask() {
   const queryClient = useQueryClient();
+  const sync = useAccountSync();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateTaskInput }): Promise<Task> => {
-      const api = getApi();
-      return await api.tasks.update(id, data);
+      const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
+      await sync.enqueueMutation({ entityType: 'task', operation: 'update', entityId: id, expectedRevision: current?.revision, payload: data as Record<string, unknown> });
+      return { ...(current as Task), ...data, updatedAt: new Date(), revision: (current?.revision ?? 0) + 1 };
     },
     onSuccess: (updatedTask) => {
       // Update the task in cache
@@ -104,11 +128,12 @@ export function useUpdateTask() {
  */
 export function useDeleteTask() {
   const queryClient = useQueryClient();
+  const sync = useAccountSync();
 
   return useMutation({
     mutationFn: async (id: string): Promise<string> => {
-      const api = getApi();
-      await api.tasks.delete(id);
+      const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
+      await sync.enqueueMutation({ entityType: 'task', operation: 'delete', entityId: id, expectedRevision: current?.revision, payload: {} });
       return id;
     },
     onSuccess: (deletedId) => {
@@ -132,15 +157,17 @@ export function useDeleteTask() {
  */
 export function useCompleteTask() {
   const queryClient = useQueryClient();
+  const sync = useAccountSync();
 
   return useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }): Promise<Task> => {
-      const api = getApi();
-      if (completed) {
-        return await api.tasks.complete(id);
-      } else {
-        return await api.tasks.uncomplete(id);
-      }
+      const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
+      await sync.enqueueMutation({
+        entityType: 'task', operation: 'update', entityId: id,
+        expectedRevision: current?.revision,
+        payload: { completedAt: completed ? new Date().toISOString() : null },
+      });
+      return { ...(current as Task), completedAt: completed ? new Date() : null, revision: (current?.revision ?? 0) + 1, updatedAt: new Date() };
     },
     onMutate: async ({ id, completed }) => {
       // Cancel outgoing refetches

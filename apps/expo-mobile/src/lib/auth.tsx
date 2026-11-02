@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { User, LoginInput, CreateUserInput, AuthResponse, UpdateUserInput } from '@open-sunsama/types';
 import { getApi, setAuthToken, clearAuthToken, getToken, setToken, removeToken, initializeApi, onTokenRefreshed } from './api';
 import { getDeviceTimezone } from './timezone';
+import * as Linking from 'expo-linking';
 
 interface AuthState {
   user: User | null;
@@ -37,6 +38,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setInitialized(true);
     })();
   }, []);
+
+  // Native Google OAuth returns a one-time handoff code to the compatible
+  // opensunsama:// callback. Exchange it immediately; the code is never
+  // persisted and the resulting JWT remains in SecureStore.
+  React.useEffect(() => {
+    const completeMobileGoogleSignIn = async (url: string | null) => {
+      if (!url) return;
+      const parsed = Linking.parse(url);
+      const code = typeof parsed.queryParams?.code === 'string' ? parsed.queryParams.code : null;
+      if (!code) return;
+      try {
+        const result = await getApi().auth.exchangeMobileHandoff(code);
+        await setToken(result.token);
+        setAuthToken(result.token);
+        setTokenState(result.token);
+        await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      } catch {
+        // The login screen remains available and explains provider setup errors.
+      }
+    };
+    void Linking.getInitialURL().then(completeMobileGoogleSignIn);
+    const subscription = Linking.addEventListener('url', ({ url }) => void completeMobileGoogleSignIn(url));
+    return () => subscription.remove();
+  }, [queryClient]);
 
   // Mirror background token refreshes (the 401 auto-retry) into React state so
   // the session stays authenticated instead of being dropped on token expiry.
@@ -79,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Only update if different from server
     if (deviceTimezone && deviceTimezone !== user.timezone) {
       timezoneSyncAttempted.current = true;
-      console.log(`[Timezone Sync] Updating timezone from ${user.timezone} to ${deviceTimezone}`);
+      console.warn(`[Timezone Sync] Updating timezone from ${user.timezone} to ${deviceTimezone}`);
       
       const api = getApi();
       api.auth.updateMe({ timezone: deviceTimezone })
@@ -144,12 +169,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [registerMutation]);
 
   const logout = React.useCallback(async () => {
+    try {
+      if (token) await getApi().auth.logout();
+    } catch {
+      // Local revocation still happens when the device is offline.
+    }
     await removeToken();
     clearAuthToken();
     setTokenState(null);
     queryClient.setQueryData(['auth', 'me'], null);
     queryClient.clear();
-  }, [queryClient]);
+  }, [queryClient, token]);
 
   const updateUser = React.useCallback(async (data: UpdateUserInput) => {
     await updateUserMutation.mutateAsync(data);

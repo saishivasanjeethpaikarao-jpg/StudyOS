@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { format } from 'date-fns';
 import type { TimeBlock } from '@open-sunsama/types';
+import { formatInZone } from '@/lib/date';
 
 interface TimeBlockCardProps {
   timeBlock: TimeBlock;
@@ -26,7 +27,9 @@ export function TimeBlockCard({ timeBlock }: TimeBlockCardProps) {
     : new Date(timeBlock.endTime);
 
   const color = getBlockColor(timeBlock.color);
-  const timeLabel = `${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')}`;
+  const timeLabel = timeBlock.studySessionId && timeBlock.studySessionTimezone
+    ? `${formatInZone(startTime, timeBlock.studySessionTimezone, { hour: 'numeric', minute: '2-digit' })} - ${formatInZone(endTime, timeBlock.studySessionTimezone, { hour: 'numeric', minute: '2-digit' })} (${timeBlock.studySessionTimezone})`
+    : `${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')}`;
 
   return (
     <View style={[styles.container, { borderLeftColor: color, backgroundColor: `${color}10` }]}>
