@@ -28,3 +28,16 @@ export async function isDesktop(): Promise<boolean> {
 export function isDesktopSync(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
+
+/**
+ * Open external URL with default OS application/browser
+ */
+export async function openExternal(url: string): Promise<void> {
+  try {
+    await invoke("open_url", { url });
+  } catch {
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }
+}

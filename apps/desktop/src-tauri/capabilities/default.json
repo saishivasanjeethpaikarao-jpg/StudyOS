@@ -42,7 +42,15 @@
       "identifier": "http:default",
       "allow": [
         { "url": "https://api.opensunsama.com/**" },
-        { "url": "wss://api.opensunsama.com/**" }
+        { "url": "wss://api.opensunsama.com/**" },
+        { "url": "http://localhost:3001/**" },
+        { "url": "http://127.0.0.1:3001/**" },
+        { "url": "http://localhost:3000/**" },
+        { "url": "http://127.0.0.1:3000/**" },
+        { "url": "ws://localhost:3001/**" },
+        { "url": "ws://127.0.0.1:3001/**" },
+        { "url": "https://*.studyos.app/**" },
+        { "url": "wss://*.studyos.app/**" }
       ]
     }
   ]

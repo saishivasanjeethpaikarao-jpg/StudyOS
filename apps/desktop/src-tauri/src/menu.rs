@@ -40,10 +40,18 @@ pub fn create_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let new_task = MenuItemBuilder::with_id("new_task", "New Task")
         .accelerator("CmdOrCtrl+N")
         .build(app)?;
+    let new_study_session = MenuItemBuilder::with_id("new_study_session", "Plan Study Session")
+        .accelerator("CmdOrCtrl+Shift+N")
+        .build(app)?;
     let file_sep = PredefinedMenuItem::separator(app)?;
     let close_window = PredefinedMenuItem::close_window(app, Some("Close Window"))?;
 
-    let file_menu = Submenu::with_items(app, "File", true, &[&new_task, &file_sep, &close_window])?;
+    let file_menu = Submenu::with_items(
+        app,
+        "File",
+        true,
+        &[&new_task, &new_study_session, &file_sep, &close_window],
+    )?;
 
     // Edit menu
     let undo = PredefinedMenuItem::undo(app, Some("Undo"))?;
@@ -67,8 +75,20 @@ pub fn create_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let today_view = MenuItemBuilder::with_id("today_view", "Today")
         .accelerator("CmdOrCtrl+1")
         .build(app)?;
-    let calendar_view = MenuItemBuilder::with_id("calendar_view", "Calendar")
+    let calendar_view = MenuItemBuilder::with_id("calendar_view", "Planner / Calendar")
         .accelerator("CmdOrCtrl+2")
+        .build(app)?;
+    let assignments_view = MenuItemBuilder::with_id("assignments_view", "Assignments")
+        .accelerator("CmdOrCtrl+3")
+        .build(app)?;
+    let subjects_view = MenuItemBuilder::with_id("subjects_view", "Subjects")
+        .accelerator("CmdOrCtrl+4")
+        .build(app)?;
+    let resources_view = MenuItemBuilder::with_id("resources_view", "Resources")
+        .accelerator("CmdOrCtrl+5")
+        .build(app)?;
+    let notes_view = MenuItemBuilder::with_id("notes_view", "Study Notes")
+        .accelerator("CmdOrCtrl+6")
         .build(app)?;
     let view_sep = PredefinedMenuItem::separator(app)?;
     let reload = MenuItemBuilder::with_id("reload", "Reload")
@@ -84,6 +104,10 @@ pub fn create_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         &[
             &today_view,
             &calendar_view,
+            &assignments_view,
+            &subjects_view,
+            &resources_view,
+            &notes_view,
             &view_sep,
             &reload,
             &view_sep2,
@@ -148,6 +172,11 @@ pub fn create_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                     let _ = window.emit("quick-add-task", ());
                 }
             }
+            "new_study_session" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.emit("navigate", "/app/assignments");
+                }
+            }
             "today_view" => {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.emit("navigate", "/app");
@@ -156,6 +185,26 @@ pub fn create_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
             "calendar_view" => {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.emit("navigate", "/app/calendar");
+                }
+            }
+            "assignments_view" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.emit("navigate", "/app/assignments");
+                }
+            }
+            "subjects_view" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.emit("navigate", "/app/subjects");
+                }
+            }
+            "resources_view" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.emit("navigate", "/app/resources");
+                }
+            }
+            "notes_view" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.emit("navigate", "/app/notes");
                 }
             }
             "reload" => {

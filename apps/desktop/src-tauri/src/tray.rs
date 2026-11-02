@@ -6,14 +6,15 @@ use tauri::{
 
 pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let new_task = MenuItem::with_id(app, "new_task", "New Task", true, Some("CmdOrCtrl+Shift+T"))?;
-    let today = MenuItem::with_id(app, "today", "Today View", true, None::<&str>)?;
-    let calendar = MenuItem::with_id(app, "calendar", "Calendar", true, None::<&str>)?;
+    let today = MenuItem::with_id(app, "today", "Today", true, None::<&str>)?;
+    let calendar = MenuItem::with_id(app, "calendar", "Planner / Calendar", true, None::<&str>)?;
+    let assignments = MenuItem::with_id(app, "assignments", "Assignments", true, None::<&str>)?;
+    let subjects = MenuItem::with_id(app, "subjects", "Subjects", true, None::<&str>)?;
+    let resources = MenuItem::with_id(app, "resources", "Resources", true, None::<&str>)?;
     let separator1 = PredefinedMenuItem::separator(app)?;
     let show_hide = MenuItem::with_id(app, "show_hide", "Show/Hide Window", true, Some("CmdOrCtrl+Shift+O"))?;
     let separator2 = PredefinedMenuItem::separator(app)?;
     let settings = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
-    // Distinct ids from the app menu's, so the global menu handler doesn't
-    // run them a second time.
     let check_updates =
         MenuItem::with_id(app, "tray_check_updates", "Check for Updates...", true, None::<&str>)?;
     let reset_local_data =
@@ -27,6 +28,9 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
             &new_task,
             &today,
             &calendar,
+            &assignments,
+            &subjects,
+            &resources,
             &separator1,
             &show_hide,
             &separator2,
@@ -54,7 +58,7 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
                     let _ = window.set_focus();
-                    let _ = window.emit("navigate", "/app");
+                    let _ = window.emit("navigate", "/app/board");
                 }
             }
             "calendar" => {
@@ -62,6 +66,27 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                     let _ = window.show();
                     let _ = window.set_focus();
                     let _ = window.emit("navigate", "/app/calendar");
+                }
+            }
+            "assignments" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                    let _ = window.emit("navigate", "/app/assignments");
+                }
+            }
+            "subjects" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                    let _ = window.emit("navigate", "/app/subjects");
+                }
+            }
+            "resources" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                    let _ = window.emit("navigate", "/app/resources");
                 }
             }
             "show_hide" => {

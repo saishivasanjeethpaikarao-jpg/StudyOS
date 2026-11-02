@@ -56,6 +56,24 @@ export async function showNotification(
 }
 
 /**
+ * Open an external URL in the system browser / default OS application
+ */
+export async function openExternal(url: string): Promise<void> {
+  if (isDesktop()) {
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      await invoke("open_url", { url });
+      return;
+    } catch {
+      // Fall through to window.open
+    }
+  }
+  if (typeof window !== "undefined") {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+}
+
+/**
  * Get auto-launch status (desktop only)
  */
 export async function getAutoLaunch(): Promise<boolean> {
