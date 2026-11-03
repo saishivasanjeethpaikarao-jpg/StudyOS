@@ -55,14 +55,39 @@ export interface StorageProvider {
  * Removes/replaces characters that could cause directory traversal or path issues.
  */
 export function sanitizeFilename(filename: string): string {
+  // Strip null bytes and non-printable ASCII control characters without control regex
+  const cleaned = Array.from(filename)
+    .filter((char) => {
+      const code = char.charCodeAt(0);
+      return code !== 0 && (code >= 32 || code > 127) && code !== 127;
+    })
+    .join('');
   // Strip any leading path components to eliminate directory traversal attempts
-  const base = filename.replace(/^.*[\\/]/, '');
-  return base
+  const base = cleaned.replace(/^.*[\\/]/, '');
+  let sanitized = base
     .toLowerCase()
     .replace(/[^a-z0-9.-]/g, '-') // Replace non-alphanumeric chars with hyphens
     .replace(/\.{2,}/g, '.') // Collapse multiple dots
     .replace(/-+/g, '-') // Collapse multiple hyphens
     .replace(/^[-.]+|[-.]+$/g, ''); // Remove leading/trailing hyphens and dots
+
+  if (!sanitized) {
+    return 'unnamed-file';
+  }
+
+  // Truncate length if overly long (>200 chars) while preserving extension
+  if (sanitized.length > 200) {
+    const extIndex = sanitized.lastIndexOf('.');
+    if (extIndex > 0 && sanitized.length - extIndex <= 10) {
+      const ext = sanitized.slice(extIndex);
+      const name = sanitized.slice(0, 200 - ext.length);
+      sanitized = `${name}${ext}`;
+    } else {
+      sanitized = sanitized.slice(0, 200);
+    }
+  }
+
+  return sanitized;
 }
 
 /**
@@ -210,7 +235,11 @@ let activeProvider: StorageProvider | null = null;
  * Automatically identifies Supabase Storage vs Cloudflare R2 vs standard S3.
  */
 export function resolveStorageConfig(): StorageProviderConfig {
-  const explicitProvider = (process.env.STORAGE_PROVIDER?.toLowerCase() as StorageProviderType) || undefined;
+  const explicitProvider = process.env.STORAGE_PROVIDER?.trim().toLowerCase();
+  if (explicitProvider && !['supabase', 'r2', 's3'].includes(explicitProvider)) {
+    throw new Error(`Unsupported STORAGE_PROVIDER '${explicitProvider}'. Allowed values: 'supabase', 'r2', 's3'`);
+  }
+
   const endpoint = process.env.SUPABASE_STORAGE_S3_ENDPOINT || process.env.AWS_ENDPOINT_URL;
   const bucket =
     process.env.SUPABASE_STORAGE_BUCKET ||
@@ -235,7 +264,7 @@ export function resolveStorageConfig(): StorageProviderConfig {
   // Determine provider type
   let provider: StorageProviderType = 's3';
   if (explicitProvider) {
-    provider = explicitProvider;
+    provider = explicitProvider as StorageProviderType;
   } else if (endpoint?.includes('supabase.co')) {
     provider = 'supabase';
   } else if (endpoint?.includes('r2.cloudflarestorage.com')) {
