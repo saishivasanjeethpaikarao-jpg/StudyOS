@@ -1,13 +1,13 @@
 # Phase 9D.4C — Local Credentials & Authenticated Connectivity Verification
 
-**Document Version:** 1.1.0  
+**Document Version:** 1.2.0  
 **Repository:** `D:\StudyOS-Project\studyos`  
 **Branch:** `studyos-development`  
 **Starting Commit:** `4ff76da9d0d71129ed0fa88dc97cace4c371daed`  
 **Target Monthly Operating Cost:** ₹0 / month (Strict zero-cost, cardless architecture)  
 **Disposable Project Ref:** `sdydpcfttodngamwnjek`  
-**Organization:** `Couple-Stars` | **Region:** `ap-south-1` (Mumbai) | **Plan:** Free ($0/mo)  
-**Phase Status:** `AUTHENTICATED CONNECTIVITY VERIFIED` (Authenticated Supabase API and Storage Gateway confirmed; zero remote mutations; credentials safely isolated in local .env)
+**Organization:** `Couple-Stars` | **Region:** `eu-west-1` (Ireland) | **Plan:** Free ($0/mo)  
+**Phase Status:** `AUTHENTICATED CONNECTIVITY VERIFIED (COMPLETE)` (PostgreSQL Wire SELECT 1 confirmed; Authenticated Supabase REST and Storage API confirmed; bucket studyos-files verified private; zero schema mutations; credentials safely isolated in local .env)
 
 ---
 
@@ -142,22 +142,22 @@ Authorization: Bearer [REDACTED_SECRET_KEY]
 | Target Service / Layer | Protocol | Authentication Credential | Observed Result | Status |
 | :--- | :---: | :---: | :--- | :---: |
 | **REST API / DB Introspection** | HTTPS | Secret Key (`sb_secret_...`) | `HTTP 200 OK` (OpenAPI schema returned) | `PASS` |
-| **Storage Bucket Service** | HTTPS | Secret Key (`sb_secret_...`) | `HTTP 200 OK` (`[]` empty bucket list) | `PASS` |
+| **Storage Bucket Service** | HTTPS | Secret Key (`sb_secret_...`) | `HTTP 200 OK` (`studyos-files` verified Private) | `PASS` |
 | **Supavisor Transaction Pooler**| TCP / 6543 | Network Probe | `TcpTestSucceeded : True` | `PASS` |
 | **Supavisor Session Pooler** | TCP / 5432 | Network Probe | `TcpTestSucceeded : True` | `PASS` |
 | **Direct S3 Gateway** | HTTPS / 443 | Network Probe | `HTTP 404` with `sb-gateway-mode: direct` | `PASS` |
-| **Direct Wire SQL (`SELECT 1`)**| Postgres Wire | Database Role Password | Gated (Password retained by user) | `PENDING DB PASSWORD` |
+| **Direct Wire SQL (`SELECT 1`)**| Postgres Wire | Database Role Password | `SELECT 1` returned `[{ connected: 1 }]` | `PASS` |
 
 ---
 
 ## 6. Remote Mutations & Billing Status Summary
 
-- **Remote Tables / Schemas Created:** `0`
+- **Remote Tables / Schemas Created:** `0` (Zero migrations executed)
 - **Remote Migrations Run:** `0`
-- **Remote Storage Buckets Created:** `0`
+- **Remote Storage Buckets Created:** `1` (`studyos-files` initialized by user as Private)
 - **Remote Files Uploaded / Transferred:** `0`
 - **Remote Supabase Auth Users Created:** `0`
-- **Billing Changes / Add-ons Activated:** `NONE` (Strict ₹0/month maintained)
+- **Billing Changes / Add-ons Activated:** `NONE` (Strict ₹0/month Free Tier verified)
 - **GitHub Pushes:** `NONE`
 
 ---
@@ -174,7 +174,12 @@ Local unit tests for the storage abstraction were executed:
 
 ## 8. Final Acceptance Verdict
 
-### Status: `ACCEPTED WITH LIMITATIONS`
+### Status: `ACCEPTED (COMPLETE VERIFICATION)`
 
 **Justification:**  
-Authenticated read-only connectivity to the disposable Supabase project has been confirmed across both the database introspection engine and the storage management service. Local `.env` has been initialized and verified as Git-ignored. Zero remote mutations and zero billing changes occurred. The phase is accepted with the limitation that direct PostgreSQL wire queries (`SELECT 1`) await the database password if wire-level DDL migrations are to be tested in subsequent phases.
+Full authenticated connectivity to the disposable Supabase project has been confirmed across all target layers:
+1. PostgreSQL wire protocol authenticated successfully via the Supavisor connection pooler; `SELECT 1;` returned `[{ connected: 1 }]`.
+2. Supabase Storage API authenticated successfully and confirmed the private `studyos-files` bucket.
+3. Database introspection via REST gateway is online and functional.
+4. Local `.env` is configured and verified as Git-ignored (`.gitignore:15:.env`).
+5. Zero schema mutations or migrations executed, zero billing changes incurred ($0/mo Free tier confirmed), and no secrets committed.
