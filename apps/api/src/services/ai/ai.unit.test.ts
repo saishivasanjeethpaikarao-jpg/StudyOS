@@ -5,13 +5,7 @@ import { GroqProvider } from "./providers/groq.js";
 import { NimProvider } from "./providers/nim.js";
 import { getAllModels, getAllProviders, getProvider } from "./providers/index.js";
 import { chunkAcademicText } from "./ingestion/chunking.js";
-import {
-  AIAuthenticationError,
-  AIInvalidOutputError,
-  AIQuotaError,
-  AIRateLimitError,
-  AITimeoutError,
-} from "./types.js";
+import { AIRateLimitError } from "./types.js";
 
 describe("AI Secrets Management & Cryptography", () => {
   it("encrypts and decrypts API keys deterministically using AES-256-GCM", () => {
@@ -29,8 +23,10 @@ describe("AI Secrets Management & Cryptography", () => {
     const originalKey = "AIzaSyD-gemini-secret-api-key";
     const encrypted = encryptApiKey(originalKey);
     const parts = encrypted.split(":");
-    // Tamper with the ciphertext
-    const tamperedPayload = parts[2]!.replace(/[a-f0-9]/, "0");
+    // Tamper with the ciphertext guaranteed
+    const firstChar = parts[2]!.charAt(0);
+    const flippedChar = firstChar === "0" ? "1" : "0";
+    const tamperedPayload = flippedChar + parts[2]!.slice(1);
     const tampered = `${parts[0]}:${parts[1]}:${tamperedPayload}`;
 
     expect(() => decryptApiKey(tampered)).toThrow();
