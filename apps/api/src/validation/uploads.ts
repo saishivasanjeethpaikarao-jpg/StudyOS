@@ -91,7 +91,7 @@ export const attachmentFormSchema = z.object({
  * Check if a MIME type is an allowed avatar type
  */
 export function isAllowedAvatarType(type: string): type is AllowedAvatarType {
-  const normalized = type.split(';')[0].trim().toLowerCase();
+  const normalized = (type.split(';')[0] ?? '').trim().toLowerCase();
   return (ALLOWED_AVATAR_TYPES as readonly string[]).includes(normalized as AllowedAvatarType);
 }
 
@@ -101,7 +101,7 @@ export function isAllowedAvatarType(type: string): type is AllowedAvatarType {
 export function isAllowedAttachmentType(
   type: string
 ): type is AllowedAttachmentType {
-  const normalized = type.split(';')[0].trim().toLowerCase();
+  const normalized = (type.split(';')[0] ?? '').trim().toLowerCase();
   return (ALLOWED_ATTACHMENT_TYPES as readonly string[]).includes(normalized as AllowedAttachmentType);
 }
 

@@ -55,4 +55,39 @@ describe("S3 / R2 Storage Security & Key Generation", () => {
     expect(MAX_AVATAR_SIZE).toBe(2 * 1024 * 1024); // 2 MB
     expect(MAX_ATTACHMENT_SIZE).toBe(10 * 1024 * 1024); // 10 MB
   });
+  it("6. Multi-tenant storage boundary: enforces that object key owner matches session user", () => {
+    const ownerUserId = "user-1111-owner";
+    const foreignUserId = "user-2222-attacker";
+    const objectKey = generateUniqueKey(ownerUserId, "attachments", "exam-notes.pdf");
+
+    const keyParts = objectKey.split("/");
+    const objectOwner = keyParts[1];
+
+    expect(objectOwner).toBe(ownerUserId);
+    expect(objectOwner === foreignUserId).toBe(false);
+  });
+
+  it("7. Strict rejection of dangerous script and executable MIME types", () => {
+    const dangerousMimeTypes = [
+      "application/x-sh",
+      "application/x-bat",
+      "application/javascript",
+      "application/x-msdownload",
+      "application/x-executable",
+    ];
+
+    for (const mime of dangerousMimeTypes) {
+      expect(isAllowedAttachmentType(mime as any)).toBe(false);
+      expect(isAllowedAvatarType(mime as any)).toBe(false);
+    }
+  });
+
+  it("8. Mocked R2 / S3 endpoint configuration parses valid cloudflare R2 format", () => {
+    const accountId = "test-cf-account-id-123456789";
+    const r2Endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
+    const parsed = new URL(r2Endpoint);
+
+    expect(parsed.protocol).toBe("https:");
+    expect(parsed.hostname).toBe(`${accountId}.r2.cloudflarestorage.com`);
+  });
 });

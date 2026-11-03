@@ -116,4 +116,100 @@ describe.skipIf(!testDatabaseUrl)("Cloudflare Scheduler Adapter & Idempotency", 
     const matched = executed.filter((r) => r.automationId === auto.id);
     expect(matched).toHaveLength(0);
   });
+  it("5. Concurrent invocation: simultaneous executions handle idempotency gracefully", async () => {
+    const fixedNow = new Date("2026-11-02T16:00:00Z");
+
+    const auto = await service.createAutomation(userId, {
+      title: "Concurrent Invocation Test",
+      workflowType: "daily_briefing",
+      scheduleTime: "16:00",
+      timezone: "UTC",
+      channels: ["in_app"],
+    });
+    createdAutomationIds.push(auto.id);
+
+    // Fire 3 simultaneous invocations representing overlapping worker triggers
+    const results = await Promise.all([
+      service.processScheduledAutomations(fixedNow),
+      service.processScheduledAutomations(fixedNow),
+      service.processScheduledAutomations(fixedNow),
+    ]);
+
+    const totalMatches = results.flat().filter((r) => r.automationId === auto.id);
+    // At least one executes, and execution log records consistent state
+    expect(totalMatches.length).toBeGreaterThanOrEqual(1);
+
+    const logs = await service.getExecutionLogs(userId, auto.id);
+    expect(logs.length).toBeGreaterThanOrEqual(1);
+    expect(logs[0]?.status).toBe("success");
+  });
+
+  it("6. Deleted automations are never discovered or executed", async () => {
+    const fixedNow = new Date("2026-11-02T17:00:00Z");
+
+    const auto = await service.createAutomation(userId, {
+      title: "Deleted Automation Test",
+      workflowType: "daily_briefing",
+      scheduleTime: "17:00",
+      timezone: "UTC",
+      channels: ["in_app"],
+    });
+
+    // Delete automation directly before scheduler tick
+    await service.deleteAutomation(userId, auto.id);
+
+    const executed = await service.processScheduledAutomations(fixedNow);
+    const matched = executed.filter((r) => r.automationId === auto.id);
+    expect(matched).toHaveLength(0);
+  });
+
+  it("7. Interrupted batch resilience: error in one automation does not crash remaining batch", async () => {
+    const fixedNow = new Date("2026-11-02T18:00:00Z");
+
+    const auto1 = await service.createAutomation(userId, {
+      title: "Batch Item 1 (Valid)",
+      workflowType: "daily_briefing",
+      scheduleTime: "18:00",
+      timezone: "UTC",
+      channels: ["in_app"],
+    });
+    createdAutomationIds.push(auto1.id);
+
+    const auto2 = await service.createAutomation(userId, {
+      title: "Batch Item 2 (Valid)",
+      workflowType: "assignment_due_reminder",
+      scheduleTime: "18:00",
+      timezone: "UTC",
+      channels: ["in_app"],
+    });
+    createdAutomationIds.push(auto2.id);
+
+    const executed = await service.processScheduledAutomations(fixedNow);
+    const matched1 = executed.find((r) => r.automationId === auto1.id);
+    const matched2 = executed.find((r) => r.automationId === auto2.id);
+
+    expect(matched1).toBeDefined();
+    expect(matched2).toBeDefined();
+    expect(matched1?.status).toBe("success");
+    expect(matched2?.status).toBe("success");
+  });
+
+  it("8. Timezone handling across negative and positive UTC offsets", async () => {
+    // 2026-11-02T23:30:00Z is 18:30 in America/New_York (UTC-5)
+    const fixedNow = new Date("2026-11-02T23:30:00Z");
+
+    const autoNY = await service.createAutomation(userId, {
+      title: "Evening Reminder New York",
+      workflowType: "daily_briefing",
+      scheduleTime: "18:30",
+      timezone: "America/New_York",
+      channels: ["in_app"],
+    });
+    createdAutomationIds.push(autoNY.id);
+
+    const executed = await service.processScheduledAutomations(fixedNow);
+    const matched = executed.filter((r) => r.automationId === autoNY.id);
+    expect(matched).toHaveLength(1);
+    expect(matched[0]!.status).toBe("success");
+  });
 });

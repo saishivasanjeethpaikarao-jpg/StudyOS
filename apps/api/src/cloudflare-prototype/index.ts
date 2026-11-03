@@ -11,8 +11,16 @@
  * 6. Hybrid Hermes Agent heartbeat and proposal queue endpoints.
  */
 
-import { Hono } from 'hono';
+import { Hono, type ExecutionContext } from 'hono';
 import { cors } from 'hono/cors';
+
+export type { ExecutionContext };
+
+export interface ScheduledEvent {
+  cron: string;
+  type: string;
+  scheduledTime: number;
+}
 
 export interface Env {
   ENVIRONMENT: string;
@@ -66,7 +74,7 @@ app.get('/health', (c) => {
 // Cloudflare Cron Trigger background worker tick endpoint (protected by CRON_SECRET)
 app.post('/workers/automations/tick', async (c) => {
   const secret = c.req.header('X-Cron-Secret');
-  if (c.env?.CRON_SECRET && secret !== c.env.CRON_SECRET) {
+  if (!c.env?.CRON_SECRET || secret !== c.env.CRON_SECRET) {
     return c.json({ error: 'Unauthorized cron invocation' }, 401);
   }
 
@@ -81,7 +89,7 @@ app.post('/workers/automations/tick', async (c) => {
 
 app.post('/workers/rollover/tick', async (c) => {
   const secret = c.req.header('X-Cron-Secret');
-  if (c.env?.CRON_SECRET && secret !== c.env.CRON_SECRET) {
+  if (!c.env?.CRON_SECRET || secret !== c.env.CRON_SECRET) {
     return c.json({ error: 'Unauthorized cron invocation' }, 401);
   }
 
@@ -101,8 +109,21 @@ export default {
 
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil((async () => {
-      console.log(`[Cloudflare Cron] Trigger fired at ${new Date(event.scheduledTime).toISOString()}`);
-      // Executes background rollover and automations within ctx.waitUntil wall-clock window
+      const timestamp = new Date(event.scheduledTime).toISOString();
+      console.log(`[Cloudflare Cron] Trigger fired at ${timestamp}`);
+      if (!env.CRON_SECRET) {
+        console.warn('[Cloudflare Cron] CRON_SECRET not configured; failing closed and skipping tick invocation');
+        return;
+      }
+      try {
+        const autoReq = new Request('http://127.0.0.1/workers/automations/tick', {
+          method: 'POST',
+          headers: { 'X-Cron-Secret': env.CRON_SECRET },
+        });
+        await app.fetch(autoReq, env, ctx);
+      } catch (err) {
+        console.error('[Cloudflare Cron] Automations tick error:', err);
+      }
     })());
   },
 };

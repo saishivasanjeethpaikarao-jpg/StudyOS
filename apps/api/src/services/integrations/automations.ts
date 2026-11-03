@@ -126,7 +126,8 @@ export class AutomationsService {
    */
   async runAutomation(
     userId: string,
-    automationId: string
+    automationId: string,
+    runTime: Date = new Date()
   ): Promise<{ status: "success" | "failed" | "skipped"; summary: string }> {
     const db = getDb();
     const [automation] = await db
@@ -150,7 +151,7 @@ export class AutomationsService {
 
     try {
       if (automation.workflowType === "daily_briefing") {
-        const todayStart = new Date();
+        const todayStart = new Date(runTime);
         todayStart.setHours(0, 0, 0, 0);
 
         const sessions = await db
@@ -209,7 +210,7 @@ export class AutomationsService {
       await db
         .update(automationDefinitions)
         .set({
-          lastRunAt: new Date(),
+          lastRunAt: runTime,
           updatedAt: new Date(),
         })
         .where(eq(automationDefinitions.id, automation.id));
@@ -331,7 +332,7 @@ export class AutomationsService {
       // Check if schedule time matches
       const isDue = options?.forceRun || currentTimeStr === auto.scheduleTime;
       if (isDue) {
-        const runRes = await this.runAutomation(auto.userId, auto.id);
+        const runRes = await this.runAutomation(auto.userId, auto.id, now);
         results.push({
           automationId: auto.id,
           userId: auto.userId,

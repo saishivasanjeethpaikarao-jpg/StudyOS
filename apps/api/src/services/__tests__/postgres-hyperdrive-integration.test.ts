@@ -39,7 +39,6 @@ describe.skipIf(!testDatabaseUrl)("PostgreSQL & Hyperdrive Drizzle Integration V
       .values({
         userId: testUserId,
         title: taskTitle,
-        status: "inbox",
       })
       .returning();
 
