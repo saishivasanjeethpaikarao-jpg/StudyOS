@@ -5,7 +5,7 @@
 **Branch:** `studyos-development`  
 **Starting Commit:** `74ffd22eec77afcbd07fd3e710bb2dd643543d2d`  
 **Target Operating Cost:** ₹0 / month (Strict zero-cost, cardless architecture)  
-**Gate A Status:** `PENDING USER CONFIRMATION` (Local readiness verified; awaiting user's manual dashboard verification)  
+**Gate A Status:** `PASSED WITH USER CONFIRMATION` (Organization: Couple-Stars; Free tier confirmed; billing settings not directly inspected)  
 **Overall Phase Status:** `ACCEPTED WITH LIMITATIONS` (Gate A documented and evaluated; project creation and live connection remain strictly unauthorized)
 
 ---
@@ -84,16 +84,16 @@ A full recursive scan across `apps/web/src` was executed:
 
 ## 6. Gate A Status & Verification Record
 
-Gate A requires the user to manually verify their account in the Supabase Dashboard prior to authorization of Gate B. The current status of all Gate A items is formally recorded:
+Gate A requires the user to manually verify their account in the Supabase Dashboard prior to authorization of Gate B. Based on the user's confirmed dashboard access and statements (Organization: `Couple-Stars`), the status of Gate A items is formally recorded:
 
 | Verification Item | Requirement / Criteria | Verification Source | Recorded Status |
 | :--- | :--- | :---: | :---: |
-| **Supabase Account Exists** | User possesses an active personal Supabase account | User Report | **CONFIRMED (User-Reported)** |
-| **Successful Dashboard Login** | User can authenticate into `https://supabase.com/dashboard` | User Confirmation | **AWAITING USER'S CONFIRMATION** |
-| **Free-Plan Access** | Account organization is explicitly assigned to **Free Plan ($0/month)** | Dashboard Inspection | **AWAITING USER'S CONFIRMATION** |
-| **Zero Payment Methods** | Organization Billing > Payment Methods is completely empty (no card/debit) | Dashboard Inspection | **AWAITING USER'S CONFIRMATION** |
-| **No Billing Activation** | No commitment to future charges, no trial deposit, no billing activation | Dashboard Inspection | **AWAITING USER'S CONFIRMATION** |
-| **Project Creation** | Creation of a new Supabase project (disposable or otherwise) | Policy Gate | **NOT AUTHORIZED** |
+| **Supabase Account Exists** | User possesses an active personal Supabase account | User Confirmation | **CONFIRMED (Organization: Couple-Stars)** |
+| **Successful Dashboard Login** | User can authenticate into `https://supabase.com/dashboard` | User Confirmation | **CONFIRMED (User-Confirmed)** |
+| **Free-Plan Access** | Account organization is assigned to **Free Plan ($0/month)** | User Confirmation | **CONFIRMED (User-Confirmed Free Tier)** |
+| **Payment Method Required** | Organization has no payment method forced or required | User Confirmation | **CONFIRMED NOT PROMPTED** *(Billing settings not directly inspected)* |
+| **Billing Activation Required** | No commitment to future charges or mandatory activation | User Confirmation | **CONFIRMED NOT PROMPTED** *(Billing settings not directly inspected)* |
+| **Project Creation** | Creation of a new Supabase project (disposable or otherwise) | Policy Gate | **NOT AUTHORIZED (Pending Gate B)** |
 | **Live Database Connection**| Connecting API or running migrations against live Supabase | Policy Gate | **NOT AUTHORIZED** |
 
 ---
