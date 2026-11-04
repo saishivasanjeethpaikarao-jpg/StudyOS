@@ -1,22 +1,17 @@
-<svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">StudyOS symbol</title>
+  <desc id="desc">A folded ribbon S in orange, coral, pink and violet</desc>
   <defs>
-    <linearGradient id="grad1" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%" style="stop-color:#F97068"/>
-      <stop offset="100%" style="stop-color:#FCAB9F"/>
-    </linearGradient>
+    <linearGradient id="upper" x1="14" y1="47" x2="104" y2="14" gradientUnits="userSpaceOnUse"><stop stop-color="#ff9a43"/><stop offset=".35" stop-color="#f464b3"/><stop offset=".72" stop-color="#9c52f5"/><stop offset="1" stop-color="#622ce6"/></linearGradient>
+    <linearGradient id="middle" x1="17" y1="44" x2="108" y2="86" gradientUnits="userSpaceOnUse"><stop stop-color="#ffbd4b"/><stop offset=".44" stop-color="#ff8546"/><stop offset=".8" stop-color="#ff654e"/><stop offset="1" stop-color="#ff9b36"/></linearGradient>
+    <linearGradient id="lower" x1="15" y1="83" x2="89" y2="116" gradientUnits="userSpaceOnUse"><stop stop-color="#7629db"/><stop offset=".42" stop-color="#c234e4"/><stop offset=".8" stop-color="#f04bc0"/><stop offset="1" stop-color="#fb6a86"/></linearGradient>
+    <linearGradient id="fold" x1="78" y1="58" x2="100" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#281350"/><stop offset="1" stop-color="#4c1970" stop-opacity=".1"/></linearGradient>
   </defs>
-  <!-- Left bean/seed shape -->
-  <path d="M48 10 
-           C28 10 12 28 12 50 
-           C12 72 28 90 48 90 
-           C48 70 38 58 38 50 
-           C38 42 48 30 48 10Z" 
-        fill="url(#grad1)"/>
-  <!-- Right bean/seed shape -->
-  <path d="M52 90 
-           C72 90 88 72 88 50 
-           C88 28 72 10 52 10 
-           C52 30 62 42 62 50 
-           C62 58 52 70 52 90Z" 
-        fill="url(#grad1)"/>
+  <path fill="#3b155d" d="M20 34 78 5c10-5 18-4 26 1l8 5c8 5 9 16 5 23-2 4-7 7-12 10L43 72 19 62c-8-4-10-18 1-28Z"/>
+  <path fill="url(#upper)" d="M22 33 78 5c9-5 18-4 26 1l8 5c7 4 9 11 6 17-2 4-5 7-10 9L47 65c-7 3-14 3-22-1-12-7-13-23-3-31Z"/>
+  <path fill="url(#fold)" d="M29 60c11 5 18 4 27 0l50-23-2 13-48 25-27-11Z"/>
+  <path fill="#6420a0" d="M19 79c-8 4-10 13-8 23 2 10 10 17 20 20 7 2 13 1 20-2l48-25-9-19-49 26-22-23Z"/>
+  <path fill="url(#lower)" d="M16 80c-8 7-6 17 2 23l20 13c6 4 12 4 19 1l39-20c9-5 13-12 11-20-2-8-10-14-17-17L39 39l-17 20 54 21c10 4 12 8 6 12l-32 17c-4 2-8 2-12 0L17 97c-5-3-6-9-1-17Z"/>
+  <path fill="url(#middle)" d="M25 31c-9 4-14 13-12 22 1 8 8 14 17 18l56 22c6 3 10 7 10 13 9-5 15-13 15-22 0-10-7-17-17-21L39 42c-7-3-11-6-14-11Z"/>
+  <path fill="#ffb54b" fill-opacity=".42" d="M22 34c-6 5-8 11-6 18 2 8 8 12 17 16l53 21c-7-6-18-10-28-14L29 64C18 59 13 48 22 34Z"/>
 </svg>

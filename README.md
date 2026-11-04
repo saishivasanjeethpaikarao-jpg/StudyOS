@@ -1,460 +1,337 @@
 <div align="center">
 
-<a href="https://opensunsama.com"><img src="docs/images/logo.png" alt="StudyOS logo" width="96" height="96" /></a>
+<img src="docs/images/logo.png" alt="StudyOS Logo" width="100" height="100" />
 
 # StudyOS
 
-### Daily planning, done right.
+### Your complete study life, in one place.
 
-The student-first planner for time-blocking, focused work, and study execution.<br />
-**AI native:** control it from any agent, including **Claude**, **ChatGPT**, Cursor, Claude Code, or any MCP client, with one URL and no API key.
+The open-source, student-first planner for academic scheduling, assignment tracking, focused study blocks, and AI-assisted learning.
 
 <br />
 
-[![Open the app](https://img.shields.io/badge/Open_the_app-opensunsama.com-F97316?style=for-the-badge)](https://opensunsama.com)
-[![Connect Claude](https://img.shields.io/badge/Claude-Add_connector-D97757?style=for-the-badge&logo=claude&logoColor=white)](#-connect-claude-or-chatgpt-in-30-seconds)
-[![Connect ChatGPT](https://img.shields.io/badge/ChatGPT-Add_app-10A37F?style=for-the-badge)](#-connect-claude-or-chatgpt-in-30-seconds)
-[![GitHub stars](https://img.shields.io/github/stars/ShadowWalker2014/open-sunsama?style=for-the-badge&logo=github&color=yellow)](https://github.com/ShadowWalker2014/open-sunsama/stargazers)
-
-[**Website**](https://opensunsama.com) · [**Docs**](https://opensunsama.com/docs) · [**Connect your AI**](https://opensunsama.com/docs/mcp/overview) · [**Self-host**](#-get-started) · [**Download apps**](https://opensunsama.com/download)
+[![License](https://img.shields.io/badge/License-Non--Commercial-orange.svg?style=for-the-badge)](LICENSE)
+[![GitHub Workflow](https://img.shields.io/badge/Release_Pipeline-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](.github/workflows/release.yml)
+[![Bun](https://img.shields.io/badge/Runtime-Bun_v1.4.2-F472B6?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh)
+[![React](https://img.shields.io/badge/Frontend-React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![Tauri](https://img.shields.io/badge/Desktop-Tauri_v2-FFC131?style=for-the-badge&logo=tauri&logoColor=black)](apps/desktop)
+[![Expo](https://img.shields.io/badge/Mobile-Expo_v54-000020?style=for-the-badge&logo=expo&logoColor=white)](apps/expo-mobile)
 
 <br />
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/board-dark.png" />
-  <img src="docs/images/readme/board.png" alt="StudyOS board: today's prioritized tasks in columns by day, with a time-blocked schedule on the right" width="100%" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/today-dark.png" />
+  <img src="docs/images/readme/today-dark.png" alt="StudyOS Dashboard: today's academic schedule, assignments, and time-blocked study sessions" width="100%" />
 </picture>
 
-<sub>A real Tuesday for a Head of Product: a prioritized board, subtasks, estimates, and a time-blocked schedule. The backlog is tucked away on the left.</sub>
+<sub>StudyOS Today view: prioritized academic assignments, lecture schedules, and time-blocked study sessions in one distraction-free workspace.</sub>
 
 </div>
 
 <br />
 
-## ✨ Why StudyOS
+---
 
-StudyOS is being built as a student-first planning and study execution system on the inherited Open Sunsama foundation. The migration is incremental so the existing planner remains usable while academic capabilities are added. See [upstream provenance](docs/UPSTREAM_PROVENANCE.md).
+## 📖 Introduction: What is StudyOS?
 
-- **🤖 Your AI plans with you.** Claude and ChatGPT can read your schedule, create and prioritize tasks, time-block your day, and close things out through a secure one-click connector.
-- **🗓️ Sunsama-style daily planning.** A kanban board of days, drag-and-drop time blocking, focus mode with a timer, and rollover of unfinished work.
-- **🔓 Open source and self-hostable.** Run it on your own server, read every line, and extend it through a full REST API.
-- **🖥️ Everywhere you work.** Web, desktop (macOS, Windows, Linux), and mobile, with light and dark themes and keyboard-first navigation.
+**StudyOS** is a unified, student-centered operating system for learning and daily execution. Most students juggle disjointed tools: a calendar for lectures, a to-do app for homework, spreadsheets for exam dates, separate note apps, and disjointed AI assistants. 
 
-<br />
+StudyOS brings your entire academic lifecycle together into a single, cohesive workflow:
+1. **Academic Structuring:** Model your terms, courses, credit weights, grading criteria, and recurring lecture blocks.
+2. **Assignment & Exam Tracking:** Track deliverables with strict due dates, priority tiers (P0–P3), estimated effort, and exam countdowns.
+3. **Time-Blocking & Execution:** Drag assignments directly onto your calendar to schedule realistic study sessions.
+4. **Distraction-Free Focus:** Run focused study intervals with native Pomodoro timers and streak tracking.
+5. **AI Study Planner:** Ingest lecture slides and syllabus PDFs, generate candidate-validated review quizzes, and formulate optimized study plans using local or cloud AI models.
+6. **Cross-Platform Synchronization:** Seamlessly transition between Windows desktop, Android mobile, and web with offline-first synchronization.
 
-## 🔌 Connect Claude or ChatGPT in 30 seconds
+---
 
-Paste one URL into your AI assistant, sign in, and click **Allow access**. That's it: no API keys and no config files.
+## ✨ Key Features
 
-```
-https://api.opensunsama.com/mcp
-```
+- **🗓️ Daily Planning Board:** Multi-day student kanban view with automatic rollover of unfinished work, priority indicators, and subtask progress.
+- **📚 Subjects & Terms Architecture:** Organize coursework by academic semester, associate professors and color themes, and view upcoming workload by course.
+- **⏳ Spaced Review & Exam Countdowns:** Automatically calculate review intervals leading up to midterms and finals, ensuring you never cram the night before.
+- **⏱️ Focus Mode & Pomodoro Timer:** Full-screen focus mode with audio cues, actual vs. estimated time tracking, and streak counters.
+- **📝 Contextual Study Notes & Materials:** Attach lecture PDFs, syllabus links, and rich-text notes (via Tiptap) directly to assignments.
+- **🤖 Multi-Provider AI Study Planner:** Built-in AI router supporting Google Gemini, OpenAI, Anthropic Claude, DeepSeek, and local Ollama via encrypted API key storage.
+- **🔄 Offline-First Sync Engine:** 4-tier revision resolution cascade with persistent 409 conflict quarantine—your offline work is never silently overwritten.
+- **🔌 Model Context Protocol (MCP) Server:** 17 specialized academic tools enabling Claude, ChatGPT, Cursor, and Hermes Agent to assist with study planning.
+- **⌨️ Keyboard-First Efficiency:** Global `⌘K` / `Ctrl+K` command palette to navigate courses, schedule tasks, and trigger focus timers instantly.
 
-<table>
-<tr>
-<td width="50%" valign="top">
+---
 
-**Claude** (web, Desktop, and mobile)
-
-1. **Settings → Customize → Connectors → Add**
-2. Name it *StudyOS* and paste the URL
-3. **Continue → Add → Connect**, then **Allow access**
-
-[Claude setup guide →](https://opensunsama.com/docs/mcp/claude)
-
-</td>
-<td width="50%" valign="top">
-
-**ChatGPT** (paid plans, developer mode)
-
-1. **Settings → Security and login → Developer mode**
-2. [chatgpt.com/plugins](https://chatgpt.com/plugins) → **+** → paste the URL
-3. **Create**, then **Allow access**
-
-[ChatGPT setup guide →](https://opensunsama.com/docs/mcp/chatgpt)
-
-</td>
-</tr>
-<tr>
-<td width="50%" align="center"><img src="docs/images/readme/consent-claude.png" alt="StudyOS consent screen: Claude wants to access your StudyOS account, verified app from claude.ai" width="88%" /></td>
-<td width="50%" align="center"><img src="docs/images/readme/consent-chatgpt.png" alt="StudyOS consent screen: ChatGPT wants to access your StudyOS account, verified app from chatgpt.com" width="88%" /></td>
-</tr>
-</table>
-
-**Coding assistants** connect the same way:
-
-| Client | Install |
-| --- | --- |
-| **Claude Code** | `claude mcp add --transport http open-sunsama https://api.opensunsama.com/mcp`, then run `/mcp` → Authenticate |
-| **Cursor** | [![Add to Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=open-sunsama&config=eyJ1cmwiOiJodHRwczovL2FwaS5vcGVuc3Vuc2FtYS5jb20vbWNwIn0=) |
-| **VS Code** | [![Add to VS Code](https://img.shields.io/badge/VS_Code-Add_MCP_server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=open-sunsama&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//api.opensunsama.com/mcp%22%7D) |
-| **Any MCP client** | Add the URL as a Streamable HTTP server with OAuth |
-
-Then just ask:
-
-> *"What's on my plate today? Move anything that isn't a P0 or P1 to tomorrow."*<br />
-> *"Block 9–11am tomorrow for deep work on the launch plan and link it to that task."*<br />
-> *"Add subtasks to 'Board deck': metrics slide, roadmap slide, asks."*
-
-<details>
-<summary><b>How the connection stays secure</b></summary>
-
-<br />
-
-- **Standard OAuth 2.1 with PKCE.** Claude and ChatGPT are identified by their published client metadata (CIMD), so the consent screen shows a **verified** badge. Other clients register with dynamic client registration.
-- **Scoped, short-lived tokens.** Access tokens expire hourly and refresh automatically. Refresh tokens rotate, and replaying an old one revokes the whole grant.
-- **Least privilege.** Connector tokens only reach tasks, time blocks, and your profile. They can't touch API keys, passwords, uploads, or calendar accounts.
-- **Annotated tools.** Every tool is marked read-only or destructive, so assistants ask before deleting anything.
-- **One-click disconnect** under **Settings → MCP → Connected apps**.
-
-<p align="center"><img src="docs/images/readme/mcp-settings.png" alt="Settings → MCP: connector URL, step-by-step setup per assistant, and connected apps list showing Claude and ChatGPT" width="70%" /></p>
-
-</details>
-
-<details>
-<summary><b>Prefer an API key? The local server still works</b></summary>
-
-<br />
-
-```json
-{
-  "mcpServers": {
-    "open-sunsama": {
-      "command": "npx",
-      "args": ["-y", "@open-sunsama/mcp"],
-      "env": { "OPENSUNSAMA_API_KEY": "os_your_api_key_here" }
-    }
-  }
-}
-```
-
-You can also send a key to the hosted server as an `X-API-Key` header. See [Local server & API keys](https://opensunsama.com/docs/mcp/local-server).
-
-</details>
-
-<br />
-
-## 🎬 See it in action
-
-<p align="center">
-  <img src="docs/images/readme/demo.gif" alt="Demo: adding a task, opening task details, switching to the week calendar, tasks list, ideas board, and connecting an AI assistant" width="100%" />
-</p>
-
-<p align="center"><sub><a href="docs/images/readme/demo.mp4">▶ Watch the full-quality video (MP4)</a></sub></p>
-
-<br />
-
-## 🧭 Everything you need to plan a focused day
+## 📸 Screenshots
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-### Time-block your week
+### 📅 Calendar & Time-Blocking
+Drag assignments and study blocks directly onto your schedule. Color-coded blocks link back to coursework so estimates meet reality.
 
-Drag tasks onto the calendar and see your whole week at a glance. Blocks link back to their tasks, so estimates meet reality.
-
-<img src="docs/images/readme/calendar-week.png" alt="Week calendar full of color-coded time blocks from Monday to Friday" width="100%" />
+<img src="docs/images/readme/calendar-week.png" alt="Week calendar with color-coded study blocks" width="100%" />
 
 </td>
 <td width="50%" valign="top">
 
-### Dig into any task
+### 📝 Assignment Details & Subtasks
+Break down complex projects into subtasks, log notes, configure priority tiers, set target estimates, and launch focus timers.
 
-Subtasks, rich-text notes, attachments, priority, estimate, and a timer, all in one keyboard-friendly modal.
-
-<img src="docs/images/readme/task-detail.png" alt="Task detail modal with subtasks, notes, P0 priority, and a running focus timer" width="100%" />
+<img src="docs/images/readme/task-detail.png" alt="Task detail modal with subtasks and focus timer" width="100%" />
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-### Focus mode
+### 📚 Course Subjects & Academic Workload
+Track all enrolled subjects, active terms, professor details, and upcoming deadlines categorized by subject.
 
-One task, one timer. Track actual time against your estimate while everything else fades away.
-
-<img src="docs/images/readme/focus.png" alt="Focus mode with a running timer at 23 minutes out of a 90-minute estimate" width="100%" />
+<img src="docs/images/readme/subjects.png" alt="Subjects and academic schedule view" width="100%" />
 
 </td>
 <td width="50%" valign="top">
 
-### ⌘K for everything
+### 🎯 Distraction-Free Focus Mode
+One assignment, one timer. Everything else fades away so you can complete deep work intervals without tab fatigue.
 
-Jump to any task, idea, or setting in a keystroke. Search spans tasks, ideas, and events.
-
-<img src="docs/images/readme/command-palette.png" alt="Command palette searching 'review' across tasks and ideas" width="100%" />
+<img src="docs/images/readme/focus.png" alt="StudyOS Focus Mode" width="100%" />
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-### Every task, one list
+### 💡 Study Notes & Ideas Board
+Trello-style boards for research papers, project ideas, reading lists, and long-term academic goals.
 
-Filter active, completed, or everything, grouped by day with subtask progress.
-
-<img src="docs/images/readme/tasks.png" alt="Tasks list grouped by Today, Tomorrow, and upcoming days with priority dots and subtask counts" width="100%" />
+<img src="docs/images/readme/ideas.png" alt="Study notes and ideas board" width="100%" />
 
 </td>
 <td width="50%" valign="top">
 
-### Ideas: your someday boards
+### ⚡ Instant Command Palette (⌘K)
+Jump to any subject, assignment, or setting in a single keystroke. Search across all notes and calendar events.
 
-Trello-style boards for bets and side projects. Promote an idea to a real task when it's time.
-
-<img src="docs/images/readme/ideas.png" alt="Ideas board with Someday, Exploring, and Ready to build columns" width="100%" />
+<img src="docs/images/readme/command-palette.png" alt="Command palette searching tasks and notes" width="100%" />
 
 </td>
 </tr>
 </table>
+
+---
+
+## 📱 Cross-Platform Support
 
 <table>
 <tr>
-<td width="32%" align="center" valign="top">
-<img src="docs/images/readme/mobile-tasks.png" alt="StudyOS on a phone: today's tasks with priorities and completed items" width="100%" />
+<td width="30%" align="center" valign="top">
+<img src="docs/images/readme/mobile-tasks.png" alt="StudyOS on Android mobile" width="100%" />
 </td>
-<td width="68%" valign="top">
+<td width="70%" valign="top">
 
-### Works on every screen
+### 🖥️ Windows Desktop
+- **Native Tauri v2 Shell:** Lightweight, memory-efficient Windows desktop app built with Rust.
+- **System Tray & Quick-Add:** Minimize to system tray with background daemon support and global hotkey quick-add.
+- **Encrypted Local Storage:** Fast local SQLite and IndexedDB caching for offline study sessions.
+- **Packaging:** Packaged via standard Windows NSIS installer (`StudyOS_{version}_x64-setup.exe`).
 
-- **Web app** at [opensunsama.com](https://opensunsama.com)
-- **Desktop** for macOS, Windows, and Linux, with a system tray, a global quick-add hotkey, and notifications ([download](https://opensunsama.com/download))
-- **Mobile** for iOS and Android
-- **Calendar sync** with Google Calendar, Outlook, and iCloud
-- **Recurring routines**, task rollover, reminders, and push notifications
-- **Keyboard-first**: press `?` anywhere for shortcuts
-- **Themes**: light, dark, or system, with multiple color palettes and fonts
+### 📱 Android Mobile
+- **React Native 0.81 & Expo 54:** Fluid touch interactions, gesture handling, and responsive dark theme.
+- **Offline Sync & Cache:** Full offline support with AsyncStorage caching and background mutation queue.
+- **System Reminders:** Native device alarms and notification scheduling for assignment due dates.
+- **Packaging:** Installable Universal APK (`StudyOS_{version}.apk`) and Google Play App Bundle (`StudyOS_{version}.aab`).
+
+### 🌐 Web Application
+- **Modern Web Architecture:** Responsive single-page application built with React 19, Vite, and Tailwind CSS.
+- **Self-Hostable:** Portable static bundle packaged as `StudyOS_{version}_web.zip` for deployment to Cloudflare Pages, Nginx, or Docker.
 
 </td>
 </tr>
 </table>
 
-<br />
+---
 
-## 🆚 How it compares
+## 🏗️ Architecture & Technology Stack
 
-| | **StudyOS** | Typical closed planners |
-| --- | :---: | :---: |
-| Open source & self-hostable | ✅ | ❌ |
-| AI native: control it from any agent over MCP | ✅ | ❌ |
-| One-click Claude & ChatGPT connector (OAuth) | ✅ | Rare |
-| Full REST API with scoped keys | ✅ | Limited |
-| Daily planning board + time blocking | ✅ | ✅ |
-| Focus timer, routines, rollover | ✅ | Varies |
-| Web, desktop, and mobile apps | ✅ | ✅ |
+StudyOS is engineered as a high-performance monorepo powered by **Turborepo** and **Bun**:
 
-Switching from another tool? Read the comparisons: [Sunsama](https://opensunsama.com/alternative/sunsama) · [Motion](https://opensunsama.com/alternative/motion) · [Akiflow](https://opensunsama.com/alternative/akiflow) · [Reclaim](https://opensunsama.com/alternative/reclaim) · [Todoist](https://opensunsama.com/alternative/todoist)
-
-<br />
-
-## 👥 Built for people who plan their day
-
-- **Founders and managers** juggling roadmaps, 1:1s, hiring, and customer calls, who want one place to decide what matters today.
-- **Engineers** who live in [Cursor, Claude Code, and the terminal](https://opensunsama.com/for/developers) and want their planner reachable from there.
-- **Remote and async teams** [time-blocking across time zones](https://opensunsama.com/for/remote-workers).
-- **ADHD and neurodivergent planners** who need [structure, visual time, and gentle rollover](https://opensunsama.com/for/adhd) instead of guilt.
-- **Privacy-minded teams** who want to self-host their planner and keep data on their own servers.
-
-<br />
-
-## 🛠️ MCP tools
-
-24 tools, available through the hosted connector and the local server:
-
-| Category | Tools |
-| --- | --- |
-| **Tasks** | `list_tasks` `get_task` `create_task` `update_task` `complete_task` `uncomplete_task` `delete_task` `schedule_task` `reorder_tasks` |
-| **Time blocks** | `list_time_blocks` `get_time_block` `create_time_block` `update_time_block` `delete_time_block` `link_task_to_time_block` `get_schedule_for_day` |
-| **Calendar events** (read-only) | `list_calendar_events` |
-| **Subtasks** | `list_subtasks` `create_subtask` `toggle_subtask` `update_subtask` `delete_subtask` |
-| **Profile** | `get_user_profile` `update_user_profile` |
-
-## 🧩 REST API
-
-Everything in the app is available over HTTP, with JWT or scoped API keys:
-
-```bash
-curl -X POST https://api.opensunsama.com/tasks \
-  -H "X-API-Key: os_your_key" -H "Content-Type: application/json" \
-  -d '{"title": "Ship v2.0", "priority": "P0", "scheduledDate": "2026-10-01", "estimatedMins": 120}'
+```
+StudyOS/
+├── apps/
+│   ├── api/            # Hono REST API, WebSocket server, OAuth 2.1, and hosted /mcp
+│   ├── web/            # React 19 + Vite web application and documentation portal
+│   ├── desktop/        # Tauri v2 Windows desktop application (Rust host)
+│   └── expo-mobile/    # Expo 54 / React Native 0.81 mobile application
+├── packages/
+│   ├── database/       # Drizzle ORM schemas, relationships, and PostgreSQL migrations
+│   ├── api-client/     # Universal TypeScript API client with offline mutation queue
+│   ├── types/          # Shared TypeScript domain models and validation schemas
+│   └── utils/          # Shared date, time-blocking, and formatting helpers
+├── mcp/                # Model Context Protocol stdio server with 17 academic tools
+└── scripts/            # Cross-platform build preparation, signing, and verification scripts
 ```
 
-Scopes: `tasks:read` `tasks:write` `time-blocks:read` `time-blocks:write` `ideas:read` `ideas:write` `user:read` `user:write`. See the [API reference](https://opensunsama.com/docs/api/authentication).
-
-<br />
-
-## 🚀 Get started
-
-**Cloud:** create an account at [opensunsama.com](https://opensunsama.com), then [connect your AI](#-connect-claude-or-chatgpt-in-30-seconds).
-
-> **StudyOS developers:** this repository is being transformed incrementally while preserving the inherited Open Sunsama foundation. Use the local workflow in [`docs/STUDYOS_DEVELOPMENT.md`](docs/STUDYOS_DEVELOPMENT.md); it does not require access to the upstream Railway project.
-
-**Self-host with Docker:**
-
-```bash
-git clone https://github.com/ShadowWalker2014/open-sunsama.git
-cd open-sunsama
-docker compose up -d --build   # PostgreSQL, Redis, API on :3001, web app on :3000
-```
-
-Open http://localhost:3000 and create your account. The API creates the database tables on start, and the MCP connector is at http://localhost:3001/mcp. The [self-hosting guide](https://opensunsama.com/docs/self-hosting/docker) covers running on a server with your own domain, optional integrations, and backups. The desktop and mobile apps connect only to opensunsama.com, so self-hosters use the web app.
-
-<details>
-<summary><b>Run from source</b></summary>
-
-<br />
-
-Prerequisites for StudyOS development: [Bun](https://bun.sh) 1.4.2 and Docker with Compose. The inherited upstream workflow can also use another PostgreSQL 15+ database by setting `DEV_DATABASE_URL` explicitly. S3-compatible storage is optional for file uploads.
-
-```bash
-git clone https://github.com/ShadowWalker2014/open-sunsama.git
-cd open-sunsama
-mise install
-bun install
-
-# StudyOS local PostgreSQL 16 on localhost:5431
-docker compose up -d postgres
-
-# API on :3001 and web app on :3000. Existing migrations apply on start;
-# Redis, email, background jobs and OAuth stay off.
-bun run dev:local
-```
-
-`DEV_DATABASE_URL` remains available as an explicit override. Authorized upstream maintainers can explicitly opt into the inherited Railway development database with `DEV_DATABASE_SOURCE=railway`; it is not selected automatically.
-
-To run with integrations turned on, copy `apps/api/.env.example` to `apps/api/.env`, fill it in, and use `bun run dev`.
-
-| Service | URL |
-| --- | --- |
-| Web app | http://localhost:3000 |
-| API | http://localhost:3001 |
-| MCP connector | http://localhost:3001/mcp |
-| Drizzle Studio | http://localhost:4983 |
-
-For calendar sync, follow the [Google Calendar setup guide](docs/calendar/google-calendar-setup.md).
-
-</details>
-
-<details>
-<summary><b>Seed a demo workspace</b></summary>
-
-<br />
-
-`scripts/readme-media/seed-demo.ts` fills an account with a realistic week (tasks, subtasks, time blocks, and ideas) through the REST API. It's the same data behind these screenshots:
-
-```bash
-DEMO_API_URL=http://localhost:3001 DEMO_PASSWORD='Choose-a-strong-1' bun run scripts/readme-media/seed-demo.ts
-```
-
-</details>
-
-<br />
-
-## 🏗️ Tech stack
+### Core Technologies
 
 | Layer | Technologies |
-| --- | --- |
-| **Frontend** | React 19, Vite, TanStack Router + Query, Tailwind CSS, Radix UI, Tiptap |
-| **Backend** | Hono 4, Drizzle ORM, PostgreSQL, PG Boss jobs, Zod, OAuth 2.1 authorization server |
-| **AI** | Model Context Protocol (Streamable HTTP + stdio), 24 annotated tools |
-| **Desktop / mobile** | Tauri 2, Expo |
-| **Infra** | Bun workspaces, Turborepo, Docker, Railway |
+| :--- | :--- |
+| **Monorepo & Package Management** | Bun 1.4.2 workspaces, Turborepo v2 |
+| **Backend & API** | Hono v4, Drizzle ORM, PostgreSQL 16, PG Boss background jobs, Zod |
+| **Web Frontend** | React 19, Vite 6, TanStack Query & Router, Tailwind CSS, Radix UI, Tiptap |
+| **Desktop App** | Tauri v2, Rust stable toolchain, NSIS bundler |
+| **Mobile App** | Expo 54, React Native 0.81.5 (Fabric / New Architecture), Reanimated 4 |
+| **AI & Tool Protocol** | Model Context Protocol (MCP), Multi-provider LLM router (Gemini, Claude, OpenAI, DeepSeek, Ollama) |
+| **Cryptography & Security** | AES-256-GCM encrypted credential vault, SHA-256 asset manifests, Row-Level Security (RLS) |
 
+---
+
+## 🚀 Getting Started (Local Development)
+
+### Prerequisites
+- **[Bun](https://bun.sh)** (v1.4.2 or higher)
+- **[Node.js](https://nodejs.org)** (v22 LTS recommended)
+- **[Docker & Docker Compose](https://www.docker.com)** (for local PostgreSQL)
+- **[Rust](https://rustup.rs)** (stable, required only for building Windows desktop)
+- **[Java 17](https://adoptium.net)** & Android SDK (required only for building Android)
+
+### Quick Start in 3 Steps
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/saishivasanjeethpaikarao-jpg/StudyOS.git
+   cd StudyOS
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   bun install --frozen-lockfile
+   ```
+
+3. **Start local database & development environment:**
+   ```bash
+   # Launch local PostgreSQL 16 on localhost:5431
+   docker compose up -d postgres
+
+   # Start API server (:3001) and Web application (:3000)
+   bun run dev:local
+   ```
+
+Open **`http://localhost:3000`** in your browser. The API server automatically applies database migrations on startup.
+
+| Service | Local Address | Description |
+| :--- | :--- | :--- |
+| **Web Application** | `http://localhost:3000` | Student planner interface |
+| **API Server** | `http://localhost:3001` | REST API and OAuth server |
+| **WebSocket Feed** | `ws://localhost:3001/ws` | Real-time cross-device sync feed |
+| **MCP Connector** | `http://localhost:3001/mcp` | Hosted AI Model Context Protocol endpoint |
+| **PostgreSQL Database** | `localhost:5431` | Local development database (StudyOS container) |
+
+---
+
+## 📦 Building Platform Packages
+
+### Build Web Application
+```bash
+bun run build --filter=@open-sunsama/web
+# Static output generated in: apps/web/dist
 ```
-open-sunsama/
-├── apps/
-│   ├── api/        # Hono REST API, OAuth server, and the /mcp endpoint
-│   ├── web/        # React + Vite app, docs, and marketing site
-│   ├── desktop/    # Tauri v2 desktop app
-│   └── mobile/     # Mobile apps
-├── packages/       # database (Drizzle), types, api-client, utils
-└── mcp/            # MCP tools + the npx stdio server
+
+### Build Windows Desktop Installer (.exe)
+```bash
+# Prepares web frontend and packages Tauri NSIS installer
+cd apps/desktop
+node scripts/prepare-frontend.mjs
+bunx tauri build --bundles nsis
+# Output located in: apps/desktop/src-tauri/target/release/bundle/nsis/
 ```
 
-<br />
+### Build Android Packages (APK & AAB)
+```bash
+cd apps/expo-mobile
+bunx expo export --platform android
+bunx expo prebuild --platform android --no-install
+node ../../scripts/prepare-android-build.mjs
+cd android
+./gradlew assembleRelease bundleRelease --no-daemon
+# APK output: apps/expo-mobile/android/app/build/outputs/apk/release/
+# AAB output: apps/expo-mobile/android/app/build/outputs/bundle/release/
+```
 
-## 🗺️ Roadmap
+---
 
-- [x] Daily planning board, priorities, subtasks, and rich notes
-- [x] Time-blocking calendar with day, 3-day, week, and month views
-- [x] Focus mode, routines (recurring tasks), and rollover
-- [x] Calendar sync: Google Calendar, Outlook, and iCloud
-- [x] Ideas boards and a ⌘K command palette
-- [x] Desktop and mobile apps
-- [x] MCP server (local stdio) and REST API with scoped keys
-- [x] **One-click Claude & ChatGPT connector** (hosted MCP + OAuth)
-- [ ] Team workspaces
-- [ ] Integrations (Linear, GitHub, Jira, Notion)
-- [ ] Analytics dashboard
-- [ ] AI auto-scheduling
+## 🚢 GitHub Actions Release Pipeline
 
-Have an idea? [Start a discussion](https://github.com/ShadowWalker2014/open-sunsama/discussions/new?category=ideas).
+StudyOS includes a unified CI/build/release pipeline located in [`.github/workflows/release.yml`](.github/workflows/release.yml).
 
-<br />
+### Strict Safety & Approval Gate
+- **No Tag-Push Publishing:** Git tag pushes do not trigger releases.
+- **Manual Trigger Only:** The release workflow can only be initiated via GitHub Actions **`workflow_dispatch`**.
+- **Default Approval Gate (`publish_release: false`):** Runs all validation gates, compiles Windows, Android, and Web packages, computes SHA-256 hashes, and uploads artifacts for QA review **without creating a public GitHub Release**.
+- **Official Publishing (`publish_release: true`):** Requires explicit approval. Strictly enforces production keystore signing, validates 5-workspace version synchronization, confirms 100% SHA-256 checksum concordance, and rejects any QA/debug-signed binaries.
+- **Strict ₹0/Month Cost Target:** Uses Linux runners (1x cost) for validation, Android build, and release assembly. The Windows runner (2x cost) is strictly isolated to desktop packaging, and costly macOS runners are excluded.
 
-## ❓ FAQ
+---
 
-<details>
-<summary><b>What is StudyOS?</b></summary>
-<br />
-An open-source daily planner and task manager inspired by Sunsama. You plan each day on a kanban board, time-block tasks on a calendar, and work through them in focus mode. It's also an MCP server, so AI assistants like Claude and ChatGPT can manage your tasks and schedule for you.
-</details>
+## 🗺️ Project Roadmap (Phases 0–9)
 
-<details>
-<summary><b>Is it an open-source Sunsama alternative?</b></summary>
-<br />
-Yes. It covers Sunsama's daily-planning loop (a kanban board, time blocking, focus mode, and calendar sync), the code is on GitHub, and you can self-host it. On top of that, any AI agent can run it over MCP. See <a href="#-license">License</a> for the terms.
-</details>
+StudyOS follows a fixed 10-phase roadmap:
 
-<details>
-<summary><b>How do I connect it to ChatGPT or Claude?</b></summary>
-<br />
-Add <code>https://api.opensunsama.com/mcp</code> as a custom connector in Claude, or as a plugin connection in ChatGPT's developer mode. Then sign in and click <b>Allow access</b>. Step-by-step guides: <a href="https://opensunsama.com/docs/mcp/claude">Claude</a> and <a href="https://opensunsama.com/docs/mcp/chatgpt">ChatGPT</a>.
-</details>
+- [x] **Phase 0 — Development Foundation:** Monorepo architecture, Bun workspaces, Docker development environment, and upstream provenance baseline.
+- [x] **Phase 1 — StudyOS Academic Foundation:** Academic data models, terms, subjects, assignments, priority tiers, and grading criteria.
+- [x] **Phase 2 — Study Planning Engine:** Exam countdowns, spaced review schedules, calendar time-blocking, and study block queues.
+- [x] **Phase 3 — Resources & Productivity:** Material linking, syllabus attachments, Tiptap study notes, focus mode, and streak tracking.
+- [x] **Phase 4 — Accounts & Cloud Sync:** Cross-platform sync engine, 4-tier revision cascade, and durable 409 conflict quarantine.
+- [x] **Phase 5 — Android Application:** Expo 54 / React Native 0.81 client, offline cache persistence, and AlarmManager notification scheduling.
+- [x] **Phase 6 — Windows Desktop Application:** Tauri v2 native shell, system tray daemon, global quick-add shortcut, and NSIS installer packaging.
+- [x] **Phase 7 — AI Study Planner:** Multi-provider AI router (Gemini, Claude, OpenAI, DeepSeek, Ollama), AES-256-GCM secret storage, and quiz generation.
+- [x] **Phase 8 — Integrations & Academic Agent:** Google Calendar export, Google Drive file ingestion, Telegram bot linking, and 17 academic MCP tools.
+- [x] **Phase 9 — Production Release:**
+  - [x] **Stage A:** Cross-platform ecosystem integration, sync conflict verification, and Docker line-ending normalization.
+  - [x] **Stage B:** Unified GitHub Actions release pipeline, production keystore signing enforcement, pre-publish invariant verifier, and repository presentation.
 
-<details>
-<summary><b>What is MCP?</b></summary>
-<br />
-The <a href="https://modelcontextprotocol.io">Model Context Protocol</a> is an open standard for connecting AI assistants to tools and data. The inherited MCP server gives assistants tools to read and update tasks, subtasks, and time blocks.
-</details>
+---
 
-<details>
-<summary><b>Can my AI delete my tasks without asking?</b></summary>
-<br />
-Destructive tools are annotated as such, so Claude and ChatGPT ask for confirmation before running them. You can revoke an assistant's access at any time under Settings → MCP.
-</details>
+## 🔒 Security & Privacy
 
-<details>
-<summary><b>Does it work with Cursor, VS Code, and Claude Code?</b></summary>
-<br />
-Yes. Use the one-click buttons above for Cursor and VS Code, or run <code>claude mcp add --transport http open-sunsama https://api.opensunsama.com/mcp</code> for Claude Code.
-</details>
+- **Row-Level Security & Access Control:** Remote PostgreSQL database access is strictly governed. Public PostgREST exposure is locked down with default-deny policies.
+- **Encrypted Secret Storage:** All third-party AI keys (Gemini, OpenAI, Anthropic) and calendar tokens are encrypted at rest using **AES-256-GCM**.
+- **No Telemetry / No Tracking:** StudyOS collects zero telemetry, zero analytics tracking, and zero behavioral telemetry. Your academic schedules and notes remain yours.
+- **Least-Privilege CI:** The GitHub Actions release workflow defaults to read-only permissions (`contents: read`), granting write permissions solely to the release job upon manual approval.
 
-<br />
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! [Open an issue](https://github.com/ShadowWalker2014/open-sunsama/issues), [start a discussion](https://github.com/ShadowWalker2014/open-sunsama/discussions), or send a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions from students, educators, and open-source developers are warmly welcomed!
 
-```bash
-git checkout -b feature/amazing-feature
-bun run dev && bun run typecheck && bun run lint
-git commit -m "feat: add amazing feature"
-```
+1. Fork the repository and create your feature branch:
+   ```bash
+   git checkout -b feature/my-enhancement
+   ```
+2. Verify quality gates before committing:
+   ```bash
+   bun run typecheck
+   bun run lint
+   bun run test
+   ```
+3. Commit with semantic commit messages:
+   ```bash
+   git commit -m "feat(assignments): add assignment reminder intervals"
+   ```
+4. Push to your branch and submit a Pull Request targeted at **`studyos-development`**.
 
-## 📄 License
+---
 
-StudyOS currently inherits Open Sunsama's custom **non-commercial license**. It covers personal, educational, non-profit, and open-source use, plus evaluation. Commercial use by for-profit companies requires an enterprise license. See [LICENSE](LICENSE) and [upstream provenance](docs/UPSTREAM_PROVENANCE.md). These files do not claim distribution rights that have not been established.
+## 📄 License & Upstream Provenance
+
+- **License:** StudyOS is distributed under a **Non-Commercial License** (Copyright © 2024–2026 Circo). It is free of charge for personal, educational, non-profit, and evaluation use. Commercial exploitation requires an enterprise license. See [`LICENSE`](LICENSE) for complete terms.
+- **Upstream Provenance:** StudyOS inherits its foundational task and calendar architecture from [Open Sunsama](https://github.com/ShadowWalker2014/open-sunsama) (commit `fecaf22e9391c6c5ff0ccfed01892b98aa20a45d`). Historical authorship and open-source contributions are preserved in Git history and documented in [`docs/UPSTREAM_PROVENANCE.md`](docs/UPSTREAM_PROVENANCE.md).
 
 <br />
 
 <div align="center">
 
-**If StudyOS helps you plan better days, please give the project a ⭐. It helps others find it.**
-
-[![Star on GitHub](https://img.shields.io/github/stars/ShadowWalker2014/open-sunsama?style=for-the-badge&logo=github&color=yellow)](https://github.com/ShadowWalker2014/open-sunsama/stargazers)
-
-<sub>Made by <a href="https://circo.so">Circo</a> · <a href="https://opensunsama.com">opensunsama.com</a></sub>
+**StudyOS — Built for students who want to study smarter, stay organized, and execute every day.**
 
 </div>
