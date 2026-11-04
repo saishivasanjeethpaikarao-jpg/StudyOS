@@ -100,14 +100,32 @@ export function useCreateTask() {
 /**
  * Update an existing task
  */
+function findTaskInCache(queryClient: ReturnType<typeof useQueryClient>, id: string): Task | undefined {
+  const detail = queryClient.getQueryData<Task>(taskKeys.detail(id));
+  if (detail) return detail;
+  const lists = queryClient.getQueriesData<Task[]>({ queryKey: taskKeys.lists() });
+  for (const [, list] of lists) {
+    const found = list?.find((t) => t.id === id);
+    if (found) return found;
+  }
+  return undefined;
+}
+
 export function useUpdateTask() {
   const queryClient = useQueryClient();
   const sync = useAccountSync();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateTaskInput }): Promise<Task> => {
-      const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
-      await sync.enqueueMutation({ entityType: 'task', operation: 'update', entityId: id, expectedRevision: current?.revision, payload: data as Record<string, unknown> });
+      let current = findTaskInCache(queryClient, id);
+      if (!current) {
+        const cached = await sync.getCached<Task>('tasks', id);
+        if (cached && !Array.isArray(cached)) current = cached;
+      }
+      if (!current || typeof current.revision !== 'number') {
+        throw new Error('Task must be loaded before editing offline');
+      }
+      await sync.enqueueMutation({ entityType: 'task', operation: 'update', entityId: id, expectedRevision: current.revision, payload: data as Record<string, unknown> });
       return { ...(current as Task), ...data, updatedAt: new Date(), revision: (current?.revision ?? 0) + 1 };
     },
     onSuccess: (updatedTask) => {
@@ -132,8 +150,15 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: async (id: string): Promise<string> => {
-      const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
-      await sync.enqueueMutation({ entityType: 'task', operation: 'delete', entityId: id, expectedRevision: current?.revision, payload: {} });
+      let current = findTaskInCache(queryClient, id);
+      if (!current) {
+        const cached = await sync.getCached<Task>('tasks', id);
+        if (cached && !Array.isArray(cached)) current = cached;
+      }
+      if (!current || typeof current.revision !== 'number') {
+        throw new Error('Task must be loaded before deleting offline');
+      }
+      await sync.enqueueMutation({ entityType: 'task', operation: 'delete', entityId: id, expectedRevision: current.revision, payload: {} });
       return id;
     },
     onSuccess: (deletedId) => {
@@ -161,10 +186,17 @@ export function useCompleteTask() {
 
   return useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }): Promise<Task> => {
-      const current = queryClient.getQueryData<Task>(taskKeys.detail(id));
+      let current = findTaskInCache(queryClient, id);
+      if (!current) {
+        const cached = await sync.getCached<Task>('tasks', id);
+        if (cached && !Array.isArray(cached)) current = cached;
+      }
+      if (!current || typeof current.revision !== 'number') {
+        throw new Error('Task must be loaded before completing offline');
+      }
       await sync.enqueueMutation({
         entityType: 'task', operation: 'update', entityId: id,
-        expectedRevision: current?.revision,
+        expectedRevision: current.revision,
         payload: { completedAt: completed ? new Date().toISOString() : null },
       });
       return { ...(current as Task), completedAt: completed ? new Date() : null, revision: (current?.revision ?? 0) + 1, updatedAt: new Date() };

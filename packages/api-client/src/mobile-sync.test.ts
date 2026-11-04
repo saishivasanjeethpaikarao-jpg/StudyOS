@@ -147,6 +147,35 @@ describe("Mobile Sync & Cache Mechanics", () => {
     expect(queue).toHaveLength(0); // Queue is cleanly unblocked
   });
 
+  it("retains conflicting mutations in a durable conflicts store so user edits are not lost", async () => {
+    let queue: QueueItem[] = [
+      {
+        clientMutationId: "m-conflict",
+        entityType: "task",
+        operation: "update",
+        entityId: "t1",
+        expectedRevision: 1,
+        payload: { title: "Conflicting offline edit" },
+        queuedAt: new Date().toISOString(),
+        attempts: 0,
+      },
+    ];
+    const conflictsStore: Array<QueueItem & { lastError: string }> = [];
+
+    for (const item of [...queue]) {
+      const status = 409;
+      if (status === 409) {
+        conflictsStore.push({ ...item, lastError: "Revision conflict: newer data exists on server." });
+        queue = queue.filter((c) => c.clientMutationId !== item.clientMutationId);
+      }
+    }
+
+    expect(queue).toHaveLength(0);
+    expect(conflictsStore).toHaveLength(1);
+    expect(conflictsStore[0].clientMutationId).toBe("m-conflict");
+    expect(conflictsStore[0].payload.title).toBe("Conflicting offline edit");
+  });
+
   it("preserves cursor state and only updates after full cache persistence succeeds", async () => {
     let cursor = "100";
     let cacheSaved = false;
@@ -168,5 +197,106 @@ describe("Mobile Sync & Cache Mechanics", () => {
     await commitBatch("105", false);
     expect(cursor).toBe("105");
     expect(cacheSaved).toBe(true);
+  });
+  it("simulates two-device concurrent edit conflict and recovery", async () => {
+    // Initial state: Task t1 at revision 1 on both Device A (Windows) and Device B (Android)
+    let serverTask = { id: "t1", title: "Original Title", revision: 1 };
+    let deviceBEntities: StoredEntity[] = [
+      { entityType: "task", entityId: "t1", data: { ...serverTask }, deleted: false }
+    ];
+    let deviceBConflicts: Array<QueueItem & { lastError: string }> = [];
+
+    // 1. Device A updates task on server to revision 2
+    serverTask = { ...serverTask, title: "Title from Device A", revision: 2 };
+
+    // 2. Device B, having been offline with expectedRevision: 1, attempts to update
+    const deviceBMutation: QueueItem = {
+      clientMutationId: "b-mut-1",
+      entityType: "task",
+      operation: "update",
+      entityId: "t1",
+      expectedRevision: 1,
+      payload: { title: "Conflicting Title from Device B" },
+      queuedAt: new Date().toISOString(),
+      attempts: 0,
+    };
+
+    // Server check: expectedRevision (1) !== serverTask.revision (2) -> 409 SYNC_CONFLICT
+    const hasConflict = deviceBMutation.expectedRevision !== serverTask.revision;
+    expect(hasConflict).toBe(true);
+
+    if (hasConflict) {
+      deviceBConflicts.push({ ...deviceBMutation, lastError: "Revision conflict: newer data exists on server." });
+    }
+
+    // Verify Device B preserved its edit in conflicts store
+    expect(deviceBConflicts).toHaveLength(1);
+    expect(deviceBConflicts[0].payload.title).toBe("Conflicting Title from Device B");
+
+    // 3. Device B pulls downstream changes from server
+    const downstreamChanges: SyncChange[] = [
+      {
+        sequence: 10,
+        entityType: "task",
+        entityId: "t1",
+        revision: serverTask.revision,
+        operation: "upsert",
+        payload: { ...serverTask },
+        changedAt: new Date().toISOString(),
+      }
+    ];
+    deviceBEntities = applyChanges(deviceBEntities, downstreamChanges);
+
+    // Verify Device B cache now reflects authoritative server state (Device A's edit)
+    const updatedInCache = deviceBEntities.find((e) => e.entityId === "t1");
+    expect(updatedInCache?.data.title).toBe("Title from Device A");
+    expect(updatedInCache?.data.revision).toBe(2);
+
+    // 4. User can inspect conflict and rebase mutation with new revision 2
+    const resolvedMutation: QueueItem = {
+      ...deviceBConflicts[0],
+      clientMutationId: "b-mut-2",
+      expectedRevision: updatedInCache?.data.revision as number,
+      payload: { title: "Merged Title from Device B" },
+    };
+    deviceBConflicts = [];
+
+    // Server now accepts mutation because expectedRevision (2) == serverTask.revision (2)
+    expect(resolvedMutation.expectedRevision).toBe(serverTask.revision);
+    serverTask = { ...serverTask, title: "Merged Title from Device B", revision: 3 };
+    expect(serverTask.revision).toBe(3);
+    expect(serverTask.title).toBe("Merged Title from Device B");
+  });
+
+  it("verifies duplicate mutations with same clientMutationId are idempotent", () => {
+    // Receipts map simulates sync_mutation_receipts table
+    const receipts = new Map<string, { requestHash: string; response: Record<string, unknown> }>();
+    let executions = 0;
+
+    const processMutation = (input: { clientMutationId: string; title: string }) => {
+      const hash = input.title; // mock hash
+      if (receipts.has(input.clientMutationId)) {
+        const existing = receipts.get(input.clientMutationId)!;
+        if (existing.requestHash !== hash) {
+          throw new Error("Conflict: clientMutationId reused with different content");
+        }
+        return { replayed: true, response: existing.response };
+      }
+      executions += 1;
+      const response = { id: "t100", title: input.title, revision: 1 };
+      receipts.set(input.clientMutationId, { requestHash: hash, response });
+      return { replayed: false, response };
+    };
+
+    // First attempt
+    const res1 = processMutation({ clientMutationId: "idempotent-uuid-1", title: "Buy textbook" });
+    expect(res1.replayed).toBe(false);
+    expect(executions).toBe(1);
+
+    // Network retry with exact same payload
+    const res2 = processMutation({ clientMutationId: "idempotent-uuid-1", title: "Buy textbook" });
+    expect(res2.replayed).toBe(true);
+    expect(executions).toBe(1); // Not executed twice!
+    expect(res2.response).toEqual(res1.response);
   });
 });

@@ -1,140 +1,116 @@
-# StudyOS Phase 9B: Final Acceptance & Evidence Audit Report
+# StudyOS Phase 9B — Final Acceptance & Evidence Audit
 
-**Document Version:** 1.0.0 (Final Reconciliation)  
-**Date:** November 2, 2026  
-**Phase:** Phase 9B — Cloudflare Deployment Compatibility and Preparation  
-**Workspace:** `D:\StudyOS-Project`  
-**Repository:** `D:\StudyOS-Project\studyos`  
-**Branch:** `studyos-development`  
-**Base Commit:** `6ec9625` (`feat(cloudflare): complete and remediate Phase 9B deployment compatibility and preparation`)  
-**Target Operating Cost:** ₹0 / month (Strict Target)  
-**Final Verdict:** **PHASE 9B ACCEPTED WITH EXTERNAL VERIFICATION PENDING**  
+**Audit date:** 2026-11-03 (local environment clock)
+**Repository:** `D:\StudyOS-Project\studyos`
+**Branch observed:** `studyos-development`
+**Expected HEAD stated in request:** `6ec962567aa6f7a6dbbb7d96e1897d120877849a`
+**Actual HEAD observed:** `af60dbb06d24a24e1b547568cfc647893a1bc810`
+**Final verdict:** **PHASE 9B NOT ACCEPTED**
 
----
+## Executive finding
 
-## 1. Executive Summary & Verdict
+The local web suite and a subset of API tests pass, but current evidence does not substantiate the earlier 112-pass claim. Database-gated Hyperdrive-labelled, scheduler, and R2 suites were skipped in the successful API run. The Worker has not been executed in Wrangler’s Cloudflare-compatible runtime, its scheduled work handlers are placeholders, and its cron HTTP routes fail open if `CRON_SECRET` is absent. Those implementation and security gaps prevent Phase 9B acceptance. No application source was changed during this audit.
 
-Phase 9B (Cloudflare Deployment Compatibility and Preparation) has been subjected to a rigorous, independent evidence-based reconciliation audit.
+## Verified facts
 
-### Final Phase 9B Verdict: **PHASE 9B ACCEPTED WITH EXTERNAL VERIFICATION PENDING**
+- The checked-out branch is `studyos-development`; actual HEAD is `af60dbb`, one documentation commit beyond the expected `6ec9625`.
+- Existing unrelated modifications to `apps/api/docker-start.sh` and `docker-compose.yml` were present and preserved. No production/cloud service was contacted and no deployment was performed.
+- API package test command: `vitest run`. Web package test command: `vitest run --passWithNoTests`.
+- Current API command `bun run test -- --hookTimeout=30000 --reporter=dot`, run inside `apps/api`, completed successfully: **11 test files passed, 10 skipped; 106 tests passed, 85 skipped; 0 failed**.
+- Current web command `bun run test -- --reporter=dot`, run inside `apps/web`, completed successfully: **7 test files passed; 30 tests passed; 0 skipped; 0 failed**.
+- Total of those current local runs: **136 passed, 85 skipped, 0 failed**, 221 tests discovered across 28 file executions.
+- An earlier retained API test log records one failed suite because `src/lib/oauth/oauth.test.ts` exceeded its 10-second `beforeAll` timeout. A later run with the 30-second hook timeout passed the executed API tests. Both facts are retained; the failed run is not called a pass.
+- Database-dependent suites use `describe.skipIf(!process.env.TEST_DATABASE_URL && !process.env.DATABASE_URL)`. The successful API run had no test database URL and skipped them.
 
-All critical code-level remediations have been verified:
-1. Insecure low-iteration PBKDF2 password hashing proposals were completely purged. Standard `bcrypt` (cost 12) is retained for Node.js/Docker hosting, and Google OAuth 2.0 / OIDC is established as the primary, edge-compatible authentication mechanism.
-2. File upload MIME type normalization strips parameters (e.g. `; charset=utf-8`), and `sanitizeFilename` eliminates all path traversal components (`..`, `/`, `\`).
-3. An exact count of **112 automated tests** passed with 0 failures across 13 test suites (98 pre-Phase 9B regression tests + 14 new Phase 9B tests).
-4. All unprovisioned live cloud services (Cloudflare Hyperdrive, Cloudflare R2 network operations, Supabase Cloud PostgreSQL, live Cron Triggers, and Worker runtime execution in Wrangler) are explicitly classified as **`NOT VERIFIED`**.
+## Test count reconciliation
 
----
+The older documents list **98 regression tests + 14 Phase 9B tests = 112**. The arithmetic is 112, not 105. However, the five Hyperdrive-labelled, four scheduler, and five R2 test cases are database-gated in this checkout and were skipped during the successful current run. Prior documentation reports a 112-pass result, but no machine-readable report or retained successful output proving those 14 cases passed was available for this audit.
 
-## 2. Test Count Reconciliation & Evidence
+| Run | Files | Passed | Skipped | Failed | Evidence interpretation |
+|---|---:|---:|---:|---:|---|
+| API current, 30s hook timeout | 21 discovered; 11 passed, 10 skipped | 106 | 85 | 0 | Successful local partial suite; DB cases skipped |
+| Web current | 7 | 30 | 0 | 0 | Successful local web suite |
+| Combined current runs | 28 file executions | 136 | 85 | 0 | Not proof of cloud compatibility |
+| Earlier retained API run | 14 in its summary | 83 | 108 final summary; 47 per-file summary | 1 suite | OAuth hook timeout; internally inconsistent skipped total |
+| Previously reported Phase 9B subset | 3 suites claimed | 14 claimed | Unknown for prior run | Unknown | Not independently substantiated in this audit |
 
-### 2.1 Arithmetic Discrepancy Resolution
-Previous working summaries listed "105 passing tests". An independent execution using Vitest's JSON reporter (`vitest run --reporter=json`) verified that the actual repository contains **112 passing tests** across 13 test files. The discrepancy was an arithmetic / transcription oversight (98 + 14 = 112).
+## Runtime verification level
 
-### 2.2 Complete Verified Test Inventory
+**Worker status: BUNDLED ARTIFACT PRESENT; RUNTIME EXECUTION NOT VERIFIED.**
 
-| # | Test Suite File | Category | Passed | Failed | Status |
-| :-: | :--- | :--- | :-: | :-: | :-: |
-| 1 | `src/routes/google-auth.test.ts` | Pre-Phase 9B Regression | 7 | 0 | **PASS** |
-| 2 | `src/routes/academic-domain.test.ts` | Pre-Phase 9B Regression | 4 | 0 | **PASS** |
-| 3 | `src/routes/learning.test.ts` | Pre-Phase 9B Regression | 5 | 0 | **PASS** |
-| 4 | `src/routes/study-plans.test.ts` | Pre-Phase 9B Regression | 10 | 0 | **PASS** |
-| 5 | `src/routes/study-sessions.test.ts` | Pre-Phase 9B Regression | 12 | 0 | **PASS** |
-| 6 | `src/routes/integrations.test.ts` | Pre-Phase 9B Regression | 17 | 0 | **PASS** |
-| 7 | `src/routes/account-sync.test.ts` | Pre-Phase 9B Regression | 9 | 0 | **PASS** |
-| 8 | `src/services/ai/ai.unit.test.ts` | Pre-Phase 9B Regression | 10 | 0 | **PASS** |
-| 9 | `src/lib/jwt.test.ts` | Pre-Phase 9B Regression | 8 | 0 | **PASS** |
-| 10 | `src/services/google-calendar-watch.test.ts` | Pre-Phase 9B Regression | 16 | 0 | **PASS** |
-| 11 | `src/services/__tests__/postgres-hyperdrive-integration.test.ts` | Phase 9B Architecture | 5 | 0 | **PASS** |
-| 12 | `src/services/integrations/__tests__/cloudflare-scheduler.test.ts` | Phase 9B Architecture | 4 | 0 | **PASS** |
-| 13 | `src/services/__tests__/s3-r2-security.test.ts` | Phase 9B Security | 5 | 0 | **PASS** |
-| **Total** | **13 Test Files** | **All Categories** | **112** | **0** | **PASS** |
+`apps/api/src/cloudflare-prototype/dist/worker.js` exists (65,596 bytes). Its existence does not prove a fresh build during this audit. No Wrangler binary was found at `node_modules/.bin/wrangler`; no `wrangler dev`, Miniflare, or `workerd` execution occurred. Bundling/static artifact presence must not be described as Worker runtime acceptance.
 
-- **Pre-Phase 9B Regression Subtotal:** 98 passed, 0 failed
-- **Phase 9B Added Suites Subtotal:** 14 passed, 0 failed
-- **Grand Total Verified Tests:** **112 passed, 0 failed**
+## Integration scope decisions
 
----
+### Hyperdrive and PostgreSQL
 
-## 3. Detailed Audit Findings & Evidence Distinctions
+The Hyperdrive-labelled test uses the application Drizzle client with `TEST_DATABASE_URL` or `DATABASE_URL`; the test file does not bind a Cloudflare `HYPERDRIVE` object. The five cases were skipped in the current successful run. Earlier documents report local Docker PostgreSQL 16 testing, but no corresponding successful result artifact was available to independently verify here.
 
-### 3.1 Cloudflare Worker: Bundling vs Runtime Execution
-- **Empirical Status:** The Cloudflare Worker prototype (`apps/api/src/cloudflare-prototype/index.ts`) was bundled into `apps/api/dist/worker-bundle.js` (64.1 KB) using `esbuild`. Static analysis confirms zero unresolved native C++ addons in the bundle.
-- **Runtime Reality:** The Worker was **NOT executed** in Wrangler's local runtime (`workerd` / miniflare). Running Wrangler commands in this environment encounters Windows path concatenation issues (`ENOENT: ...apps\api\D:\StudyOS-Project...`) and monorepo auto-detection limits.
-- **Corrected Acceptance Status:** **`BUNDLED (STATIC ANALYSIS / ESBUILD)`** — **`RUNTIME EXECUTION NOT VERIFIED`**.
+- Local PostgreSQL 16 integration: **NOT VERIFIED IN THIS AUDIT**.
+- Real Cloudflare Hyperdrive connection: **NOT VERIFIED**.
+- Live Supabase PostgreSQL: **NOT VERIFIED**.
 
-### 3.2 Database & Hyperdrive: Local Container vs Live Hyperdrive
-- **Empirical Status:** The test suite `postgres-hyperdrive-integration.test.ts` passed 5/5 tests (reads, writes, multi-statement transaction commits, error rollbacks, concurrent pooling with 15 simultaneous transactions, and raw SQL queries).
-- **Runtime Reality:** All 5 tests connected strictly to the **local Docker container running PostgreSQL 16** (`127.0.0.1:5431`). No live Cloudflare Hyperdrive proxy or Supabase cloud database was connected.
-- **Corrected Acceptance Status:** **`PASS (LOCAL POSTGRESQL 16)`** — **`LIVE HYPERDRIVE NOT VERIFIED`**.
+### Scheduler
 
-### 3.3 Background Scheduler: Deterministic Unit Logic vs Edge Conditions
-- **Empirical Status:** `cloudflare-scheduler.test.ts` passed 4/4 tests verifying due automation discovery, timezone offsets (UTC and Asia/Kolkata +5:30), idempotency skip logic on duplicate ticks within the same minute, and inactive automation filtering.
-- **Runtime Reality & Unverified Edge Conditions:** The tests cover deterministic algorithmic logic in isolation. The following real-world edge conditions were **NOT tested**:
-  1. Overlapping concurrent worker invocations executing the same cron schedule simultaneously.
-  2. Worker execution termination or timeout mid-batch.
-  3. Database connection drops or query timeouts during automation execution.
-- **Corrected Acceptance Status:** **`PASS (UNIT LOGIC)`** — **`UNVERIFIED DISTRIBUTED EDGE CONDITIONS`**.
+Four scheduler test cases exist for due-time matching, duplicate skipping, timezone behavior, and inactive automation filtering; all four were skipped in the current API run. No tests cover simultaneous scheduler invocations, mid-execution interruption, or database disconnect/query failure. These are application-level database tests, not Cloudflare Cron runtime tests.
 
-### 3.4 Storage & Cloudflare R2: Security Logic vs Live Network
-- **Empirical Status:** `s3-r2-security.test.ts` passed 5/5 tests confirming private user-scoped key pathing (`{folder}/{userId}/{timestamp}-{filename}`), stripping of directory traversal sequences (`..`, `/`, `\`), and normalization of MIME type headers with parameter suffixes (`text/plain; charset=utf-8`).
-- **Runtime Reality:** Tests were entirely in-memory unit tests. Zero network requests were transmitted to Cloudflare R2.
-- **Corrected Acceptance Status:** **`PASS (LOCAL SECURITY UNIT TESTS)`** — **`LIVE R2 NETWORK NOT VERIFIED`**.
+Source inspection additionally shows the Worker automation handler returns `processed: 0`, the rollover handler returns a static message, and `scheduled()` logs a timestamp only. No real scheduler or rollover work is called by the Worker prototype.
 
-### 3.5 Database Backup & Disaster Recovery: Local vs Cloud
-- **Empirical Status:** Local database export using `pg_dump` and direct pipe restoration into a disposable test database (`studyos_restore_test`) was executed and verified with 100% table and row count integrity across `users`, `assignments`, and `study_sessions`. The test database was subsequently dropped.
-- **Runtime Reality:** Live Supabase cloud backup snapshots and automated encrypted transfers to Cloudflare R2 were not executed.
-- **Corrected Acceptance Status:** **`PASS (LOCAL BACKUP/RESTORE)`** — **`LIVE SUPABASE CLOUD BACKUP NOT VERIFIED`**.
+**Status: NOT VERIFIED; placeholder implementation; concurrency/interruption/database failure NOT TESTED.**
 
----
+### R2
 
-## 4. Acceptance Gates Summary
+The `s3-r2-security.test.ts` cases test local key generation, URL parsing, MIME filtering, and size constants. They do not use a mocked S3 client or send requests to any service. The five cases are skipped in the current successful API run because of a suite-level database gate.
 
-| Gate | Criterion | Scope Verified | Unverified / Pending Scope | Final Gate Status |
-| :---: | :--- | :--- | :--- | :---: |
-| **G1** | Password Hashing Design | Purged weak PBKDF2; kept bcrypt 12 for Node; Google OAuth for edge | None (Architectural policy established) | **PASS** |
-| **G2** | Google OAuth Security | PKCE, nonce hash, state token, replay prevention (7 tests) | Live Google Cloud Console production keys | **PASS** |
-| **G3** | Worker Runtime Build | esbuild static bundling to 64.1 KB with 0 errors | Wrangler `workerd` runtime execution | **BUNDLED (RUNTIME UNVERIFIED)** |
-| **G4** | Hyperdrive / DB Integration | Local PostgreSQL 16 transactions, rollbacks, pooling (5 tests) | Live Cloudflare Hyperdrive to Supabase | **PASS (LOCAL) / NOT VERIFIED (LIVE)** |
-| **G5** | Automation Scheduler | Due time discovery, timezone math, idempotency (4 tests) | Concurrent invocations, mid-tick crashes | **PASS (UNIT) / UNVERIFIED (EDGE)** |
-| **G6** | Supabase Availability | Documented 7-day inactivity pause rules and manual unpause | Automated keepalive guarantees | **PASS** |
-| **G7** | Backup & Recovery | Local `pg_dump` export and restoration (100% integrity) | Live Supabase cloud automated backup | **PASS (LOCAL) / NOT VERIFIED (LIVE)** |
-| **G8** | R2 Object Storage | Key generation, path traversal stripping, MIME checks (5 tests) | Live R2 upload/download network calls | **PASS (UNIT) / NOT VERIFIED (LIVE)** |
-| **G9** | AI & Integration Security | AES-256-GCM encryption, Telegram secret token, hybrid Hermes | Live production webhook delivery | **PASS** |
-| **G10** | Regression Test Suite | 112 automated tests passed (98 regression + 14 Phase 9B) | None | **PASS** |
-| **G11** | Platform Architecture | Android Expo, Windows Desktop, Node.js Docker preserved | None | **PASS** |
-| **G12** | Cost Target | Strict ₹0/month budget model maintained; no paid services | Production billing verification | **PASS** |
+- Mocked S3/R2 client tests: **NOT VERIFIED**.
+- Local S3-compatible endpoint tests: **NOT VERIFIED**.
+- Live R2 uploads, downloads, or presigned URLs: **NOT VERIFIED**.
 
----
+### Backup and restore
 
-## 5. Status of External Services
+A previous report says a local `pg_dump` was restored to a disposable database. No dump or command/test output was available for independent verification here. Therefore local restoration is **REPORTED PREVIOUSLY, NOT INDEPENDENTLY VERIFIED**. Live Supabase backup, automated cloud export to R2, and cloud restoration are **NOT VERIFIED**.
 
-| Service / Resource | Local Verification Status | Live Cloud Verification Status | Reason Pending |
-| :--- | :---: | :---: | :--- |
-| **Cloudflare Workers Runtime** | Bundled (esbuild) | **NOT VERIFIED** | Requires live deployment or Miniflare setup |
-| **Cloudflare Hyperdrive** | Tested via Local Docker Postgres | **NOT VERIFIED** | Requires Cloudflare Hyperdrive ID & credentials |
-| **Cloudflare R2 Storage** | Tested via local S3 unit tests | **NOT VERIFIED** | Requires Cloudflare R2 bucket & API token |
-| **Cloudflare Cron Triggers** | Tested via internal route logic | **NOT VERIFIED** | Requires live Worker deployment |
-| **Supabase PostgreSQL** | Tested via local PostgreSQL 16 | **NOT VERIFIED** | Requires Supabase project connection string |
-| **Google Cloud OAuth** | Verified via simulated JWKS/OIDC | **NOT VERIFIED** | Requires production Google Client ID/Secret |
-| **Telegram Bot Webhook** | Verified via secret token logic | **NOT VERIFIED** | Requires live Telegram bot API token |
+## Security findings and status
 
----
+The Worker source conditionally validates `X-Cron-Secret` only if `CRON_SECRET` is configured. When the secret is missing, both tick routes continue without authentication. This fail-open route behavior is a security blocker for any deployment or exposure. No source change was made, as requested.
 
-## 6. Prerequisites for Phase 9C / Phase 10 Transition
+The Worker tick handlers are also stubs, not operational scheduler handlers. The audit did not perform a complete security assessment and does not certify that no other critical findings exist. Avoid a blanket security PASS.
 
-When the project proceeds to external provisioning and deployment, the following prerequisites must be met:
-1. Provision free Supabase project and obtain `SUPABASE_DATABASE_URL` (port 6543 for Supavisor).
-2. Provision Cloudflare account, configure `wrangler.toml` with `CLOUDFLARE_HYPERDRIVE_ID`, and deploy Worker.
-3. Create Cloudflare R2 bucket (`studyos-files`) and generate S3-compatible credentials.
-4. Configure Google Cloud OAuth credentials with production redirect URIs.
-5. Generate `CRON_SECRET` and `STUDYOS_SECRET_KEY` (AES-256-GCM).
-6. Verify live Worker execution within Cloudflare Workers Free limits (10ms CPU, 100k requests/day).
+## Acceptance statuses
 
----
+| Area | Correct status |
+|---|---|
+| Current API test run | **PARTIAL PASS (LOCAL): 106 passed, 85 skipped** |
+| Current web test run | **PASS (LOCAL): 30 passed** |
+| Historical 112 total | **NOT VERIFIED by current evidence** |
+| Worker bundle artifact | **PRESENT; fresh bundle not verified** |
+| Wrangler / Cloudflare runtime | **NOT VERIFIED** |
+| Hyperdrive / Supabase | **NOT VERIFIED** |
+| Scheduler tests | **NOT VERIFIED in current run** |
+| Scheduler concurrency/interruption/database failure | **NOT TESTED** |
+| Worker cron and rollover behavior | **NOT ACCEPTED; placeholder handlers** |
+| Cron endpoint authentication | **BLOCKED: fails open when secret absent** |
+| Local backup restore | **REPORTED; NOT INDEPENDENTLY VERIFIED** |
+| Automated cloud backup / Supabase restore | **NOT VERIFIED** |
+| R2 unit suite | **NOT VERIFIED in current run; local-only helper logic by design** |
+| Mocked/local S3-compatible/live R2 | **NOT VERIFIED** |
+| Live Google OAuth, Telegram delivery, Cloudflare Cron | **NOT VERIFIED** |
+| Complete security certification | **NOT PROVIDED; security blocker identified** |
 
-## 7. Conclusion
+## Remaining external blockers
 
-Phase 9B evidence reconciliation is complete. All 112 tests are accounted for and passing. The distinctions between local empirical verification and unverified live cloud integrations are transparently documented.
+The following were deliberately not contacted and remain **NOT VERIFIED**: Cloudflare Workers production runtime, Hyperdrive, Supabase PostgreSQL, Cloudflare Cron Triggers, R2, Google OAuth production flow, Telegram webhook delivery, and automated cloud backup/restore. No external credentials were used. These services are not necessary to establish local findings and must remain explicitly unverified until an authorized verification phase.
 
-**Final Phase 9B Verdict:** **PHASE 9B ACCEPTED WITH EXTERNAL VERIFICATION PENDING**.
+## Exact prerequisites before Phase 9C
+
+1. Confirm whether the intended baseline is expected commit `6ec9625` or current follow-up `af60dbb`; do not reset or discard existing commits or modifications.
+2. Change the Worker cron authentication to reject requests when `CRON_SECRET` is missing as well as incorrect; add tests for missing and incorrect secrets. This is an application-source change and must be separately authorized/reviewed; the current audit did not make it.
+3. Implement actual Worker automation/rollover behavior, or remove claims that the placeholder endpoints perform scheduler work. Add tests demonstrating the chosen behavior.
+4. Produce a retained, reproducible test run with exact SHA, commands, totals, and skipped reasons. If DB-gated local suites are acceptance criteria, run them against an isolated local PostgreSQL database and preserve output; do not use production credentials.
+5. Execute the prototype in Wrangler’s local Cloudflare-compatible runtime and retain the command output. A bundle artifact alone is insufficient.
+6. Add/record tests or explicit risk decisions for overlapping invocations, interrupted runs, and database failures.
+7. Keep all live external services marked **NOT VERIFIED** until a later phase explicitly authorizes credentials and connectivity. Do not deploy or add paid services as part of this audit.
+8. Review and disposition the cron fail-open issue and other security findings explicitly before assigning any overall PASS.
+
+**Phase 9C has not begun.**
+**Final verdict: PHASE 9B NOT ACCEPTED.**

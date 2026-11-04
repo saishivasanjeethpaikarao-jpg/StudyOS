@@ -46,8 +46,15 @@ export function useUpdateSubject() {
   const sync = useAccountSync();
   return useMutation({
     mutationFn: async ({ id, input }: { id: string; input: UpdateSubjectInput }) => {
-      const subject = queryClient.getQueryData<Subject[]>(subjectKeys.list())?.find((item) => item.id === id);
-      await sync.enqueueMutation({ entityType: 'subject', operation: 'update', entityId: id, expectedRevision: subject?.revision, payload: input as Record<string, unknown> });
+      let subject = queryClient.getQueryData<Subject[]>(subjectKeys.list())?.find((item) => item.id === id);
+      if (!subject) {
+        const cached = await sync.getCached<Subject>('subjects', id);
+        if (cached && !Array.isArray(cached)) subject = cached;
+      }
+      if (!subject || typeof subject.revision !== 'number') {
+        throw new Error('Subject must be loaded before editing offline');
+      }
+      await sync.enqueueMutation({ entityType: 'subject', operation: 'update', entityId: id, expectedRevision: subject.revision, payload: input as Record<string, unknown> });
       return { ...subject, ...input, revision: (subject?.revision ?? 0) + 1, updatedAt: new Date() } as Subject;
     },
     onSuccess: () => { void queryClient.invalidateQueries({ queryKey: subjectKeys.all }); },
@@ -87,8 +94,22 @@ export function useUpdateAssignment() {
   const sync = useAccountSync();
   return useMutation({
     mutationFn: async ({ id, input }: { id: string; input: UpdateAssignmentInput }) => {
-      const assignment = queryClient.getQueryData<Assignment>(assignmentKeys.detail(id));
-      await sync.enqueueMutation({ entityType: 'assignment', operation: 'update', entityId: id, expectedRevision: assignment?.revision, payload: input as Record<string, unknown> });
+      let assignment = queryClient.getQueryData<Assignment>(assignmentKeys.detail(id));
+      if (!assignment) {
+        const lists = queryClient.getQueriesData<Assignment[]>({ queryKey: assignmentKeys.all });
+        for (const [, list] of lists) {
+          const found = list?.find((a) => a.id === id);
+          if (found) { assignment = found; break; }
+        }
+      }
+      if (!assignment) {
+        const cached = await sync.getCached<Assignment>('assignments', id);
+        if (cached && !Array.isArray(cached)) assignment = cached;
+      }
+      if (!assignment || typeof assignment.revision !== 'number') {
+        throw new Error('Assignment must be loaded before editing offline');
+      }
+      await sync.enqueueMutation({ entityType: 'assignment', operation: 'update', entityId: id, expectedRevision: assignment.revision, payload: input as Record<string, unknown> });
       return { ...assignment, ...input, dueAt: input.dueAt ? new Date(input.dueAt) : assignment?.dueAt, revision: (assignment?.revision ?? 0) + 1, updatedAt: new Date() } as Assignment;
     },
     onSuccess: (assignment) => {

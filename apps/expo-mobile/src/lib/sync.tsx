@@ -118,8 +118,10 @@ export function AccountSyncProvider({ children }: { children: React.ReactNode })
           const status = (error as { status?: number }).status;
           if (status === 409) {
             conflicts += 1;
-            // The server has newer revision. Remove the conflicting mutation so the queue is not blocked,
-            // and let the downstream change-feed fetch the server's authoritative version.
+            // The server has a newer revision. Preserve the conflicting mutation in a durable conflicts store
+            // so student offline work is never lost, while unblocking subsequent items in the active queue.
+            const existingConflicts = await readJson<QueueItem[]>(key(user.id, 'conflicts'), []);
+            await writeJson(key(user.id, 'conflicts'), [...existingConflicts, { ...item, lastError: 'Revision conflict: newer data exists on server.' }]);
             queue = queue.filter((candidate) => candidate.clientMutationId !== item.clientMutationId);
             await writeJson(key(user.id, 'queue'), queue);
             continue;
