@@ -1,0 +1,412 @@
+name: StudyOS Unified Release Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Explicit approval to publish production release to GitHub Releases (false = dry-run QA build only)'
+        type: boolean
+        required: true
+        default: false
+      version_override:
+        description: 'Optional version override (e.g. 1.0.17; defaults to root package.json)'
+        type: string
+        required: false
+        default: ''
+      release_draft:
+        description: 'Create release as a draft'
+        type: boolean
+        required: false
+        default: false
+      release_prerelease:
+        description: 'Mark release as pre-release'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: release-${{ github.event.inputs.version_override || github.ref }}
+  cancel-in-progress: false
+
+# Least-privilege top-level permission: Read-only access by default
+permissions:
+  contents: read
+
+env:
+  BUN_VERSION: "1.4.2"
+  NODE_VERSION: "22"
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  # ============================================================================
+  # JOB 1: VALIDATE (Quality Gates, Web App Build, Backend Tests)
+  # Runs on Ubuntu to minimize runner minutes (1x cost).
+  # ============================================================================
+  validate:
+    name: Validate Ecosystem & Build Web
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Resolve Release Version
+        id: version
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.version_override }}" ]; then
+            VERSION="${{ inputs.version_override }}"
+          else
+            VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install Monorepo Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Ecosystem Typecheck
+        run: bun run typecheck
+
+      - name: Ecosystem Lint
+        run: bun run lint
+
+      - name: Unit Tests
+        run: bun run test
+
+      - name: Build Web Application & API
+        run: bunx turbo run build --filter='!@open-sunsama/desktop' --filter='!@open-sunsama/mobile' --filter='!@open-sunsama/expo-mobile'
+
+      - name: Package Web Distribution
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p web-dist
+          cd apps/web/dist
+          zip -r "../../web-dist/StudyOS_${VERSION}_web.zip" .
+          cd ../../..
+
+      - name: Upload Web Distribution Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-distribution
+          path: web-dist/*
+          retention-days: 7
+
+  # ============================================================================
+  # JOB 2: BUILD ANDROID (Universal APK + Android App Bundle)
+  # Runs on Ubuntu to minimize runner minutes (1x cost).
+  # ============================================================================
+  build-android:
+    name: Build Android Packages (APK & AAB)
+    needs: [validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Setup Gradle Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Install Monorepo Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Export Expo Android Bundle
+        working-directory: apps/expo-mobile
+        run: bunx expo export --platform android
+
+      - name: Generate Native Android Project
+        working-directory: apps/expo-mobile
+        run: bunx expo prebuild --platform android --no-install
+
+      - name: Prepare Android Build & Configure Signing
+        env:
+          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          STUDYOS_KEYSTORE_BASE64: ${{ secrets.STUDYOS_KEYSTORE_BASE64 }}
+          STUDYOS_KEYSTORE_PASSWORD: ${{ secrets.STUDYOS_KEYSTORE_PASSWORD }}
+          STUDYOS_KEY_ALIAS: ${{ secrets.STUDYOS_KEY_ALIAS }}
+          STUDYOS_KEY_PASSWORD: ${{ secrets.STUDYOS_KEY_PASSWORD }}
+        run: node scripts/prepare-android-build.mjs
+
+      - name: Build Android Release APK and Bundle (AAB)
+        working-directory: apps/expo-mobile/android
+        run: ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
+
+      - name: Stage Android Release Packages
+        shell: bash
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          mkdir -p android-dist
+          
+          # Inspect signing status provenance
+          STATUS_FILE="apps/expo-mobile/android/signing-status.json"
+          IS_PROD_SIGNED=false
+          if [ -f "$STATUS_FILE" ]; then
+            cp "$STATUS_FILE" "android-dist/signing-status.json"
+            if grep -q '"isProductionSigned": true' "$STATUS_FILE"; then
+              IS_PROD_SIGNED=true
+            fi
+          fi
+
+          echo "Android production signed: $IS_PROD_SIGNED"
+
+          # Stage APK with strict labelling
+          APK_PATH=$(find apps/expo-mobile/android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -n "$APK_PATH" ] && [ -f "$APK_PATH" ]; then
+            if [ "$IS_PROD_SIGNED" = "true" ]; then
+              echo "Staging production-signed APK: StudyOS_${VERSION}.apk"
+              cp "$APK_PATH" "android-dist/StudyOS_${VERSION}.apk"
+            else
+              echo "Staging QA debug-signed APK: StudyOS_${VERSION}_qa-debug.apk"
+              cp "$APK_PATH" "android-dist/StudyOS_${VERSION}_qa-debug.apk"
+            fi
+          else
+            echo "::error::Android release APK was not found in outputs"
+            exit 1
+          fi
+
+          # Stage AAB with strict labelling
+          AAB_PATH=$(find apps/expo-mobile/android/app/build/outputs/bundle/release -name "*.aab" | head -n 1)
+          if [ -n "$AAB_PATH" ] && [ -f "$AAB_PATH" ]; then
+            if [ "$IS_PROD_SIGNED" = "true" ]; then
+              echo "Staging production-signed AAB: StudyOS_${VERSION}.aab"
+              cp "$AAB_PATH" "android-dist/StudyOS_${VERSION}.aab"
+            else
+              echo "Staging QA debug-signed AAB: StudyOS_${VERSION}_qa-debug.aab"
+              cp "$AAB_PATH" "android-dist/StudyOS_${VERSION}_qa-debug.aab"
+            fi
+          else
+            echo "::error::Android release AAB was not found in outputs"
+            exit 1
+          fi
+
+      - name: Upload Android Packages Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-packages
+          path: android-dist/*
+          retention-days: 7
+
+  # ============================================================================
+  # JOB 3: BUILD WINDOWS (Tauri Desktop .exe NSIS Installer)
+  # Runs on Windows runner (2x cost, isolated exclusively to desktop binary).
+  # ============================================================================
+  build-windows:
+    name: Build Windows Desktop Installer (.exe)
+    needs: [validate]
+    runs-on: windows-latest
+    timeout-minutes: 50
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust Build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+          key: windows-desktop
+
+      - name: Install Monorepo Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Web Frontend
+        run: bun run build --filter=@open-sunsama/web
+
+      - name: Prepare Desktop Frontend Assets
+        run: node apps/desktop/scripts/prepare-frontend.mjs
+
+      - name: Build Tauri Windows Installer
+        working-directory: apps/desktop
+        env:
+          VITE_API_URL: https://api.opensunsama.com
+          VITE_WS_URL: wss://api.opensunsama.com
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: bunx tauri build --bundles nsis
+
+      - name: Stage Windows Release Installers
+        shell: bash
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          mkdir -p windows-dist
+
+          # Find and stage NSIS setup executable
+          EXE_PATH=$(find apps/desktop/src-tauri/target/release/bundle/nsis -name "*-setup.exe" | head -n 1)
+          if [ -n "$EXE_PATH" ] && [ -f "$EXE_PATH" ]; then
+            echo "Found Windows installer: $EXE_PATH"
+            cp "$EXE_PATH" "windows-dist/StudyOS_${VERSION}_x64-setup.exe"
+          else
+            echo "::error::Windows installer executable was not found"
+            exit 1
+          fi
+
+          # Stage MSI installer if generated
+          MSI_PATH=$(find apps/desktop/src-tauri/target/release/bundle/msi -name "*.msi" 2>/dev/null | head -n 1)
+          if [ -n "$MSI_PATH" ] && [ -f "$MSI_PATH" ]; then
+            echo "Found MSI installer: $MSI_PATH"
+            cp "$MSI_PATH" "windows-dist/StudyOS_${VERSION}_x64.msi"
+          fi
+
+      - name: Upload Windows Installers Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: windows-dist/*
+          retention-days: 7
+
+  # ============================================================================
+  # JOB 4: RELEASE ASSEMBLY & STRICT APPROVAL GATE
+  # Runs on Ubuntu to verify checksums, enforce invariants, and publish if approved.
+  # ============================================================================
+  release:
+    name: Assemble Assets & Publish Release
+    needs: [validate, build-android, build-windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Create Release Assets Directory
+        run: mkdir -p release-assets
+
+      - name: Download Web Distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: web-distribution
+          path: release-assets
+
+      - name: Download Android Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: android-packages
+          path: release-assets
+
+      - name: Download Windows Installers
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-installers
+          path: release-assets
+
+      - name: Generate Cryptographic SHA-256 Checksums
+        shell: bash
+        run: |
+          cd release-assets
+          echo "=== Release Assets Contents ==="
+          ls -la
+          sha256sum $(ls -1 | grep -v 'SHA256SUMS.txt' | grep -v 'RELEASE_NOTES.md') > SHA256SUMS.txt
+          echo "=== SHA-256 Checksums ==="
+          cat SHA256SUMS.txt
+
+      - name: Generate Release Notes
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          COMMIT_SHA: ${{ github.sha }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+        run: node scripts/generate-release-notes.mjs
+
+      - name: Enforce Release Invariants & Verification Gate
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+        run: node scripts/verify-release-invariants.mjs
+
+      - name: Publish GitHub Release (Explicit Manual Approval Only)
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: StudyOS v${{ needs.validate.outputs.version }}
+          body_path: release-assets/RELEASE_NOTES.md
+          draft: ${{ inputs.release_draft || false }}
+          prerelease: ${{ inputs.release_prerelease || false }}
+          files: release-assets/*
+
+      - name: Dry-Run Release Summary (Manual Gate Closed)
+        if: "!(github.event_name == 'workflow_dispatch' && inputs.publish_release == true)"
+        shell: bash
+        run: |
+          echo "================================================================="
+          echo "StudyOS v${{ needs.validate.outputs.version }} QA / DRY-RUN BUILD COMPLETED"
+          echo "================================================================="
+          echo "All platform artifacts (Windows, Android, Web) compiled and verified."
+          echo "The release publishing gate remained closed ('publish_release: false')."
+          echo "Artifacts are retained under the GitHub Actions run for QA inspection."
+          echo "No public GitHub Release was created or modified."
+          echo "To publish an official production release, re-run with 'publish_release: true'."
