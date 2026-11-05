@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Alert, Linking } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter, Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getApi } from '@/lib/api';
 import type { LearningResource } from '@open-sunsama/types';
@@ -8,18 +8,200 @@ import { SyncBanner } from '@/components/SyncBanner';
 import { useAccountSync } from '@/lib/sync';
 import { newClientId } from '@/lib/ids';
 
+function extractYouTubeId(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  return match ? match[1] : null;
+}
+
 export default function ResourcesScreen() {
   const { assignmentId } = useLocalSearchParams<{ assignmentId?: string }>();
+  const router = useRouter();
   const sync = useAccountSync();
   const [resources, setResources] = useState<LearningResource[]>([]);
-  const [showAdd, setShowAdd] = useState(false); const [title, setTitle] = useState(''); const [url, setUrl] = useState('');
-  const load = async () => { try { setResources(await getApi().resources.list(assignmentId ? { assignmentId } : {})); } catch { /* offline cache is surfaced by sync banner */ } };
-  useEffect(() => { void load(); }, [assignmentId]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [title, setTitle] = useState('');
+  const [url, setUrl] = useState('');
+
+  const load = async () => {
+    try {
+      setResources(await getApi().resources.list(assignmentId ? { assignmentId } : {}));
+    } catch {
+      /* offline cache is surfaced by sync banner */
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, [assignmentId]);
+
   const add = async () => {
     if (!title.trim() || !url.trim()) return;
-    try { const type = /youtube\.com|youtu\.be/.test(url) ? 'youtube' : 'web'; const id = newClientId(); await sync.enqueueMutation({ entityType: 'resource', operation: 'create', entityId: id, payload: { type, title: title.trim(), url: url.trim(), link: assignmentId ? { assignmentId } : undefined } }); const created = { id, userId: 'pending', type, title: title.trim(), url: url.trim(), storageKey: null, mimeType: null, filename: null, sizeBytes: null, providerItemId: null, completedAt: null, revision: 1, deletedAt: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as LearningResource; setResources((current) => [created, ...current]); setTitle(''); setUrl(''); setShowAdd(false); }
-    catch (error) { Alert.alert('Could not add resource', error instanceof Error ? error.message : 'Check the link and try again'); }
+    try {
+      const isYt = /youtube\.com|youtu\.be/.test(url);
+      const type = isYt ? 'youtube' : 'web';
+      const providerItemId = isYt ? extractYouTubeId(url) : null;
+      const id = newClientId();
+      await sync.enqueueMutation({
+        entityType: 'resource',
+        operation: 'create',
+        entityId: id,
+        payload: {
+          type,
+          title: title.trim(),
+          url: url.trim(),
+          providerItemId,
+          link: assignmentId ? { assignmentId } : undefined,
+        },
+      });
+      const created = {
+        id,
+        userId: 'pending',
+        type,
+        title: title.trim(),
+        url: url.trim(),
+        storageKey: null,
+        mimeType: null,
+        filename: null,
+        sizeBytes: null,
+        providerItemId,
+        completedAt: null,
+        revision: 1,
+        deletedAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as LearningResource;
+      setResources((current) => [created, ...current]);
+      setTitle('');
+      setUrl('');
+      setShowAdd(false);
+    } catch (error) {
+      Alert.alert('Could not add resource', error instanceof Error ? error.message : 'Check the link and try again');
+    }
   };
-  return <SafeAreaView style={styles.container} edges={['left', 'right']}><SyncBanner /><View style={styles.header}><View><Text style={styles.eyebrow}>MATERIAL</Text><Text style={styles.title}>Resources</Text></View><TouchableOpacity style={styles.add} onPress={() => setShowAdd(true)}><Text style={styles.addText}>+</Text></TouchableOpacity></View><FlatList data={resources} keyExtractor={(item) => item.id} contentContainerStyle={styles.list} onRefresh={() => void load()} refreshing={false} ListEmptyComponent={<View style={styles.empty}><Text style={styles.emptyTitle}>Keep useful material nearby</Text><Text style={styles.muted}>Save a YouTube lesson or a web link next to your work.</Text></View>} renderItem={({ item }) => <TouchableOpacity style={styles.card} onPress={() => item.url && void Linking.openURL(item.url)}><View style={styles.cardIcon}><Text>{item.type === 'youtube' ? '▶' : '↗'}</Text></View><View style={{ flex: 1 }}><Text style={styles.cardTitle}>{item.title}</Text><Text style={styles.muted} numberOfLines={1}>{item.url ?? item.filename ?? 'Stored file'}</Text></View><Text style={styles.open}>Open</Text></TouchableOpacity>} /><Modal visible={showAdd} animationType="slide" transparent onRequestClose={() => setShowAdd(false)}><View style={styles.backdrop}><View style={styles.modal}><Text style={styles.modalTitle}>Save a resource</Text><TextInput style={styles.input} placeholder="Title" value={title} onChangeText={setTitle} /><TextInput style={styles.input} placeholder="YouTube or web URL" value={url} onChangeText={setUrl} autoCapitalize="none" keyboardType="url" /><Text style={styles.muted}>Files can be opened from the web workspace; links work offline once cached.</Text><View style={styles.actions}><TouchableOpacity onPress={() => setShowAdd(false)}><Text style={styles.cancel}>Cancel</Text></TouchableOpacity><TouchableOpacity style={styles.save} onPress={() => void add()}><Text style={styles.saveText}>Save resource</Text></TouchableOpacity></View></View></View></Modal></SafeAreaView>;
+
+  const handleCardPress = (item: LearningResource) => {
+    if (item.type === 'youtube') {
+      const vidId = item.providerItemId || extractYouTubeId(item.url || '');
+      if (vidId) {
+        router.push({ pathname: '/(app)/focustube', params: { videoId: vidId } });
+        return;
+      }
+    }
+    if (item.url) {
+      void Linking.openURL(item.url);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
+      <SyncBanner />
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.eyebrow}>MATERIAL</Text>
+          <Text style={styles.title}>Resources</Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Link href="/(app)/focustube" asChild>
+            <TouchableOpacity style={styles.focusTubeBtn}>
+              <Text style={styles.focusTubeBtnText}>📺 FocusTube</Text>
+            </TouchableOpacity>
+          </Link>
+          <TouchableOpacity style={styles.add} onPress={() => setShowAdd(true)}>
+            <Text style={styles.addText}>+</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <FlatList
+        data={resources}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
+        onRefresh={() => void load()}
+        refreshing={false}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>Keep useful material nearby</Text>
+            <Text style={styles.muted}>Save a YouTube lesson or a web link next to your work.</Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.card} onPress={() => handleCardPress(item)}>
+            <View style={[styles.cardIcon, item.type === 'youtube' && { backgroundColor: '#fee2e2' }]}>
+              <Text>{item.type === 'youtube' ? '▶' : '↗'}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>{item.title}</Text>
+              <Text style={styles.muted} numberOfLines={1}>
+                {item.type === 'youtube' ? 'FocusTube Video' : item.url ?? item.filename ?? 'Stored file'}
+              </Text>
+            </View>
+            <Text style={[styles.open, item.type === 'youtube' && { color: '#dc2626' }]}>
+              {item.type === 'youtube' ? 'Play' : 'Open'}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
+      <Modal visible={showAdd} animationType="slide" transparent onRequestClose={() => setShowAdd(false)}>
+        <View style={styles.backdrop}>
+          <View style={styles.modal}>
+            <Text style={styles.modalTitle}>Save a resource</Text>
+            <TextInput style={styles.input} placeholder="Title" value={title} onChangeText={setTitle} />
+            <TextInput
+              style={styles.input}
+              placeholder="YouTube or web URL"
+              value={url}
+              onChangeText={setUrl}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+            <Text style={styles.muted}>Files can be opened from the web workspace; links work offline once cached.</Text>
+            <View style={styles.actions}>
+              <TouchableOpacity onPress={() => setShowAdd(false)}>
+                <Text style={styles.cancel}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.save} onPress={() => void add()}>
+                <Text style={styles.saveText}>Save resource</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
 }
-const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#f8fafc' }, header: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, eyebrow: { color: '#7c3aed', fontSize: 11, fontWeight: '800', letterSpacing: 1.2 }, title: { color: '#172033', fontSize: 27, fontWeight: '800', marginTop: 5 }, add: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#7c3aed', alignItems: 'center', justifyContent: 'center' }, addText: { color: '#fff', fontSize: 28 }, list: { padding: 16, paddingTop: 0 }, card: { backgroundColor: '#fff', borderRadius: 15, padding: 15, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12 }, cardIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#ffedd5', alignItems: 'center', justifyContent: 'center' }, cardTitle: { color: '#172033', fontWeight: '800', marginBottom: 3 }, muted: { color: '#64748b', fontSize: 13, lineHeight: 19 }, open: { color: '#7c3aed', fontWeight: '800', fontSize: 12 }, empty: { backgroundColor: '#fff', borderRadius: 15, padding: 22 }, emptyTitle: { color: '#172033', fontWeight: '800', fontSize: 18, marginBottom: 5 }, backdrop: { flex: 1, backgroundColor: 'rgba(15,23,42,.45)', justifyContent: 'flex-end' }, modal: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, paddingBottom: 32 }, modalTitle: { color: '#172033', fontSize: 22, fontWeight: '800', marginBottom: 16 }, input: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 14, fontSize: 16, color: '#172033', marginBottom: 10, backgroundColor: '#f8fafc' }, actions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 20, marginTop: 20 }, cancel: { color: '#64748b', fontWeight: '700' }, save: { backgroundColor: '#7c3aed', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12 }, saveText: { color: '#fff', fontWeight: '800' } });
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f8fafc' },
+  header: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  eyebrow: { color: '#7c3aed', fontSize: 11, fontWeight: '800', letterSpacing: 1.2 },
+  title: { color: '#172033', fontSize: 27, fontWeight: '800', marginTop: 5 },
+  focusTubeBtn: {
+    backgroundColor: '#fee2e2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  focusTubeBtnText: { color: '#dc2626', fontWeight: '800', fontSize: 13 },
+  add: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#7c3aed', alignItems: 'center', justifyContent: 'center' },
+  addText: { color: '#fff', fontSize: 28 },
+  list: { padding: 16, paddingTop: 0 },
+  card: { backgroundColor: '#fff', borderRadius: 15, padding: 15, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#ffedd5', alignItems: 'center', justifyContent: 'center' },
+  cardTitle: { color: '#172033', fontWeight: '800', marginBottom: 3 },
+  muted: { color: '#64748b', fontSize: 13, lineHeight: 19 },
+  open: { color: '#7c3aed', fontWeight: '800', fontSize: 12 },
+  empty: { backgroundColor: '#fff', borderRadius: 15, padding: 22 },
+  emptyTitle: { color: '#172033', fontWeight: '800', fontSize: 18, marginBottom: 5 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(15,23,42,.45)', justifyContent: 'flex-end' },
+  modal: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, paddingBottom: 32 },
+  modalTitle: { color: '#172033', fontSize: 22, fontWeight: '800', marginBottom: 16 },
+  input: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 14, fontSize: 16, color: '#172033', marginBottom: 10, backgroundColor: '#f8fafc' },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 20, marginTop: 20 },
+  cancel: { color: '#64748b', fontWeight: '700' },
+  save: { backgroundColor: '#7c3aed', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12 },
+  saveText: { color: '#fff', fontWeight: '800' },
+});

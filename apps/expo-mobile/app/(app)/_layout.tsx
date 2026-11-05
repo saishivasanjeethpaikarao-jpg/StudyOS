@@ -79,6 +79,7 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen name="calendar" options={{ href: null, title: 'Calendar' }} />
+      <Tabs.Screen name="focustube" options={{ href: null, title: 'FocusTube' }} />
       <Tabs.Screen name="assignment/[id]" options={{ href: null, title: 'Assignment' }} />
       <Tabs.Screen name="resources" options={{ href: null, title: 'Resources' }} />
       <Tabs.Screen name="notes" options={{ href: null, title: 'Notes' }} />

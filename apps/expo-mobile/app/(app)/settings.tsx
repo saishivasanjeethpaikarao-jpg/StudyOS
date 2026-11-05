@@ -36,6 +36,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Study tools</Text>
           <View style={styles.menuCard}>
+            <Link href="/(app)/focustube" asChild><TouchableOpacity style={styles.menuItem}><Text style={styles.menuItemText}>FocusTube 📺</Text><Text style={styles.menuItemValue}>›</Text></TouchableOpacity></Link>
             <Link href="/(app)/resources" asChild><TouchableOpacity style={styles.menuItem}><Text style={styles.menuItemText}>Resources</Text><Text style={styles.menuItemValue}>›</Text></TouchableOpacity></Link>
             <Link href="/(app)/notes" asChild><TouchableOpacity style={styles.menuItem}><Text style={styles.menuItemText}>Notes</Text><Text style={styles.menuItemValue}>›</Text></TouchableOpacity></Link>
             <Link href="/(app)/quizzes" asChild><TouchableOpacity style={styles.menuItem}><Text style={styles.menuItemText}>Knowledge checks</Text><Text style={styles.menuItemValue}>›</Text></TouchableOpacity></Link>
