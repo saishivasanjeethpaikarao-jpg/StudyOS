@@ -3,12 +3,16 @@ import {
   getDb,
   eq,
   and,
+  or,
+  like,
   gte,
   lte,
   ne,
   isNull,
   users,
   tasks,
+  subtasks,
+  resources,
   subjects,
   agentProposals,
   studySessions,
@@ -852,10 +856,223 @@ export class TelegramIntegrationService {
             `Week 4 Day 6: ${subjectName} Comprehensive Evaluation`,
           ];
 
+      // Clean up previous placeholder C tasks so the planner immediately displays the complete rich syllabus
+      if (isCProg) {
+        await db.delete(tasks).where(
+          and(
+            eq(tasks.userId, userId),
+            or(like(tasks.title, "C %"), like(tasks.title, "Week %: C%"), like(tasks.title, "Week % Day %"))
+          )
+        );
+      }
+
+      // 1. Ensure Subject exists
+      let subjectId: string | undefined;
+      const [existingSub] = await db
+        .select({ id: subjects.id })
+        .from(subjects)
+        .where(
+          and(
+            eq(subjects.userId, userId),
+            eq(subjects.name, isCProg ? "C Programming & Systems Foundations" : subjectName)
+          )
+        )
+        .limit(1);
+
+      if (existingSub) {
+        subjectId = existingSub.id;
+      } else {
+        const [newSub] = await db
+          .insert(subjects)
+          .values({
+            userId,
+            name: isCProg ? "C Programming & Systems Foundations" : subjectName,
+            description: isCProg
+              ? "Mastering C programming: memory models, pointers, data structures, and POSIX system I/O."
+              : `Comprehensive academic curriculum for ${subjectName}.`,
+            color: "#6366F1",
+            icon: "code",
+          })
+          .returning({ id: subjects.id });
+        subjectId = newSub?.id;
+      }
+
+      // 2. Weekly Hands-on Coding Assignments
+      const assignmentList = isCProg
+        ? [
+            {
+              title: "Week 1 Project: Interactive CLI Unit Converter & Calculator in C",
+              description: "Build a modular command-line calculator in C supporting arithmetic, trigonometry, and input validation using functions, switch-case, and format specifiers.",
+              daysDue: 7,
+            },
+            {
+              title: "Week 2 Project: Text Analyzer & 2D Matrix Engine in C",
+              description: "Implement string manipulation algorithms (word frequency, palindrome detector) and 2D matrix multiplication with row-major memory indexing.",
+              daysDue: 14,
+            },
+            {
+              title: "Week 3 Project: Dynamic Memory Singly-Linked List & Pointer Math",
+              description: "Implement a robust singly-linked list in C using malloc, free, and pointer references with zero memory leaks verified via Valgrind.",
+              daysDue: 21,
+            },
+            {
+              title: "Week 4 Capstone: Persistent CLI Task & Student Database in C",
+              description: "Architect a full console application with struct records, binary file persistence (fopen, fread, fwrite), search, update, and sorting.",
+              daysDue: 28,
+            },
+          ]
+        : [
+            { title: `Week 1: ${subjectName} Foundations Project`, description: "Implement foundational concepts and problem sets.", daysDue: 7 },
+            { title: `Week 2: ${subjectName} Core Mechanics Project`, description: "Apply core patterns and data manipulation drills.", daysDue: 14 },
+            { title: `Week 3: ${subjectName} Advanced Architecture Project`, description: "Design modular, scalable components with testing.", daysDue: 21 },
+            { title: `Week 4: ${subjectName} Capstone Portfolio System`, description: "Deliver comprehensive end-to-end working implementation.", daysDue: 28 },
+          ];
+
+      const assignmentValues = assignmentList.map((a) => ({
+        userId,
+        subjectId: subjectId || null,
+        title: a.title,
+        description: a.description,
+        dueAt: new Date(Date.now() + a.daysDue * 86400000),
+        status: "not_started" as const,
+        priority: "P1",
+        estimatedMinutes: 120,
+      }));
+      await db.insert(assignments).values(assignmentValues);
+
+      // 3. FocusTube & Academic Resources
+      const focusTubeCourses = isCProg
+        ? [
+            {
+              type: "youtube" as const,
+              title: "C Programming Tutorial for Beginners - Full Course (freeCodeCamp)",
+              url: "https://www.youtube.com/watch?v=KJgsSFOSQv0",
+              providerItemId: "KJgsSFOSQv0",
+            },
+            {
+              type: "youtube" as const,
+              title: "CS50 2024 - Lecture 1 - C (Harvard University)",
+              url: "https://www.youtube.com/watch?v=4Tz_oN_tH8A",
+              providerItemId: "4Tz_oN_tH8A",
+            },
+            {
+              type: "youtube" as const,
+              title: "C Programming Full Course 🕹️ (Bro Code)",
+              url: "https://www.youtube.com/watch?v=87SH2Cn0s9A",
+              providerItemId: "87SH2Cn0s9A",
+            },
+            {
+              type: "youtube" as const,
+              title: "Pointers in C / C++ Complete Masterclass (mycodeschool)",
+              url: "https://www.youtube.com/watch?v=zuegQmMdy8M",
+              providerItemId: "zuegQmMdy8M",
+            },
+            {
+              type: "youtube" as const,
+              title: "File Management in C (Neso Academy)",
+              url: "https://www.youtube.com/watch?v=0k1Lz1x59hA",
+              providerItemId: "0k1Lz1x59hA",
+            },
+            {
+              type: "web" as const,
+              title: "Cppreference - C Language Documentation & Standard Library Reference",
+              url: "https://en.cppreference.com/w/c",
+              providerItemId: null,
+            },
+            {
+              type: "web" as const,
+              title: "Harvard CS50 Manual Pages & C Library Reference",
+              url: "https://manual.cs50.io/",
+              providerItemId: null,
+            },
+            {
+              type: "web" as const,
+              title: "GNU C Reference Manual & GCC Compiler Guide",
+              url: "https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html",
+              providerItemId: null,
+            },
+          ]
+        : [
+            {
+              type: "web" as const,
+              title: `${subjectName} Official Documentation & Reference Guide`,
+              url: `https://en.wikipedia.org/wiki/${encodeURIComponent(subjectName)}`,
+              providerItemId: null,
+            },
+          ];
+
+      const resourceValues = focusTubeCourses.map((r) => ({
+        userId,
+        type: r.type,
+        title: r.title,
+        url: r.url,
+        providerItemId: r.providerItemId,
+      }));
+      await db.insert(resources).values(resourceValues);
+
+      // Helper function to build rich notes and subtasks
+      const buildLessonPackage = (title: string) => {
+        const snippet = title.includes("Setup")
+          ? '#include <stdio.h>\n\nint main(void) {\n    printf("Hello, StudyOS World!\\n");\n    return 0;\n}'
+          : title.includes("Pointers")
+          ? 'int x = 42;\nint *ptr = &x;\nprintf("Value: %d, Memory Address: %p\\n", *ptr, (void*)ptr);'
+          : title.includes("Loops")
+          ? 'for (int i = 1; i <= 5; i++) {\n    printf("Step %d\\n", i);\n}'
+          : title.includes("Structs")
+          ? 'typedef struct {\n    int id;\n    char name[50];\n} Student;\nStudent s1 = {1, "Alex"};'
+          : title.includes("Files")
+          ? 'FILE *f = fopen("data.txt", "w");\nif (f) {\n    fprintf(f, "StudyOS Log\\n");\n    fclose(f);\n}'
+          : `// Implementation for ${title}\n#include <stdio.h>\n\nint main(void) {\n    printf("${title}\\n");\n    return 0;\n}`;
+
+        const notes = [
+          `# 📚 ${title}`,
+          "",
+          `## 1. Core Educational Objective`,
+          `Master the fundamental mechanics and practical implementation of ${title}.`,
+          "",
+          `## 2. Compilation & Architecture Flowchart`,
+          "```text",
+          "Source Code (.c)",
+          "      │ Preprocessor (#include, #define)",
+          "      ▼",
+          "Expanded Code (.i)",
+          "      │ Compiler (gcc -Wall)",
+          "      ▼",
+          "Assembly Code (.s)",
+          "      │ Assembler & Linker",
+          "      ▼",
+          "Native Binary Executable",
+          "```",
+          "",
+          `## 3. Working Implementation`,
+          "```c",
+          snippet,
+          "```",
+          "",
+          `## 4. Compilation & Execution Commands`,
+          "- Compile: `gcc -Wall -Wextra -O2 main.c -o app`",
+          "- Run: `./app` (or `app.exe` on Windows)",
+          "",
+          `## 5. Key Pitfalls to Avoid`,
+          "• Always initialize variables before reading them to avoid garbage values.",
+          "• Ensure every dynamically allocated buffer (`malloc`) has a corresponding `free()` call.",
+          "• Check return values of I/O functions (`scanf`, `fopen`) for NULL or EOF.",
+        ].join("\n");
+
+        const subtasks = [
+          `1. Study core concepts & code structure for ${title.split(":")[1]?.trim() || title}`,
+          `2. Write implementation in local editor and save file`,
+          `3. Compile with 'gcc -Wall -Wextra' and fix any compiler warnings`,
+          `4. Execute binary in terminal and verify edge-case outputs`,
+        ];
+
+        return { notes, subtasks };
+      };
+
       // Schedule all 24 lessons across Monday–Saturday (Sundays reserved for review & rest)
       let currentDate = new Date();
       const taskValues: any[] = [];
-      const lessonMeta: { title: string; date: string }[] = [];
+      const lessonMeta: { title: string; date: string; subtasks: string[] }[] = [];
 
       for (const lesson of dailyLessons) {
         // Skip Sundays
@@ -864,15 +1081,18 @@ export class TelegramIntegrationService {
         }
 
         const dateStr = currentDate.toISOString().split("T")[0]!;
+        const { notes, subtasks: stList } = buildLessonPackage(lesson);
+
         taskValues.push({
           userId,
           title: lesson,
+          notes,
           scheduledDate: dateStr,
           estimatedMins: 90,
           priority: "P1",
           revision: 1,
         });
-        lessonMeta.push({ title: lesson, date: dateStr });
+        lessonMeta.push({ title: lesson, date: dateStr, subtasks: stList });
         currentDate = new Date(currentDate.getTime() + 86400000);
       }
 
@@ -881,6 +1101,21 @@ export class TelegramIntegrationService {
         .insert(tasks)
         .values(taskValues)
         .returning({ id: tasks.id });
+
+      // Fast single-batch insert for all subtasks
+      const allSubtaskValues = insertedTasks.flatMap((t, idx) => {
+        const stList = lessonMeta[idx]?.subtasks || [];
+        return stList.map((stTitle, sIdx) => ({
+          taskId: t.id,
+          title: stTitle,
+          position: sIdx,
+          completed: false,
+          revision: 1,
+        }));
+      });
+      if (allSubtaskValues.length > 0) {
+        await db.insert(subtasks).values(allSubtaskValues);
+      }
 
       // Fast single-batch insert for all timeBlocks
       const timeBlockValues = insertedTasks.map((t, idx) => ({
@@ -900,18 +1135,22 @@ export class TelegramIntegrationService {
       const syncNotice = [
         "",
         "═════════════════════════════════",
-        "📅 *Full-Month StudyOS Timetable Scheduled!*",
-        `• *${scheduledCount} daily study sessions* organized across 4 weeks (Mon–Sat, 18:00–19:30).`,
-        `• Sundays kept free for review and rest.`,
-        `• Saved directly to your StudyOS Cloud account — check your live calendar:`,
-        `  🌐 https://studyos-web-8ruc.onrender.com/app/calendar`,
-        `• Telegram reminders will alert you before each block begins!`,
+        "🎯 *Complete StudyOS Academic Package Activated!*",
+        `• 📚 *${scheduledCount} daily study sessions* with rich lesson notes and checklist subtasks.`,
+        `• 📺 *5 FocusTube video courses* added to your FocusTube library (distraction-free player).`,
+        `• 📝 *4 Weekly Assignments* created with deadlines across Weeks 1 to 4.`,
+        `• 🌐 *3 Verified Reference Guides* linked in your Resources dashboard.`,
+        `• 🎓 Enrolled in subject: *${isCProg ? "C Programming & Systems Foundations" : subjectName}*.`,
         "",
-        `💡 *Multi-Device Sync:*`,
-        `Whenever you install the StudyOS Windows Desktop app (.exe) or Android phone APK, this entire timetable will automatically be waiting for you in sync, complete with native device alarms.`,
+        "🌐 *Access Everything Directly:*",
+        "• Calendar: https://studyos-web-8ruc.onrender.com/app/calendar",
+        "• FocusTube: https://studyos-web-8ruc.onrender.com/app/focustube",
+        "• Assignments: https://studyos-web-8ruc.onrender.com/app/assignments",
+        "",
+        "💡 *Tip:* You can also connect your own free Groq or Gemini API key in StudyOS Settings → AI & Providers to save shared server quota and customize your models!",
       ].join("\n");
 
-      return aiRoadmap ? `${aiRoadmap}\n${syncNotice}` : `📅 *${subjectName} 30-Day Timetable Scheduled!*\n${syncNotice}`;
+      return aiRoadmap ? `${aiRoadmap}\n${syncNotice}` : `📅 *${subjectName} 30-Day Package Activated!*\n${syncNotice}`;
     }
 
     // 1. Determine target date

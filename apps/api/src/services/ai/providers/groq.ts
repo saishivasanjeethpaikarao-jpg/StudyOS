@@ -17,6 +17,26 @@ import {
 
 const GROQ_MODELS: AIModelMetadata[] = [
   {
+    id: "qwen/qwen3.8-27b",
+    name: "Qwen 3.8 27B (Ultra-Fast)",
+    provider: "groq",
+    contextWindow: 128_000,
+    maxOutputTokens: 8192,
+    supportsStructuredOutput: true,
+    supportsStreaming: true,
+    recommendedFor: ["quiz_generation", "study_planning", "learning_assistant", "concept_extraction"],
+  },
+  {
+    id: "openai/gpt-oss-120b",
+    name: "GPT-OSS 120B",
+    provider: "groq",
+    contextWindow: 128_000,
+    maxOutputTokens: 8192,
+    supportsStructuredOutput: true,
+    supportsStreaming: true,
+    recommendedFor: ["study_planning", "concept_extraction"],
+  },
+  {
     id: "llama-3.3-70b-versatile",
     name: "Llama 3.3 70B Versatile",
     provider: "groq",
@@ -24,7 +44,7 @@ const GROQ_MODELS: AIModelMetadata[] = [
     maxOutputTokens: 8192,
     supportsStructuredOutput: true,
     supportsStreaming: true,
-    recommendedFor: ["quiz_generation", "study_planning", "learning_assistant", "concept_extraction"],
+    recommendedFor: ["quiz_generation", "study_planning", "learning_assistant"],
   },
   {
     id: "llama-3.1-8b-instant",
@@ -35,16 +55,6 @@ const GROQ_MODELS: AIModelMetadata[] = [
     supportsStructuredOutput: true,
     supportsStreaming: true,
     recommendedFor: ["learning_assistant"],
-  },
-  {
-    id: "mixtral-8x7b-32768",
-    name: "Mixtral 8x7B",
-    provider: "groq",
-    contextWindow: 32_768,
-    maxOutputTokens: 4096,
-    supportsStructuredOutput: true,
-    supportsStreaming: true,
-    recommendedFor: ["quiz_generation"],
   },
 ];
 
@@ -57,7 +67,7 @@ export class GroqProvider implements AIProvider {
   }
 
   getDefaultModel(): string {
-    return "llama-3.3-70b-versatile";
+    return "qwen/qwen3.8-27b";
   }
 
   async testConnection(

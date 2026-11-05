@@ -94,7 +94,13 @@ export class AIRouter {
       }
     }
 
-    // Ensure gemini is always a candidate if system-level API key is configured
+    // Ensure free high-speed Groq is candidate if system-level API key is configured
+    if (process.env.GROQ_API_KEY && !candidateIds.includes("groq")) {
+      // Put groq first after primary if primary has no user config
+      candidateIds.unshift("groq");
+    }
+
+    // Ensure gemini is also a candidate if system-level API key is configured
     const hasSystemGemini = Boolean(
       process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY || process.env.GOOGLE_API_KEY
     );
@@ -252,7 +258,13 @@ export class AIRouter {
       }
     }
 
-    // Ensure gemini is always a candidate if system-level API key is configured
+    // Ensure free high-speed Groq is candidate if system-level API key is configured
+    if (process.env.GROQ_API_KEY && !candidateIds.includes("groq")) {
+      // Put groq first after primary if primary has no user config
+      candidateIds.unshift("groq");
+    }
+
+    // Ensure gemini is also a candidate if system-level API key is configured
     const hasSystemGemini = Boolean(
       process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY || process.env.GOOGLE_API_KEY
     );
