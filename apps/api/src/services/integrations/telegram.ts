@@ -287,9 +287,16 @@ export class TelegramIntegrationService {
     // Commands for already-linked users
     const user = await this.findUserByChatId(chatId);
     if (!user) {
+      if (text === "/help") {
+        await this.sendMessageToChat(
+          chatId,
+          "📚 *StudyOS Telegram Bot*\n\nTo use this bot, please connect your StudyOS account first!\n\n1. Open StudyOS Settings → Integrations & Agent\n2. Click *Connect Telegram Bot* to link your account."
+        );
+        return { handled: true, action: "help_unlinked" };
+      }
       await this.sendMessageToChat(
         chatId,
-        "🔒 Account not linked. Please connect Telegram from StudyOS Settings first."
+        "🔒 Account not linked.\n\nTo link your account, open StudyOS Settings → Integrations & Agent → Telegram Notifications and tap *Connect Telegram Bot*."
       );
       return { handled: true, action: "unlinked_command" };
     }
@@ -495,8 +502,21 @@ export class TelegramIntegrationService {
           parse_mode: "Markdown",
         }),
       });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.warn(`[Telegram] sendMessage error (${res.status}): ${errText}`);
+        if (errText.includes("can't parse entities")) {
+          const fallbackRes = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, text }),
+          });
+          return fallbackRes.ok;
+        }
+      }
       return res.ok;
-    } catch {
+    } catch (err) {
+      console.error("[Telegram] sendMessage network error:", err);
       return false;
     }
   }
