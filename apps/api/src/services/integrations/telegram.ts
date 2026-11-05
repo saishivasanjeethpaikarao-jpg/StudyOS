@@ -1648,6 +1648,8 @@ export class TelegramIntegrationService {
             chat_id: chatId,
             text: chunk,
             parse_mode: "Markdown",
+            disable_web_page_preview: true,
+            link_preview_options: { is_disabled: true },
           }),
         });
 
@@ -1664,6 +1666,8 @@ export class TelegramIntegrationService {
             body: JSON.stringify({
               chat_id: chatId,
               text: plainChunk,
+              disable_web_page_preview: true,
+              link_preview_options: { is_disabled: true },
             }),
           });
           sent = fallbackRes.ok;
