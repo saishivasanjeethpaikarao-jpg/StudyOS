@@ -40,7 +40,7 @@ export function DocsSchema({
         url: "https://studyos-web-8ruc.onrender.com",
         logo: {
           "@type": "ImageObject",
-          url: "https://studyos-web-8ruc.onrender.com/open-sunsama-logo.png",
+          url: "https://studyos-web-8ruc.onrender.com/og-image.png",
         },
       },
       mainEntityOfPage: {

@@ -4,6 +4,8 @@ import {
   eq,
   getDb,
   isNull,
+  resources,
+  studyNotes,
   subjects,
 } from "@open-sunsama/database";
 import type {
@@ -27,6 +29,51 @@ export class LearningAssistantService {
     let contextHeader = "";
     const citations: LearningAssistantCitation[] = [];
     let isGrounded = false;
+
+    // Attach student's live workspace state so AI tutor has complete contextual awareness
+    try {
+      const activeSubjects = await db
+        .select({ id: subjects.id, name: subjects.name })
+        .from(subjects)
+        .where(and(eq(subjects.userId, userId), isNull(subjects.archivedAt)));
+
+      const activeResources = await db
+        .select({ title: resources.title, url: resources.url, type: resources.type })
+        .from(resources)
+        .where(eq(resources.userId, userId))
+        .limit(12);
+
+      const activeAssignments = await db
+        .select({ title: assignments.title, dueAt: assignments.dueAt, status: assignments.status })
+        .from(assignments)
+        .where(and(eq(assignments.userId, userId), isNull(assignments.deletedAt)))
+        .limit(6);
+
+      const activeNotes = await db
+        .select({ id: studyNotes.id, title: studyNotes.title })
+        .from(studyNotes)
+        .where(and(eq(studyNotes.userId, userId), isNull(studyNotes.deletedAt)))
+        .limit(8);
+
+      if (activeSubjects.length > 0 || activeResources.length > 0 || activeAssignments.length > 0 || activeNotes.length > 0) {
+        contextHeader += `=== CURRENT STUDENT WORKSPACE STATE ===\n`;
+        if (activeSubjects.length > 0) {
+          contextHeader += `Enrolled Subjects: ${activeSubjects.map((s) => s.name).join(", ")}\n`;
+        }
+        if (activeResources.length > 0) {
+          contextHeader += `FocusTube & Verified Courses (${activeResources.length} active in library):\n${activeResources.map((r) => `  • [${r.type.toUpperCase()}] ${r.title}`).join("\n")}\n`;
+        }
+        if (activeAssignments.length > 0) {
+          contextHeader += `Active Assignments:\n${activeAssignments.map((a) => `  • ${a.title} (Status: ${a.status})`).join("\n")}\n`;
+        }
+        if (activeNotes.length > 0) {
+          contextHeader += `Lecture Notes in Notebook:\n${activeNotes.map((n) => `  • ${n.title}`).join("\n")}\n`;
+        }
+        contextHeader += `=======================================\n\n`;
+      }
+    } catch {
+      // Continue gracefully if workspace query fails
+    }
 
     // Attach subject context if present
     if (req.context?.subjectId) {
@@ -114,6 +161,14 @@ export class LearningAssistantService {
     const systemPrompt = `You are the StudyOS AI Learning Assistant — a world-class, elite academic tutor designed to deliver clear, rigorous, ChatGPT-caliber explanations with visual diagrams.
 Your mission is to help students learn deeply, visualize complex mental models, and retain concepts permanently.
 
+StudyOS Identity & Creator Knowledge:
+- Creator & Lead Architect: StudyOS was designed, engineered, and built by **Sai Shiva Sanjeeth** (GitHub: https://github.com/saishivasanjeethpaikarao-jpg/StudyOS, Email: saishivasanjeethpaikarao@gmail.com).
+- Purpose: StudyOS is an intelligent, open-source Student Operating System bringing together distraction-free YouTube video courses (FocusTube), lecture notes and structured slide decks, assignment deadline management, calendar timeblocks, and adaptive AI knowledge checks.
+- If asked "who made you", "who made studyos", or "who created this", ALWAYS answer accurately: "I am the StudyOS AI Learning Assistant. StudyOS was created and engineered by **Sai Shiva Sanjeeth** (GitHub: [saishivasanjeethpaikarao-jpg](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS))."
+- NEVER output placeholder brackets like "[Your Name/Team Name]" or "[Your Organization]"!
+- NEVER claim you are just a generic Google LLM that cannot browse or knows nothing about StudyOS. You ARE the native StudyOS AI Learning Assistant!
+- You have complete access to the student's active subjects, FocusTube video courses, assignments, and study notes through the workspace context provided below. Always speak with direct familiarity about what is in the student's FocusTube and notes library.
+
 Core Pedagogical Standards & Formatting (ChatGPT Master Tutor Style):
 1. Visual Workflows & Flowcharts:
    - For any technical concept, system, pipeline, or roadmap, always include a visual ASCII or Unicode diagram or flowchart.
@@ -145,7 +200,7 @@ Core Pedagogical Standards & Formatting (ChatGPT Master Tutor Style):
    - Use bold titles, clean bullet points, and syntax-highlighted code blocks.
    - Avoid messy walls of text; keep paragraphs focused and punchy.
 5. Grounding & Rigor:
-   - Draw upon attached student notes when present. Never fabricate facts.`;
+   - Draw upon attached student notes and FocusTube courses when present. Never fabricate facts.`;
 
     let actionInstruction = "";
     switch (req.action) {

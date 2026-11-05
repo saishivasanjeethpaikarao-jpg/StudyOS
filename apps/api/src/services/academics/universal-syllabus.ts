@@ -335,18 +335,33 @@ Verify Results;
       await db.insert(assignments).values(assignmentValues);
     }
 
-    // 4. Insert Verified Resources & FocusTube Courses
+    // 4. Insert Verified Resources & FocusTube Courses (preserves existing courses, deduplicates by URL)
     if (pkg.resources.length > 0) {
-      // Remove existing resources of this type/topic for this user
-      await db.delete(resources).where(eq(resources.userId, userId));
-      const resourceValues = pkg.resources.map((r) => ({
-        userId,
-        type: r.type,
-        title: r.title,
-        url: r.url,
-        providerItemId: r.providerItemId,
-      }));
-      await db.insert(resources).values(resourceValues);
+      const existingResources = await db
+        .select({ url: resources.url, providerItemId: resources.providerItemId })
+        .from(resources)
+        .where(eq(resources.userId, userId));
+      const existingUrls = new Set(existingResources.map((r) => r.url));
+      const existingItemIds = new Set(
+        existingResources.map((r) => r.providerItemId).filter(Boolean)
+      );
+
+      const toInsert = pkg.resources.filter(
+        (r) =>
+          !existingUrls.has(r.url) &&
+          (!r.providerItemId || !existingItemIds.has(r.providerItemId))
+      );
+
+      if (toInsert.length > 0) {
+        const resourceValues = toInsert.map((r) => ({
+          userId,
+          type: r.type,
+          title: r.title,
+          url: r.url,
+          providerItemId: r.providerItemId,
+        }));
+        await db.insert(resources).values(resourceValues);
+      }
     }
 
     // 5. Insert 8 Structured Lecture Slide Decks in study_notes table

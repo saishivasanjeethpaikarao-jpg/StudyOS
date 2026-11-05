@@ -22,10 +22,12 @@ import {
   telegramLinkRequests,
   telegramSettings,
   integrationAuditLogs,
+  aiProviderConfigs,
 } from "@open-sunsama/database";
 import { HermesBridgeService } from "./hermes-bridge.js";
 import { LearningAssistantService } from "../ai/learning-assistant.js";
 import { UniversalSyllabusService } from "../academics/universal-syllabus.js";
+import { decryptApiKey } from "../ai/secrets.js";
 import type { TelegramLinkResponse, TelegramSettings } from "@open-sunsama/types";
 
 const TELEGRAM_API = "https://api.telegram.org";
@@ -193,12 +195,13 @@ export class TelegramIntegrationService {
     }
 
     const message = update?.message;
-    if (!message || !message.text) {
+    if (!message || (!message.text && !message.photo)) {
       return { handled: false };
     }
 
     const chatId = String(message.chat.id);
-    const text = (message.text as string).trim();
+    const isPhoto = Array.isArray(message.photo) && message.photo.length > 0;
+    const text = (message.text || message.caption || "").trim();
     const fromUsername = message.from?.username || message.from?.first_name || "Student";
 
     // Handle /start [code]
@@ -313,6 +316,28 @@ export class TelegramIntegrationService {
         "🔒 Account not linked.\n\nTo link your account, open StudyOS Settings → Integrations & Agent → Telegram Notifications and tap *Connect Telegram Bot*."
       );
       return { handled: true, action: "unlinked_command" };
+    }
+
+    // Handle student photos (handwritten math problems, code screenshots, textbook diagrams)
+    if (isPhoto) {
+      const statusMsgId = await this.sendInitialStatusMessage(
+        chatId,
+        "📷 *StudyOS AI Tutor is analyzing your image & solving the problem...* ⏳"
+      );
+      await this.sendChatAction(chatId, "typing");
+
+      const highestResPhoto = message.photo[message.photo.length - 1];
+      const photoExplanation = await this.analyzePhotoProblem(
+        user.userId,
+        highestResPhoto.file_id,
+        text
+      );
+
+      if (statusMsgId) {
+        await this.deleteStatusMessage(chatId, statusMsgId);
+      }
+      await this.sendMessageToChat(chatId, photoExplanation);
+      return { handled: true, action: "photo_solution" };
     }
 
     if (text === "/today") {
@@ -737,6 +762,146 @@ export class TelegramIntegrationService {
     }
   }
 
+  /**
+   * Analyze student photos (handwritten math problems, code screenshots, textbook diagrams).
+   * Uses Gemini Vision if configured, or free OCR + Groq Qwen LLM for deep pedagogical solutions.
+   */
+  private async analyzePhotoProblem(
+    userId: string,
+    fileId: string,
+    caption?: string
+  ): Promise<string> {
+    const token = this.getBotToken();
+    if (!token) return "❌ Telegram bot token is not configured.";
+
+    try {
+      // 1. Get file path from Telegram Bot API
+      const fileRes = await fetch(`${TELEGRAM_API}/bot${token}/getFile?file_id=${fileId}`);
+      const fileData = (await fileRes.json()) as { ok: boolean; result?: { file_path?: string } };
+      if (!fileData.ok || !fileData.result?.file_path) {
+        return "❌ Could not retrieve photo from Telegram servers.";
+      }
+
+      // 2. Download the photo
+      const fileUrl = `${TELEGRAM_API}/file/bot${token}/${fileData.result.file_path}`;
+      const imgRes = await fetch(fileUrl);
+      if (!imgRes.ok) {
+        return "❌ Could not download photo from Telegram.";
+      }
+      const arrayBuf = await imgRes.arrayBuffer();
+      const base64Data = Buffer.from(arrayBuf).toString("base64");
+      const mimeType = fileData.result.file_path.endsWith(".png") ? "image/png" : "image/jpeg";
+
+      // 3. Check for Gemini Key (from user's DB config or process.env)
+      let geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+      if (!geminiKey) {
+        const db = getDb();
+        const [userCfg] = await db
+          .select()
+          .from(aiProviderConfigs)
+          .where(and(eq(aiProviderConfigs.userId, userId), eq(aiProviderConfigs.provider, "gemini")))
+          .limit(1);
+        if (userCfg?.encryptedApiKey) {
+          try {
+            geminiKey = decryptApiKey(userCfg.encryptedApiKey);
+          } catch {
+            // Ignore if key cannot be decrypted
+          }
+        }
+      }
+
+      // 4. If Gemini key is available, use direct multimodal vision
+      if (geminiKey) {
+        try {
+          const userPrompt = caption?.trim()
+            ? `The student provided this image with question: "${caption}". Explain the concepts, solve any problem shown step-by-step with formulas and code/ASCII diagrams, point out common pitfalls, and suggest practice steps.`
+            : `Analyze this study material shown in the image with pedagogical rigor. Break down the core concepts, solve any problems step-by-step with clear equations or ASCII diagrams, explain common gotchas, and provide practice tips.`;
+
+          const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      { text: userPrompt },
+                      {
+                        inlineData: {
+                          mimeType,
+                          data: base64Data,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              }),
+            }
+          );
+
+          if (geminiRes.ok) {
+            const gData = (await geminiRes.json()) as any;
+            const textContent = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (textContent?.trim()) {
+              return `🤖 *StudyOS Multimodal AI Tutor*\n\n${textContent.trim()}`;
+            }
+          }
+        } catch (geminiErr) {
+          console.warn("[Telegram Vision] Gemini direct vision failed, falling back to OCR + Groq:", geminiErr);
+        }
+      }
+
+      // 5. Fallback: Free OCR extraction + Groq Qwen Master Tutor
+      let extractedText = "";
+      try {
+        const form = new FormData();
+        form.append("apikey", "helloworld");
+        form.append("isOverlayRequired", "false");
+        form.append("base64Image", `data:${mimeType};base64,${base64Data}`);
+
+        const ocrRes = await fetch("https://api.ocr.space/parse/image", {
+          method: "POST",
+          body: form,
+          signal: AbortSignal.timeout(12000),
+        });
+
+        if (ocrRes.ok) {
+          const ocrData = (await ocrRes.json()) as any;
+          extractedText = ocrData?.ParsedResults?.[0]?.ParsedText?.trim() || "";
+        }
+      } catch (ocrErr) {
+        console.warn("[Telegram Vision] OCR space extraction failed:", ocrErr);
+      }
+
+      if (extractedText && extractedText.length > 5) {
+        const fullQuestion = `[Student Homework/Exam Image OCR Extracted Content]:\n"""\n${extractedText}\n"""\n\nStudent Question / Note: ${caption || "Please solve and explain this problem step-by-step with diagrams, working, and formulas."}`;
+        return await this.askAiTutor(userId, fullQuestion);
+      }
+
+      // 6. If OCR was blank and caption exists
+      if (caption?.trim()) {
+        return await this.askAiTutor(
+          userId,
+          `The student shared an image with caption: "${caption}". Provide a comprehensive breakdown and solution assuming standard academic curriculum context.`
+        );
+      }
+
+      return [
+        "📷 *Image Received by StudyOS*",
+        "",
+        "I received your study image! To provide the most accurate step-by-step solution:",
+        "1. Send the image with a caption (e.g. *Solve problem 3* or *Find the bug in this code*).",
+        "2. Ensure the text or handwriting is sharp and well-lit.",
+        "",
+        "💡 *Pro Tip:* You can also connect your free Google Gemini API key in **StudyOS Settings → AI & Providers** for instant direct image handwriting & diagram recognition!",
+      ].join("\n");
+    } catch (err: any) {
+      console.error("[Telegram Vision] Failed:", err);
+      return `❌ Could not analyze image: ${err?.message || "Internal error"}`;
+    }
+  }
+
   private async askAiTutor(userId: string, question: string): Promise<string> {
     try {
       const res = await LearningAssistantService.processAssistantRequest(userId, {
@@ -752,7 +917,7 @@ export class TelegramIntegrationService {
         return [
           "🤖 *StudyOS AI Tutor*",
           "",
-          "To enable AI answers directly in Telegram, please add your free Gemini API key in **StudyOS Settings → AI & Providers**!",
+          "To enable custom AI models directly in Telegram, you can also connect your own free Groq or Gemini API key in **StudyOS Settings → AI & Providers**!",
           "",
           "In the meantime, you can use:",
           "• /today - Daily plan",

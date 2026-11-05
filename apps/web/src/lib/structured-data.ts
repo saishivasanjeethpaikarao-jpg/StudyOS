@@ -6,7 +6,7 @@
 
 import { isoDuration, type VideoMedia } from "./blog-media";
 
-export const SITE_URL = "https://opensunsama.com";
+export const SITE_URL = "https://studyos-web-8ruc.onrender.com";
 
 const absolute = (url: string) => (url.startsWith("http") ? url : `${SITE_URL}${url}`);
 
@@ -39,7 +39,7 @@ export function blogPostingJsonLd(post: BlogPostingInput) {
       url: SITE_URL,
       logo: {
         "@type": "ImageObject",
-        url: `${SITE_URL}/open-sunsama-logo.png`,
+        url: `${SITE_URL}/og-image.png`,
       },
     },
     mainEntityOfPage: {
