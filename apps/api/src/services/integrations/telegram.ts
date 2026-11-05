@@ -854,7 +854,8 @@ export class TelegramIntegrationService {
 
       // Schedule all 24 lessons across Monday–Saturday (Sundays reserved for review & rest)
       let currentDate = new Date();
-      let scheduledCount = 0;
+      const taskValues: any[] = [];
+      const lessonMeta: { title: string; date: string }[] = [];
 
       for (const lesson of dailyLessons) {
         // Skip Sundays
@@ -863,43 +864,51 @@ export class TelegramIntegrationService {
         }
 
         const dateStr = currentDate.toISOString().split("T")[0]!;
-
-        const [insertedTask] = await db
-          .insert(tasks)
-          .values({
-            userId,
-            title: lesson,
-            scheduledDate: dateStr,
-            estimatedMins: 90,
-            priority: "P1",
-            revision: 1,
-          })
-          .returning({ id: tasks.id });
-
-        await db.insert(timeBlocks).values({
+        taskValues.push({
           userId,
-          taskId: insertedTask?.id,
           title: lesson,
-          date: dateStr,
-          startTime: "18:00",
-          endTime: "19:30",
-          durationMins: 90,
-          color: "#4F46E5",
+          scheduledDate: dateStr,
+          estimatedMins: 90,
+          priority: "P1",
+          revision: 1,
         });
-
-        scheduledCount++;
-        // Advance to next day
+        lessonMeta.push({ title: lesson, date: dateStr });
         currentDate = new Date(currentDate.getTime() + 86400000);
       }
+
+      // Fast single-batch insert for all tasks
+      const insertedTasks = await db
+        .insert(tasks)
+        .values(taskValues)
+        .returning({ id: tasks.id });
+
+      // Fast single-batch insert for all timeBlocks
+      const timeBlockValues = insertedTasks.map((t, idx) => ({
+        userId,
+        taskId: t.id,
+        title: lessonMeta[idx]?.title || "Study Session",
+        date: lessonMeta[idx]?.date || new Date().toISOString().split("T")[0]!,
+        startTime: "18:00",
+        endTime: "19:30",
+        durationMins: 90,
+        color: "#4F46E5",
+      }));
+      await db.insert(timeBlocks).values(timeBlockValues);
+
+      const scheduledCount = insertedTasks.length;
 
       const syncNotice = [
         "",
         "═════════════════════════════════",
-        "📅 *Full-Month StudyOS Timetable Activated!*",
-        `• *${scheduledCount} daily study sessions* scheduled across 4 weeks (Mon–Sat, 18:00–19:30).`,
-        `• Sundays reserved for review and rest.`,
-        `• Visible in your Month & Week Planner on Web, Desktop, and Android APK.`,
-        `• Device alarms and Telegram reminders active for every single session!`,
+        "📅 *Full-Month StudyOS Timetable Scheduled!*",
+        `• *${scheduledCount} daily study sessions* organized across 4 weeks (Mon–Sat, 18:00–19:30).`,
+        `• Sundays kept free for review and rest.`,
+        `• Saved directly to your StudyOS Cloud account — check your live calendar:`,
+        `  🌐 https://studyos-web-8ruc.onrender.com/app/calendar`,
+        `• Telegram reminders will alert you before each block begins!`,
+        "",
+        `💡 *Multi-Device Sync:*`,
+        `Whenever you install the StudyOS Windows Desktop app (.exe) or Android phone APK, this entire timetable will automatically be waiting for you in sync, complete with native device alarms.`,
       ].join("\n");
 
       return aiRoadmap ? `${aiRoadmap}\n${syncNotice}` : `📅 *${subjectName} 30-Day Timetable Scheduled!*\n${syncNotice}`;

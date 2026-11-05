@@ -140,6 +140,7 @@ export class GeminiProvider implements AIProvider {
       generationConfig: {
         temperature: request.temperature ?? 0.2,
         ...(request.maxTokens ? { maxOutputTokens: request.maxTokens } : {}),
+        thinkingConfig: { thinkingBudget: 0 },
       },
     };
 
@@ -208,6 +209,7 @@ export class GeminiProvider implements AIProvider {
         responseMimeType: "application/json",
         ...(request.jsonSchema ? { responseSchema: request.jsonSchema } : {}),
         ...(request.maxTokens ? { maxOutputTokens: request.maxTokens } : {}),
+        thinkingConfig: { thinkingBudget: 0 },
       },
     };
 
