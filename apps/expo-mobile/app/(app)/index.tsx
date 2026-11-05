@@ -7,6 +7,7 @@ import {
   RefreshControl,
   FlatList,
   Modal,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format, addDays, subDays } from 'date-fns';
@@ -17,6 +18,7 @@ import type { Task } from '@open-sunsama/types';
 import { SyncBanner } from '@/components/SyncBanner';
 import { useStudySessions } from '@/hooks/useStudyOS';
 import { formatInZone } from '@/lib/date';
+import { openClockAlarm } from '@/lib/alarms';
 
 /**
  * Tasks screen - shows tasks for the selected date
@@ -24,13 +26,26 @@ import { formatInZone } from '@/lib/date';
 export default function TasksScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
-  
+
   const dateString = format(selectedDate, 'yyyy-MM-dd');
   const { data: tasks, isLoading, refetch, isRefetching } = useTasks({
     scheduledDate: dateString,
   });
   const { data: sessions = [] } = useStudySessions();
-  const todaySessions = sessions.filter((session) => session.status === 'planned' && formatInZone(session.startAt, session.timezone, { year: 'numeric', month: '2-digit', day: '2-digit' }) === formatInZone(selectedDate, session.timezone, { year: 'numeric', month: '2-digit', day: '2-digit' }));
+  const todaySessions = sessions.filter(
+    (session) =>
+      session.status === 'planned' &&
+      formatInZone(session.startAt, session.timezone, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }) ===
+        formatInZone(selectedDate, session.timezone, {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        })
+  );
 
   const goToPreviousDay = useCallback(() => {
     setSelectedDate((prev) => subDays(prev, 1));
@@ -46,9 +61,10 @@ export default function TasksScreen() {
 
   const isToday = format(new Date(), 'yyyy-MM-dd') === dateString;
 
-  const renderTask = useCallback(({ item }: { item: Task }) => (
-    <TaskCard task={item} />
-  ), []);
+  const renderTask = useCallback(
+    ({ item }: { item: Task }) => <TaskCard task={item} />,
+    []
+  );
 
   const handleCreateTask = useCallback(() => {
     setIsCreateModalVisible(true);
@@ -58,12 +74,20 @@ export default function TasksScreen() {
     setIsCreateModalVisible(false);
   }, []);
 
+  const handleSetAlarm = async (startAt: string | Date, timezone: string, title?: string) => {
+    const res = await openClockAlarm(startAt, title || 'Study Session', timezone);
+    if (res === 'unsupported') {
+      Alert.alert('Device Alarm', 'Android built-in Clock intent is supported on Android devices.');
+    }
+  };
+
   // Sort tasks: incomplete first (by position), then completed
-  const sortedTasks = tasks?.slice().sort((a, b) => {
-    if (a.completedAt && !b.completedAt) return 1;
-    if (!a.completedAt && b.completedAt) return -1;
-    return a.position - b.position;
-  }) ?? [];
+  const sortedTasks =
+    tasks?.slice().sort((a, b) => {
+      if (a.completedAt && !b.completedAt) return 1;
+      if (!a.completedAt && b.completedAt) return -1;
+      return a.position - b.position;
+    }) ?? [];
 
   const incompleteTasks = sortedTasks.filter((t) => !t.completedAt);
   const completedTasks = sortedTasks.filter((t) => t.completedAt);
@@ -76,18 +100,16 @@ export default function TasksScreen() {
         <TouchableOpacity onPress={goToPreviousDay} style={styles.navButton}>
           <Text style={styles.navButtonText}>{'<'}</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity onPress={goToToday} style={styles.dateButton}>
           <Text style={styles.dateText}>
             {isToday ? 'Today' : format(selectedDate, 'EEE, MMM d')}
           </Text>
           {!isToday && (
-            <Text style={styles.dateSubtext}>
-              {format(selectedDate, 'yyyy')}
-            </Text>
+            <Text style={styles.dateSubtext}>{format(selectedDate, 'yyyy')}</Text>
           )}
         </TouchableOpacity>
-        
+
         <TouchableOpacity onPress={goToNextDay} style={styles.navButton}>
           <Text style={styles.navButtonText}>{'>'}</Text>
         </TouchableOpacity>
@@ -101,7 +123,25 @@ export default function TasksScreen() {
         </Text>
       </View>
 
-      {todaySessions.length > 0 && <View style={styles.sessionStrip}><Text style={styles.sessionStripTitle}>Study sessions</Text>{todaySessions.map((session) => <Text key={session.id} style={styles.sessionStripItem}>{formatInZone(session.startAt, session.timezone, { hour: 'numeric', minute: '2-digit' })} · {session.plannedMinutes} min</Text>)}</View>}
+      {/* Study Sessions Strip with 1-Tap Real Clock Alarm */}
+      {todaySessions.length > 0 && (
+        <View style={styles.sessionStrip}>
+          <Text style={styles.sessionStripTitle}>Study sessions</Text>
+          {todaySessions.map((session) => (
+            <View key={session.id} style={styles.sessionRow}>
+              <Text style={styles.sessionStripItem}>
+                • {formatInZone(session.startAt, session.timezone, { hour: 'numeric', minute: '2-digit' })} · {session.plannedMinutes} min
+              </Text>
+              <TouchableOpacity
+                style={styles.miniAlarmBtn}
+                onPress={() => void handleSetAlarm(session.startAt, session.timezone, 'Study Session')}
+              >
+                <Text style={styles.miniAlarmText}>⏰ Set Device Alarm</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Task List */}
       <FlatList
@@ -120,9 +160,7 @@ export default function TasksScreen() {
           !isLoading ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyTitle}>No tasks for this day</Text>
-              <Text style={styles.emptySubtitle}>
-                Tap the + button to add a task
-              </Text>
+              <Text style={styles.emptySubtitle}>Tap the + button to add a task</Text>
             </View>
           ) : null
         }
@@ -203,9 +241,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6b7280',
   },
-  sessionStrip: { marginHorizontal: 16, marginTop: 10, padding: 13, borderRadius: 12, backgroundColor: '#fff7ed' },
-  sessionStripTitle: { color: '#9a3412', fontWeight: '800', fontSize: 12, marginBottom: 4 },
-  sessionStripItem: { color: '#c2410c', fontSize: 13, marginTop: 2 },
+  sessionStrip: {
+    marginHorizontal: 16,
+    marginTop: 10,
+    padding: 13,
+    borderRadius: 12,
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+  },
+  sessionStripTitle: {
+    color: '#9a3412',
+    fontWeight: '800',
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  sessionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  sessionStripItem: { color: '#c2410c', fontSize: 13, fontWeight: '600', flex: 1 },
+  miniAlarmBtn: {
+    backgroundColor: '#ffedd5',
+    borderWidth: 1,
+    borderColor: '#fdba74',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  miniAlarmText: { color: '#c2410c', fontWeight: '800', fontSize: 11 },
   listContent: {
     padding: 16,
     paddingBottom: 100,

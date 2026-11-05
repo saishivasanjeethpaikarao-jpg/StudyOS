@@ -1,6 +1,20 @@
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
-import { Button } from "@/components/ui";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+  Download,
+  FileText,
+  Printer,
+} from "lucide-react";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui";
 import type { TimeBlock, CalendarViewMode } from "@open-sunsama/types";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +87,96 @@ function describeRange(
     primary: viewMode === "week" ? "This week" : "3 days",
     secondary,
   };
+}
+
+function downloadFile(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportIcsCalendar(
+  timeBlocks: TimeBlock[],
+  rangeStart: Date,
+  _rangeEnd: Date,
+  viewMode: CalendarViewMode
+) {
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//StudyOS//Student Schedule//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+  ];
+
+  for (const block of timeBlocks) {
+    const startDt = new Date(block.startTime);
+    const endDt = new Date(block.endTime);
+    const startTimeFormatted = format(startDt, "yyyyMMdd'T'HHmmss");
+    const endTimeFormatted = format(endDt, "yyyyMMdd'T'HHmmss");
+    lines.push(
+      "BEGIN:VEVENT",
+      `UID:studyos-${block.id}@studyos.app`,
+      `DTSTAMP:${format(new Date(), "yyyyMMdd'T'HHmmss'Z'")}`,
+      `DTSTART:${startTimeFormatted}`,
+      `DTEND:${endTimeFormatted}`,
+      `SUMMARY:${block.title.replace(/[,;\n]/g, " ")}`,
+      `DESCRIPTION:${(block.notes || "StudyOS Study Session").replace(/[,;\n]/g, " ")}`,
+      "END:VEVENT"
+    );
+  }
+
+  lines.push("END:VCALENDAR");
+  const icsContent = lines.join("\r\n");
+  const filename = `StudyOS_${viewMode}_schedule_${format(rangeStart, "yyyy-MM-dd")}.ics`;
+  downloadFile(icsContent, filename, "text/calendar;charset=utf-8");
+}
+
+function exportTimetableText(
+  timeBlocks: TimeBlock[],
+  rangeStart: Date,
+  rangeEnd: Date,
+  viewMode: CalendarViewMode
+) {
+  const header = `==================================================\nStudyOS Academic Timetable (${viewMode.toUpperCase()} VIEW)\nPeriod: ${format(rangeStart, "MMM d, yyyy")} to ${format(rangeEnd, "MMM d, yyyy")}\nTotal Planned Blocks: ${timeBlocks.length}\n==================================================\n\n`;
+
+  const byDate: Record<string, TimeBlock[]> = {};
+  for (const block of timeBlocks) {
+    const startDt = new Date(block.startTime);
+    const dateKey = format(startDt, "yyyy-MM-dd");
+    const list = byDate[dateKey] ?? [];
+    list.push(block);
+    byDate[dateKey] = list;
+  }
+
+  const dates = Object.keys(byDate).sort();
+  let body = "";
+  if (dates.length === 0) {
+    body = "No study sessions or time blocks scheduled in this range.\n";
+  } else {
+    for (const d of dates) {
+      body += `📅 Date: ${d}\n`;
+      const dateBlocks = byDate[d] ?? [];
+      for (const b of dateBlocks) {
+        const startDt = new Date(b.startTime);
+        const endDt = new Date(b.endTime);
+        const durationMins = Math.round((endDt.getTime() - startDt.getTime()) / 60000);
+        const timeStr = `${format(startDt, "HH:mm")} - ${format(endDt, "HH:mm")}`;
+        body += `  • [${timeStr}] ${b.title} (${durationMins} mins)\n`;
+      }
+      body += "\n";
+    }
+  }
+
+  const content = header + body;
+  const filename = `StudyOS_Timetable_${viewMode}_${format(rangeStart, "yyyy-MM-dd")}.txt`;
+  downloadFile(content, filename, "text/plain;charset=utf-8");
 }
 
 export function CalendarViewToolbar({
@@ -167,6 +271,63 @@ export function CalendarViewToolbar({
             </button>
           ))}
         </div>
+
+        {/* Export / Download Schedule Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 sm:h-8 px-2.5 sm:px-3 text-xs sm:text-[13px] font-medium gap-1.5 border-border/70 hover:bg-muted"
+            >
+              <Download className="h-3.5 w-3.5 text-primary" />
+              <span className="hidden sm:inline">Download</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem
+              onClick={() =>
+                exportIcsCalendar(timeBlocks, rangeStart, rangeEnd, viewMode)
+              }
+              className="cursor-pointer gap-2"
+            >
+              <CalendarIcon className="h-4 w-4 text-indigo-500" />
+              <div>
+                <p className="font-medium text-xs">Download .ics Calendar</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Google / Apple / Phone Calendar
+                </p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                exportTimetableText(timeBlocks, rangeStart, rangeEnd, viewMode)
+              }
+              className="cursor-pointer gap-2"
+            >
+              <FileText className="h-4 w-4 text-emerald-500" />
+              <div>
+                <p className="font-medium text-xs">Download Timetable (.txt)</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Clean printable text schedule
+                </p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => window.print()}
+              className="cursor-pointer gap-2"
+            >
+              <Printer className="h-4 w-4 text-amber-500" />
+              <div>
+                <p className="font-medium text-xs">Print / PDF</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Print visible {viewMode} schedule
+                </p>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Block count badge — only on day view (per-day signal) */}
         {viewMode === "day" && timeBlocks.length > 0 && (

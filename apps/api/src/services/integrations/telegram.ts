@@ -4,6 +4,7 @@ import {
   eq,
   and,
   gte,
+  lte,
   ne,
   isNull,
   users,
@@ -12,6 +13,7 @@ import {
   agentProposals,
   studySessions,
   assignments,
+  timeBlocks,
   telegramLinkRequests,
   telegramSettings,
   integrationAuditLogs,
@@ -368,6 +370,31 @@ export class TelegramIntegrationService {
       return { handled: true, action: "accept_proposal" };
     }
 
+    if (text === "/week" || text.startsWith("/week ")) {
+      const summary = await this.buildWeekSummary(user.userId);
+      await this.sendMessageToChat(chatId, summary);
+      return { handled: true, action: "week_summary" };
+    }
+
+    if (text === "/month" || text.startsWith("/month ")) {
+      const summary = await this.buildMonthSummary(user.userId);
+      await this.sendMessageToChat(chatId, summary);
+      return { handled: true, action: "month_summary" };
+    }
+
+    if (text === "/download" || text === "/export") {
+      const summary = await this.buildDownloadSummary(user.userId);
+      await this.sendMessageToChat(chatId, summary);
+      return { handled: true, action: "export_summary" };
+    }
+
+    if (text.startsWith("/plan ") || text.startsWith("/schedule ")) {
+      const instruction = text.replace(/^\/(plan|schedule)\s+/, "").trim();
+      const response = await this.planAndSaveSchedule(user.userId, instruction);
+      await this.sendMessageToChat(chatId, response);
+      return { handled: true, action: "plan_saved" };
+    }
+
     if (text.startsWith("/ask ")) {
       const question = text.replace(/^\/ask\s+/, "").trim();
       const response = await this.askAiTutor(user.userId, question);
@@ -378,6 +405,14 @@ export class TelegramIntegrationService {
     if (text === "/help") {
       await this.sendMessageToChat(chatId, this.buildHelpMessage());
       return { handled: true, action: "help" };
+    }
+
+    // Check if message is a natural language planning or scheduling request
+    const isPlanningIntent = /^(plan|schedule|set up my schedule|create a schedule|plan my (?:day|week|month|study|sessions?))\b/i.test(text.trim());
+    if (isPlanningIntent) {
+      const planResponse = await this.planAndSaveSchedule(user.userId, text);
+      await this.sendMessageToChat(chatId, planResponse);
+      return { handled: true, action: "plan_saved" };
     }
 
     // Default: conversational AI study tutor assistance
@@ -712,27 +747,325 @@ export class TelegramIntegrationService {
         ].join("\n");
       }
     }
-    return `I received your message: "${question}".\n\nUse /today to check your schedule, /task <title> to add a task, or /help to view all available commands.`;
+    return `I received your message: "${question}".\n\nUse /today to check your schedule, /task <title> to add a task, /plan to schedule study sessions, or /help to view all available commands.`;
+  }
+
+  private async planAndSaveSchedule(userId: string, input: string): Promise<string> {
+    const db = getDb();
+    
+    // 1. Determine target date
+    let targetDate = new Date();
+    const lower = input.toLowerCase();
+    if (lower.includes("tomorrow")) {
+      targetDate = new Date(Date.now() + 86400000);
+    } else if (lower.includes("day after tomorrow")) {
+      targetDate = new Date(Date.now() + 2 * 86400000);
+    }
+    const targetDateStr = targetDate.toISOString().split("T")[0]!;
+
+    // 2. Parse sessions from input
+    const cleanedInput = input
+      .replace(/^(plan|schedule|set up my schedule|create a schedule|plan my (?:day|week|month|study|sessions?))\s*(?:for\s+)?(?:today|tomorrow)?[:\s]*/i, "")
+      .trim();
+
+    const chunks = cleanedInput
+      .split(/[,;\n]|\s+and\s+/i)
+      .map((c) => c.trim())
+      .filter(Boolean);
+
+    interface PlannedItem {
+      title: string;
+      durationMins: number;
+      startTime: string;
+      endTime: string;
+    }
+
+    const plannedItems: PlannedItem[] = [];
+    let currentHour = 16; // default starting slot 4pm
+    let currentMinute = 0;
+
+    const sessionChunks = chunks.length > 0 ? chunks : [cleanedInput || "Study Session"];
+
+    for (let chunk of sessionChunks) {
+      if (!chunk) continue;
+      
+      // Extract duration (e.g., "2 hours", "2h", "45 mins", "1.5 hrs")
+      let durationMins = 60;
+      const durMatch = chunk.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)\b/i);
+      const minMatch = chunk.match(/(\d+)\s*(?:minutes?|mins?|m)\b/i);
+      if (durMatch && durMatch[1]) {
+        durationMins = Math.round(parseFloat(durMatch[1]) * 60);
+        chunk = chunk.replace(durMatch[0], "");
+      } else if (minMatch && minMatch[1]) {
+        durationMins = parseInt(minMatch[1], 10);
+        chunk = chunk.replace(minMatch[0], "");
+      }
+
+      // Extract time (e.g., "at 4pm", "from 10am to 12pm", "at 16:30", "4:00 pm")
+      let startH = currentHour;
+      let startM = currentMinute;
+      const timeMatch = chunk.match(/(?:at|from)?\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+      if (timeMatch && timeMatch[1]) {
+        let h = parseInt(timeMatch[1], 10);
+        const m = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+        const meridian = timeMatch[3]?.toLowerCase();
+        if (meridian === "pm" && h < 12) h += 12;
+        if (meridian === "am" && h === 12) h = 0;
+        if (h >= 0 && h <= 23) {
+          startH = h;
+          startM = m;
+        }
+        chunk = chunk.replace(timeMatch[0], "");
+      }
+
+      // Calculate end time
+      const totalStartMins = startH * 60 + startM;
+      const totalEndMins = totalStartMins + durationMins;
+      const endH = Math.floor(totalEndMins / 60) % 24;
+      const endM = totalEndMins % 60;
+
+      const startTimeStr = `${String(startH).padStart(2, "0")}:${String(startM).padStart(2, "0")}`;
+      const endTimeStr = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+
+      // Clean subject title
+      const cleanTitle = chunk
+        .replace(/\b(to|at|for|hours?|hrs?|mins?|minutes?|today|tomorrow|study|session|plan|review)\b/gi, "")
+        .replace(/[:\-–—]/g, " ")
+        .trim();
+
+      const finalTitle = cleanTitle ? `Study: ${cleanTitle}` : "Focused Study Block";
+
+      plannedItems.push({
+        title: finalTitle,
+        durationMins,
+        startTime: startTimeStr,
+        endTime: endTimeStr,
+      });
+
+      // Advance default time for subsequent items
+      currentHour = (endH + (endM > 30 ? 1 : 0)) % 24;
+      currentMinute = endM > 30 ? 0 : 30;
+    }
+
+    if (plannedItems.length === 0) {
+      plannedItems.push({
+        title: "Study: Focus Block",
+        durationMins: 60,
+        startTime: "16:00",
+        endTime: "17:00",
+      });
+    }
+
+    // Insert into database (both tasks and timeBlocks)
+    for (const item of plannedItems) {
+      const [insertedTask] = await db
+        .insert(tasks)
+        .values({
+          userId,
+          title: item.title,
+          scheduledDate: targetDateStr,
+          estimatedMins: item.durationMins,
+          priority: "P1",
+          revision: 1,
+        })
+        .returning({ id: tasks.id });
+
+      await db.insert(timeBlocks).values({
+        userId,
+        taskId: insertedTask?.id,
+        title: item.title,
+        date: targetDateStr,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        durationMins: item.durationMins,
+        color: "#6366F1",
+      });
+    }
+
+    const formattedDate = targetDate.toLocaleDateString([], {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+
+    const lines = plannedItems.map(
+      (p) => `• ⏱ *${p.startTime} – ${p.endTime}* (${p.durationMins}m)\n  📖 *${p.title}*`
+    );
+
+    return [
+      `📅 *Study Schedule Created & Saved!*`,
+      `Scheduled for *${formattedDate}*`,
+      "",
+      ...lines,
+      "",
+      `⚡ *Total Sync Guaranteed:*`,
+      `• Instantly visible on your Web & Windows Desktop Planner`,
+      `• Synchronized to your Android APK Today & Plan tabs`,
+      `• You will receive a reminder right here before each block begins!`,
+    ].join("\n");
+  }
+
+  private async buildWeekSummary(userId: string): Promise<string> {
+    const db = getDb();
+    const today = new Date();
+    const startStr = today.toISOString().split("T")[0]!;
+    const end = new Date(Date.now() + 7 * 86400000);
+    const endStr = end.toISOString().split("T")[0]!;
+
+    const [blocks, pendingAssignments] = await Promise.all([
+      db.select({
+        id: timeBlocks.id,
+        title: timeBlocks.title,
+        date: timeBlocks.date,
+        startTime: timeBlocks.startTime,
+        endTime: timeBlocks.endTime,
+        durationMins: timeBlocks.durationMins,
+      })
+      .from(timeBlocks)
+      .where(and(eq(timeBlocks.userId, userId), gte(timeBlocks.date, startStr), lte(timeBlocks.date, endStr))),
+      db.select({
+        id: assignments.id,
+        title: assignments.title,
+        dueAt: assignments.dueAt,
+      })
+      .from(assignments)
+      .where(and(eq(assignments.userId, userId), eq(assignments.status, "in_progress"), gte(assignments.dueAt, today), lte(assignments.dueAt, end))),
+    ]);
+
+    let totalMins = 0;
+    const byDay: Record<string, typeof blocks> = {};
+    for (const b of blocks) {
+      totalMins += b.durationMins;
+      const dayList = byDay[b.date] ?? [];
+      dayList.push(b);
+      byDay[b.date] = dayList;
+    }
+
+    const dates = Object.keys(byDay).sort();
+    const lines: string[] = [];
+
+    if (dates.length === 0) {
+      lines.push("No scheduled study blocks for the next 7 days.");
+      lines.push("💡 Tip: Use `/plan 2h Math at 4pm` to plan your week!");
+    } else {
+      for (const d of dates) {
+        const dateObj = new Date(`${d}T00:00:00`);
+        const dayLabel = dateObj.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+        lines.push(`📅 *${dayLabel}*`);
+        const dayItems = byDay[d] ?? [];
+        for (const item of dayItems) {
+          lines.push(`  • \`${item.startTime}-${item.endTime}\` ${item.title} (${item.durationMins}m)`);
+        }
+      }
+    }
+
+    if (pendingAssignments.length > 0) {
+      lines.push("", "📝 *Deadlines This Week:*");
+      for (const asgn of pendingAssignments) {
+        const dStr = new Date(asgn.dueAt).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+        lines.push(`  • *${asgn.title}* (Due: \`${dStr}\`)`);
+      }
+    }
+
+    const totalHours = (totalMins / 60).toFixed(1);
+    return [
+      `🗓 *Your 7-Day Study Schedule*`,
+      `Total planned: *${totalHours} hours* across ${blocks.length} sessions`,
+      "",
+      ...lines,
+      "",
+      `🔗 Open full timetable: https://studyos-web-8ruc.onrender.com/app/calendar`,
+    ].join("\n");
+  }
+
+  private async buildMonthSummary(userId: string): Promise<string> {
+    const db = getDb();
+    const today = new Date();
+    const startStr = today.toISOString().split("T")[0]!;
+    const end = new Date(Date.now() + 30 * 86400000);
+    const endStr = end.toISOString().split("T")[0]!;
+
+    const [blocks, pendingAssignments] = await Promise.all([
+      db.select({
+        id: timeBlocks.id,
+        title: timeBlocks.title,
+        date: timeBlocks.date,
+        durationMins: timeBlocks.durationMins,
+      })
+      .from(timeBlocks)
+      .where(and(eq(timeBlocks.userId, userId), gte(timeBlocks.date, startStr), lte(timeBlocks.date, endStr))),
+      db.select({
+        id: assignments.id,
+        title: assignments.title,
+        dueAt: assignments.dueAt,
+      })
+      .from(assignments)
+      .where(and(eq(assignments.userId, userId), eq(assignments.status, "in_progress"), gte(assignments.dueAt, today), lte(assignments.dueAt, end))),
+    ]);
+
+    let totalMins = 0;
+    for (const b of blocks) totalMins += b.durationMins;
+    const totalHours = (totalMins / 60).toFixed(1);
+
+    const asgnLines = pendingAssignments.length === 0
+      ? ["No pending assignment deadlines in the next 30 days."]
+      : pendingAssignments.map((a) => {
+          const dStr = new Date(a.dueAt).toLocaleDateString([], { month: "short", day: "numeric" });
+          return `• *${a.title}* — Due: \`${dStr}\``;
+        });
+
+    return [
+      `📆 *30-Day Monthly Schedule Overview*`,
+      `• Total Study Sessions: *${blocks.length}* (${totalHours} hours planned)`,
+      `• Pending Assignments: *${pendingAssignments.length}*`,
+      "",
+      `🎯 *Upcoming Milestones & Deadlines:*`,
+      ...asgnLines,
+      "",
+      `💡 You can switch to *Month View* on the Web & Desktop planner anytime:`,
+      `https://studyos-web-8ruc.onrender.com/app/calendar`,
+    ].join("\n");
+  }
+
+  private async buildDownloadSummary(userId: string): Promise<string> {
+    const weekSummary = await this.buildWeekSummary(userId);
+    return [
+      `📥 *Download & Export Your Schedule*`,
+      "",
+      weekSummary,
+      "",
+      `📱 *How to download to Google Calendar / Apple Calendar:*`,
+      `1. Open StudyOS Web Planner: https://studyos-web-8ruc.onrender.com/app/calendar`,
+      `2. Click *Export Schedule* → Select *Download .ics Calendar*`,
+      `3. Open the downloaded file to sync directly with your phone's native calendar!`,
+    ].join("\n");
   }
 
   private buildHelpMessage(): string {
     return [
       "📚 *StudyOS Telegram Bot Guide*",
       "",
-      "📋 *Tasks & Planning*",
+      "🗓 *Schedules & Planning*",
+      "• /plan <text> - Plan study schedule (e.g. /plan 2h Math at 4pm, 1h Physics at 7pm)",
       "• /today - View today's study schedule & sessions",
+      "• /week - Complete 7-day weekly study schedule",
+      "• /month - 30-day schedule & assignment milestones",
+      "• /download - Export timetable for offline use or calendar import",
+      "",
+      "📋 *Tasks & Deadlines*",
       "• /assignments - View upcoming assignment deadlines",
-      "• /task <title> - Quickly add a task for today (e.g. /task Revise Math Chapter 3)",
-      "• /briefing - Complete daily workload briefing",
+      "• /task <title> - Quickly add a task (e.g. /task Revise Math Chapter 3)",
+      "• /briefing - Daily workload briefing",
       "",
       "⏱ *Study & Focus*",
       "• /focus [mins] - Log focus session (e.g. /focus 30)",
       "• /subjects - View your enrolled academic courses",
       "",
-      "🤖 *AI & Hermes Agent*",
+      "🤖 *AI Tutor & Chat*",
+      "• Just type naturally! Ask study questions or say 'plan my day' / 'schedule math tomorrow at 5pm'",
       "• /ask <question> - Ask the AI Study Tutor any question",
       "• /proposals - View pending Hermes Agent suggestions",
-      "• /accept <id> - Approve a Hermes revision plan or task proposal",
+      "• /accept <id> - Approve a Hermes revision plan",
       "• /help - Show this guide",
       "",
       "⚙️ *Preferences*",

@@ -1,17 +1,26 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
 import { format, addDays } from 'date-fns';
 import { useStudySessions } from '@/hooks/useStudyOS';
 import { SyncBanner } from '@/components/SyncBanner';
 import { formatInZone } from '@/lib/date';
+import { openClockAlarm } from '@/lib/alarms';
 
 export default function PlanScreen() {
   const [date, setDate] = useState(new Date());
   const day = format(date, 'yyyy-MM-dd');
   const { data: sessions = [], isLoading, refetch } = useStudySessions();
   const daySessions = sessions.filter((session) => format(session.startAt, 'yyyy-MM-dd') === day && session.status === 'planned');
+
+  const handleSetAlarm = async (startAt: string | Date, timezone: string, title?: string) => {
+    const res = await openClockAlarm(startAt, title || 'Study Session', timezone);
+    if (res === 'unsupported') {
+      Alert.alert('Device Alarm', 'Android built-in Clock intent is supported on Android devices.');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <SyncBanner />
@@ -29,7 +38,24 @@ export default function PlanScreen() {
         {isLoading ? <Text style={styles.muted}>Loading your plan…</Text> : daySessions.length === 0 ? (
           <View style={styles.empty}><Text style={styles.emptyTitle}>A clear day</Text><Text style={styles.muted}>Plan study from an assignment and your sessions will appear here.</Text></View>
         ) : daySessions.map((session) => (
-          <View key={session.id} style={styles.session}><View style={styles.sessionAccent} /><View style={styles.sessionBody}><Text style={styles.sessionTime}>{formatInZone(session.startAt, session.timezone, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} – {formatInZone(session.endAt, session.timezone, { hour: 'numeric', minute: '2-digit' })}</Text><Text style={styles.sessionTitle}>Study session</Text><Text style={styles.muted}>{session.plannedMinutes} minutes · {session.timezone}</Text></View></View>
+          <View key={session.id} style={styles.session}>
+            <View style={styles.sessionAccent} />
+            <View style={styles.sessionBody}>
+              <View style={styles.sessionHeaderRow}>
+                <Text style={styles.sessionTime}>
+                  {formatInZone(session.startAt, session.timezone, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} – {formatInZone(session.endAt, session.timezone, { hour: 'numeric', minute: '2-digit' })}
+                </Text>
+                <TouchableOpacity
+                  style={styles.alarmBtn}
+                  onPress={() => void handleSetAlarm(session.startAt, session.timezone, 'Study Session')}
+                >
+                  <Text style={styles.alarmBtnText}>⏰ Set Device Alarm</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.sessionTitle}>Study session</Text>
+              <Text style={styles.muted}>{session.plannedMinutes} minutes · {session.timezone}</Text>
+            </View>
+          </View>
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -52,8 +78,11 @@ const styles = StyleSheet.create({
   summaryLabel: { color: '#ddd6fe', marginTop: 4 },
   session: { backgroundColor: '#fff', borderRadius: 16, marginBottom: 12, flexDirection: 'row', overflow: 'hidden', shadowColor: '#0f172a', shadowOpacity: 0.06, shadowRadius: 8, elevation: 1 },
   sessionAccent: { width: 5, backgroundColor: '#f97316' },
-  sessionBody: { padding: 16 },
-  sessionTime: { color: '#7c3aed', fontWeight: '800', fontSize: 13 },
+  sessionBody: { flex: 1, padding: 16 },
+  sessionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  sessionTime: { color: '#7c3aed', fontWeight: '800', fontSize: 13, flex: 1 },
+  alarmBtn: { backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fcd34d', paddingHorizontal: 9, paddingVertical: 5, borderRadius: 8 },
+  alarmBtnText: { color: '#b45309', fontWeight: '800', fontSize: 11 },
   sessionTitle: { color: '#172033', fontWeight: '800', fontSize: 17, marginTop: 5 },
   muted: { color: '#64748b', lineHeight: 20 },
   empty: { backgroundColor: '#fff', borderRadius: 16, padding: 22 },
