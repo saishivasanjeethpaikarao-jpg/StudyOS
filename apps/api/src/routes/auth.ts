@@ -51,7 +51,6 @@ authRouter.post('/register', authRateLimiter, zValidator('json', registerSchema)
   const passwordHash = await hashPassword(password);
   const [newUser] = await db.insert(users).values({ email: normalizedEmail, passwordHash, name: name || null }).returning();
   if (!newUser) throw new Error('Failed to create user');
-  void UniversalSyllabusService.seedNewUserWorkspace(newUser.id).catch((err) => console.error('Starter seed error:', err));
 
   const token = signToken(newUser.id);
   if (isWebSessionRequest(c)) await issueBrowserSession(c, newUser.id);
