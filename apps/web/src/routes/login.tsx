@@ -38,6 +38,30 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, goNext]);
 
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const googleParam = params.get("google");
+    if (googleParam) {
+      if (googleParam === "failed") {
+        toast({
+          variant: "destructive",
+          title: "Google sign-in failed",
+          description: "Unable to sign in with Google. Please try again or sign in with your email and password.",
+        });
+      } else if (googleParam === "unavailable") {
+        toast({
+          variant: "destructive",
+          title: "Google sign-in unavailable",
+          description: "Google sign-in is currently unavailable. Please sign in with your email and password.",
+        });
+      }
+      params.delete("google");
+      const cleanUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState(null, "", cleanUrl);
+    }
+  }, []);
+
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {

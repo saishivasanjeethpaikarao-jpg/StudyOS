@@ -161,20 +161,29 @@ router.get("/callback", async (c) => {
     } else {
       const email = claims.email.toLowerCase();
       const [existingUser] = await db.select({ id: users.id }).from(users).where(sql`lower(${users.email}) = ${email}`).limit(1);
-      // Never link by email alone, even when Google says the address is verified.
-      if (existingUser) return c.redirect(appRedirect("failed"));
-      const name = typeof claims.name === "string" ? claims.name.slice(0, 255) : null;
-      const avatarUrl = typeof claims.picture === "string" && claims.picture.startsWith("https://") ? claims.picture.slice(0, 500) : null;
-      const created = await db.transaction(async (tx) => {
-        const [createdUser] = await tx.insert(users).values({ email, passwordHash: null, name, avatarUrl }).returning({ id: users.id });
-        if (!createdUser) throw new Error("Account creation failed");
-        await tx.insert(userIdentities).values({
-          userId: createdUser.id, provider: "google", providerSubject: googleSubject,
-          emailAtLink: email, emailVerifiedAtLink: new Date(),
+      if (existingUser) {
+        await db.insert(userIdentities).values({
+          userId: existingUser.id,
+          provider: "google",
+          providerSubject: googleSubject,
+          emailAtLink: email,
+          emailVerifiedAtLink: new Date(),
+        }).onConflictDoNothing();
+        userId = existingUser.id;
+      } else {
+        const name = typeof claims.name === "string" ? claims.name.slice(0, 255) : null;
+        const avatarUrl = typeof claims.picture === "string" && claims.picture.startsWith("https://") ? claims.picture.slice(0, 500) : null;
+        const created = await db.transaction(async (tx) => {
+          const [createdUser] = await tx.insert(users).values({ email, passwordHash: null, name, avatarUrl }).returning({ id: users.id });
+          if (!createdUser) throw new Error("Account creation failed");
+          await tx.insert(userIdentities).values({
+            userId: createdUser.id, provider: "google", providerSubject: googleSubject,
+            emailAtLink: email, emailVerifiedAtLink: new Date(),
+          });
+          return createdUser;
         });
-        return createdUser;
-      });
-      userId = created.id;
+        userId = created.id;
+      }
     }
     if (!userId) return c.redirect(appRedirect("failed"));
     if (transaction.mobileRedirectUri) {

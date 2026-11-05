@@ -43,6 +43,30 @@ export default function RegisterPage() {
     }
   }, [isAuthenticated, goNext]);
 
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const googleParam = params.get("google");
+    if (googleParam) {
+      if (googleParam === "failed") {
+        toast({
+          variant: "destructive",
+          title: "Google sign-up failed",
+          description: "Unable to sign up with Google. Please try again or create an account with email.",
+        });
+      } else if (googleParam === "unavailable") {
+        toast({
+          variant: "destructive",
+          title: "Google sign-up unavailable",
+          description: "Google sign-up is currently unavailable. Please create an account with email.",
+        });
+      }
+      params.delete("google");
+      const cleanUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
+      window.history.replaceState(null, "", cleanUrl);
+    }
+  }, []);
+
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
     try {
