@@ -23,3 +23,17 @@ services:
         value: 3001
       - key: MIGRATE_ON_START
         value: "false"
+
+  - type: static_site
+    name: studyos-web
+    buildCommand: npm install -g bun@1.4.2 && bun install && cd apps/web && bun run build
+    publishPath: apps/web/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://studyos-api-wy5w.onrender.com
+      - key: VITE_WS_URL
+        value: wss://studyos-api-wy5w.onrender.com/ws
