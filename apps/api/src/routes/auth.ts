@@ -51,7 +51,7 @@ authRouter.post('/register', authRateLimiter, zValidator('json', registerSchema)
   const [newUser] = await db.insert(users).values({ email: normalizedEmail, passwordHash, name: name || null }).returning();
   if (!newUser) throw new Error('Failed to create user');
 
-  const token = isWebSessionRequest(c) ? '' : signToken(newUser.id);
+  const token = signToken(newUser.id);
   if (isWebSessionRequest(c)) await issueBrowserSession(c, newUser.id);
   return c.json({ success: true, data: { user: formatUser(newUser) as User, token } as AuthResponse }, 201);
 });
@@ -67,7 +67,7 @@ authRouter.post('/login', authRateLimiter, zValidator('json', loginSchema), asyn
   const isValid = !!user.passwordHash && await comparePassword(password, user.passwordHash);
   if (!isValid) throw new AuthenticationError('Invalid email or password');
 
-  const token = isWebSessionRequest(c) ? '' : signToken(user.id);
+  const token = signToken(user.id);
   if (isWebSessionRequest(c)) await issueBrowserSession(c, user.id);
   return c.json({ success: true, data: { user: formatUser(user) as User, token } as AuthResponse });
 });

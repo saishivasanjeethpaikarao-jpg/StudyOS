@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User, LoginInput, CreateUserInput, AuthResponse, UpdateUserInput } from "@open-sunsama/types";
-import { getApi, clearApiClient, clearCsrfToken } from "@/lib/api";
+import { getApi, clearApiClient, clearCsrfToken, getToken, setAuthToken } from "@/lib/api";
 import { clearPersistedCache } from "@/lib/query-persister";
 import { identifyUser, trackGoal } from "@/lib/analytics";
 
@@ -24,6 +24,7 @@ function storeUser(user: User) {
 }
 function clearAuthData() {
   localStorage.removeItem(AUTH_USER_KEY);
+  setAuthToken(null);
   clearCsrfToken();
   clearApiClient();
   clearPersistedCache();
@@ -32,13 +33,27 @@ function clearAuthData() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [cachedUser, setCachedUser] = React.useState<User | null>(getStoredUser);
-  const [hasSession, setHasSession] = React.useState(false);
+  const [hasSession, setHasSession] = React.useState(() => !!getToken());
   const [checkingSession, setCheckingSession] = React.useState(true);
 
   React.useEffect(() => {
-    // Remove tokens persisted by older browser builds. All browser requests now use the HttpOnly session cookie.
-    localStorage.removeItem("open_sunsama_token");
-  }, []);
+    if (typeof window === "undefined") return;
+    let tokenFromUrl: string | null = null;
+    if (window.location.hash.includes("token=")) {
+      const match = window.location.hash.match(/token=([^&]+)/);
+      if (match?.[1]) tokenFromUrl = decodeURIComponent(match[1]);
+    } else if (window.location.search.includes("token=")) {
+      const match = window.location.search.match(/[?&]token=([^&]+)/);
+      if (match?.[1]) tokenFromUrl = decodeURIComponent(match[1]);
+    }
+    if (tokenFromUrl) {
+      setAuthToken(tokenFromUrl);
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState(null, "", cleanUrl);
+      setHasSession(true);
+      void queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+    }
+  }, [queryClient]);
 
   const { data: user } = useQuery({
     queryKey: ["auth", "me"],
@@ -50,15 +65,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         storeUser(me);
         return me;
       } catch (error) {
-        const status = (error as { status?: number } | null)?.status;
-        if (status === 401) {
+        const status = (error as { status?: number; response?: { status?: number } } | null)?.status ??
+                       (error as { response?: { status?: number } } | null)?.response?.status;
+        const msg = error instanceof Error ? error.message : "";
+        if (status === 401 || msg.includes("Authentication required") || msg.includes("Unauthorized")) {
           clearAuthData();
           setCachedUser(null);
           setHasSession(false);
           return null;
         }
         // Keep the last local profile available through a temporary outage.
-        setHasSession(!!cachedUser);
+        setHasSession(!!cachedUser && !!getToken());
         return cachedUser;
       } finally { setCheckingSession(false); }
     },
@@ -72,14 +89,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginInput): Promise<AuthResponse> => getApi().auth.login(credentials),
-    onSuccess: ({ user: nextUser }) => {
+    onSuccess: ({ user: nextUser, token }) => {
+      if (token) setAuthToken(token);
       storeUser(nextUser); setCachedUser(nextUser); setHasSession(true);
       queryClient.setQueryData(["auth", "me"], nextUser);
     },
   });
   const registerMutation = useMutation({
     mutationFn: (data: CreateUserInput): Promise<AuthResponse> => getApi().auth.register(data),
-    onSuccess: ({ user: nextUser }) => {
+    onSuccess: ({ user: nextUser, token }) => {
+      if (token) setAuthToken(token);
       trackGoal("signup"); storeUser(nextUser); setCachedUser(nextUser); setHasSession(true);
       queryClient.setQueryData(["auth", "me"], nextUser);
     },
@@ -94,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = React.useCallback(async (credentials: LoginInput) => { await loginMutation.mutateAsync(credentials); }, [loginMutation]);
   const register = React.useCallback(async (data: CreateUserInput) => { await registerMutation.mutateAsync(data); }, [registerMutation]);
   const logout = React.useCallback(async () => {
-    try { if (hasSession) await getApi().auth.logout(); } finally {
+    try { if (hasSession || getToken()) await getApi().auth.logout(); } finally {
       clearAuthData(); setHasSession(false); setCachedUser(null); setCheckingSession(false);
       queryClient.setQueryData(["auth", "me"], null); queryClient.clear();
     }
@@ -103,10 +122,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const effectiveUser = user ?? cachedUser;
   React.useEffect(() => { if (effectiveUser) identifyUser(effectiveUser); }, [effectiveUser?.id, effectiveUser?.email, effectiveUser?.name, effectiveUser?.avatarUrl]);
-  const isAuthenticated = hasSession || (checkingSession && !!cachedUser);
+  const isAuthenticated = hasSession || (checkingSession && !!cachedUser && !!getToken());
   const value = React.useMemo<AuthContextValue>(() => ({
     user: effectiveUser,
-    token: null,
+    token: getToken() ?? null,
     isAuthenticated,
     isLoading: checkingSession && !cachedUser,
     login, register, logout, updateUser,

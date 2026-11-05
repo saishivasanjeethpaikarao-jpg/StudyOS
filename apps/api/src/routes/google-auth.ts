@@ -28,10 +28,14 @@ function config() {
   return { clientId, clientSecret, redirectUri };
 }
 
-function appRedirect(result: "success" | "unavailable" | "failed") {
+function appRedirect(result: "success" | "unavailable" | "failed", token?: string) {
   const base = process.env.WEB_APP_ORIGIN || "http://localhost:3000";
   const url = new URL(result === "success" ? "/app" : "/login", base);
-  if (result !== "success") url.searchParams.set("google", result);
+  if (result !== "success") {
+    url.searchParams.set("google", result);
+  } else if (token) {
+    url.hash = `token=${token}`;
+  }
   return url.toString();
 }
 
@@ -185,7 +189,8 @@ router.get("/callback", async (c) => {
       return c.redirect(target.toString());
     }
     await issueBrowserSession(c, userId);
-    return c.redirect(appRedirect("success"));
+    const token = signToken(userId);
+    return c.redirect(appRedirect("success", token));
   } catch {
     // Provider/verification failures intentionally do not log tokens or claims.
     return c.redirect(appRedirect("failed"));

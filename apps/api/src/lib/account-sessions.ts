@@ -27,7 +27,7 @@ export async function issueBrowserSession(c: Context, userId: string, deviceId?:
   setCookie(c, SESSION_COOKIE, token, {
     httpOnly: true,
     secure: secure(),
-    sameSite: "Lax",
+    sameSite: secure() ? "None" : "Lax",
     path: "/",
     expires: expiresAt,
   });
@@ -72,6 +72,6 @@ export async function revokeBrowserSession(c: Context, sessionId?: string) {
       ));
     }
   }
-  deleteCookie(c, SESSION_COOKIE, { path: "/", secure: secure(), sameSite: "Lax" });
+  deleteCookie(c, SESSION_COOKIE, { path: "/", secure: secure(), sameSite: secure() ? "None" : "Lax" });
 }
 // Session records remain revocable server-side even after a browser cookie is cleared.
