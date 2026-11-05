@@ -397,6 +397,7 @@ export class TelegramIntegrationService {
 
     if (text.startsWith("/ask ")) {
       const question = text.replace(/^\/ask\s+/, "").trim();
+      await this.sendChatAction(chatId, "typing");
       const response = await this.askAiTutor(user.userId, question);
       await this.sendMessageToChat(chatId, response);
       return { handled: true, action: "ai_question" };
@@ -410,12 +411,14 @@ export class TelegramIntegrationService {
     // Check if message is a natural language planning or scheduling request
     const isPlanningIntent = /^(plan|schedule|set up my schedule|create a schedule|plan my (?:day|week|month|study|sessions?))\b/i.test(text.trim());
     if (isPlanningIntent) {
+      await this.sendChatAction(chatId, "typing");
       const planResponse = await this.planAndSaveSchedule(user.userId, text);
       await this.sendMessageToChat(chatId, planResponse);
       return { handled: true, action: "plan_saved" };
     }
 
     // Default: conversational AI study tutor assistance
+    await this.sendChatAction(chatId, "typing");
     const aiResponse = await this.askAiTutor(user.userId, text);
     await this.sendMessageToChat(chatId, aiResponse);
     return { handled: true, action: "ai_chat" };
@@ -1073,36 +1076,146 @@ export class TelegramIntegrationService {
     ].join("\n");
   }
 
-  private async sendMessageToChat(chatId: string, text: string): Promise<boolean> {
+  /**
+   * Send chat action indicator (e.g. typing) to Telegram.
+   */
+  private async sendChatAction(chatId: string, action = "typing"): Promise<void> {
     const token = this.getBotToken();
-    if (!token) return false;
-
+    if (!token) return;
     try {
-      const res = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
+      await fetch(`${TELEGRAM_API}/bot${token}/sendChatAction`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text,
-          parse_mode: "Markdown",
-        }),
+        body: JSON.stringify({ chat_id: chatId, action }),
       });
-      if (!res.ok) {
-        const errText = await res.text();
-        console.warn(`[Telegram] sendMessage error (${res.status}): ${errText}`);
-        if (errText.includes("can't parse entities")) {
+    } catch {
+      // non-fatal action indicator failure
+    }
+  }
+
+  /**
+   * Split a long message into chunks that fit comfortably within Telegram's 4096 character limit.
+   */
+  private splitMessage(text: string, maxChunkLength = 3600): string[] {
+    if (text.length <= maxChunkLength) {
+      return [text];
+    }
+
+    const chunks: string[] = [];
+    const paragraphs = text.split("\n\n");
+    let currentChunk = "";
+
+    for (const paragraph of paragraphs) {
+      if ((currentChunk + "\n\n" + paragraph).length <= maxChunkLength) {
+        currentChunk = currentChunk ? `${currentChunk}\n\n${paragraph}` : paragraph;
+      } else {
+        if (currentChunk) {
+          chunks.push(currentChunk.trim());
+          currentChunk = "";
+        }
+        if (paragraph.length > maxChunkLength) {
+          const lines = paragraph.split("\n");
+          for (const line of lines) {
+            if ((currentChunk + "\n" + line).length <= maxChunkLength) {
+              currentChunk = currentChunk ? `${currentChunk}\n${line}` : line;
+            } else {
+              if (currentChunk) {
+                chunks.push(currentChunk.trim());
+                currentChunk = "";
+              }
+              if (line.length > maxChunkLength) {
+                for (let i = 0; i < line.length; i += maxChunkLength) {
+                  chunks.push(line.slice(i, i + maxChunkLength));
+                }
+              } else {
+                currentChunk = line;
+              }
+            }
+          }
+        } else {
+          currentChunk = paragraph;
+        }
+      }
+    }
+
+    if (currentChunk.trim()) {
+      chunks.push(currentChunk.trim());
+    }
+
+    return chunks.filter(Boolean);
+  }
+
+  private async sendMessageToChat(chatId: string, text: string): Promise<boolean> {
+    const token = this.getBotToken();
+    if (!token || !text?.trim()) return false;
+
+    const chunks = this.splitMessage(text);
+    let allOk = true;
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i]!;
+      let sent = false;
+
+      // 1. Attempt sending with Markdown formatting
+      try {
+        const res = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: chunk,
+            parse_mode: "Markdown",
+          }),
+        });
+
+        if (res.ok) {
+          sent = true;
+        } else {
+          const errText = await res.text();
+          console.warn(`[Telegram] markdown delivery failed (${res.status}): ${errText}`);
+          // 2. Always fallback cleanly to plain text if Markdown fails for any reason
           const fallbackRes = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: chatId, text }),
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: chunk,
+            }),
           });
-          return fallbackRes.ok;
+          sent = fallbackRes.ok;
+          if (!sent) {
+            const fbErr = await fallbackRes.text();
+            console.error(`[Telegram] plain text fallback failed (${fallbackRes.status}): ${fbErr}`);
+          }
+        }
+      } catch (err) {
+        console.error("[Telegram] sendMessage network error:", err);
+        // 3. One retry with plain text on network interruption
+        try {
+          const retryRes = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: chunk,
+            }),
+          });
+          sent = retryRes.ok;
+        } catch {
+          sent = false;
         }
       }
-      return res.ok;
-    } catch (err) {
-      console.error("[Telegram] sendMessage network error:", err);
-      return false;
+
+      if (!sent) {
+        allOk = false;
+      }
+
+      // Small throttle between multiple message chunks to protect Telegram API rate limits
+      if (chunks.length > 1 && i < chunks.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
     }
+
+    return allOk;
   }
 }

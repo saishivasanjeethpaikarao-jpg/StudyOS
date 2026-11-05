@@ -94,6 +94,14 @@ export class AIRouter {
       }
     }
 
+    // Ensure gemini is always a candidate if system-level API key is configured
+    const hasSystemGemini = Boolean(
+      process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY || process.env.GOOGLE_API_KEY
+    );
+    if (hasSystemGemini && !candidateIds.includes("gemini")) {
+      candidateIds.push("gemini");
+    }
+
     let lastError: unknown = null;
     let fallbackFrom: AIProviderId | undefined;
 
@@ -101,28 +109,44 @@ export class AIRouter {
       const providerId = candidateIds[i]!;
       const configRow = configs.find((c) => c.provider === providerId);
 
-      // Skip provider if unconfigured or has no key
-      if (!configRow || !configRow.encryptedApiKey) {
-        continue;
+      let apiKey: string | undefined;
+      if (configRow?.encryptedApiKey) {
+        try {
+          apiKey = decryptApiKey(configRow.encryptedApiKey);
+        } catch {
+          apiKey = undefined;
+        }
       }
 
-      let apiKey: string;
-      try {
-        apiKey = decryptApiKey(configRow.encryptedApiKey);
-      } catch {
+      // Fall back to system environment key if user has not set a personal key
+      if (!apiKey) {
+        if (providerId === "gemini") {
+          apiKey =
+            process.env.GEMINI_API_KEY ||
+            process.env.GOOGLE_AI_KEY ||
+            process.env.GOOGLE_API_KEY;
+        } else if (providerId === "groq") {
+          apiKey = process.env.GROQ_API_KEY;
+        } else if (providerId === "nim") {
+          apiKey = process.env.NIM_API_KEY || process.env.NVIDIA_API_KEY;
+        }
+      }
+
+      // Skip provider if unconfigured and has no system fallback
+      if (!apiKey) {
         continue;
       }
 
       const provider = getProvider(providerId);
       const model =
         (i === 0 && options.preferredModel) ||
-        configRow.defaultModel ||
+        configRow?.defaultModel ||
         provider.getDefaultModel();
 
       const execConfig: AIProviderExecutionConfig = {
         apiKey,
         model,
-        customEndpoint: configRow.customEndpoint,
+        customEndpoint: configRow?.customEndpoint,
       };
 
       // Try executing with 1 bounded retry on transient failure
@@ -228,6 +252,14 @@ export class AIRouter {
       }
     }
 
+    // Ensure gemini is always a candidate if system-level API key is configured
+    const hasSystemGemini = Boolean(
+      process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY || process.env.GOOGLE_API_KEY
+    );
+    if (hasSystemGemini && !candidateIds.includes("gemini")) {
+      candidateIds.push("gemini");
+    }
+
     let lastError: unknown = null;
     let fallbackFrom: AIProviderId | undefined;
 
@@ -235,27 +267,44 @@ export class AIRouter {
       const providerId = candidateIds[i]!;
       const configRow = configs.find((c) => c.provider === providerId);
 
-      if (!configRow || !configRow.encryptedApiKey) {
-        continue;
+      let apiKey: string | undefined;
+      if (configRow?.encryptedApiKey) {
+        try {
+          apiKey = decryptApiKey(configRow.encryptedApiKey);
+        } catch {
+          apiKey = undefined;
+        }
       }
 
-      let apiKey: string;
-      try {
-        apiKey = decryptApiKey(configRow.encryptedApiKey);
-      } catch {
+      // Fall back to system environment key if user has not set a personal key
+      if (!apiKey) {
+        if (providerId === "gemini") {
+          apiKey =
+            process.env.GEMINI_API_KEY ||
+            process.env.GOOGLE_AI_KEY ||
+            process.env.GOOGLE_API_KEY;
+        } else if (providerId === "groq") {
+          apiKey = process.env.GROQ_API_KEY;
+        } else if (providerId === "nim") {
+          apiKey = process.env.NIM_API_KEY || process.env.NVIDIA_API_KEY;
+        }
+      }
+
+      // Skip provider if unconfigured and has no system fallback
+      if (!apiKey) {
         continue;
       }
 
       const provider = getProvider(providerId);
       const model =
         (i === 0 && options.preferredModel) ||
-        configRow.defaultModel ||
+        configRow?.defaultModel ||
         provider.getDefaultModel();
 
       const execConfig: AIProviderExecutionConfig = {
         apiKey,
         model,
-        customEndpoint: configRow.customEndpoint,
+        customEndpoint: configRow?.customEndpoint,
       };
 
       for (let attempt = 0; attempt < 2; attempt++) {
