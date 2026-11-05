@@ -47,13 +47,15 @@ export const errorHandler: ErrorHandler = (err, c: Context) => {
   }
 
   // Handle custom AppError instances
-  if (isAppError(err)) {
+  const isCustomError = isAppError(err) || (Boolean(err) && typeof err === 'object' && 'statusCode' in err && 'code' in err);
+  if (isCustomError) {
+    const customErr = err as any;
     const response: Record<string, unknown> = {
       success: false,
       error: {
-        code: err.code,
-        message: err.message,
-        statusCode: err.statusCode,
+        code: customErr.code,
+        message: customErr.message,
+        statusCode: customErr.statusCode,
       },
     };
 
@@ -61,11 +63,11 @@ export const errorHandler: ErrorHandler = (err, c: Context) => {
     if (err instanceof ValidationError) {
       response.error = {
         ...(response.error as object),
-        errors: err.errors,
+        errors: customErr.errors,
       };
     }
 
-    return c.json(response, err.statusCode as 400 | 401 | 403 | 404 | 409 | 429 | 500);
+    return c.json(response, customErr.statusCode as 400 | 401 | 403 | 404 | 409 | 429 | 500);
   }
 
   // Handle JWT errors
