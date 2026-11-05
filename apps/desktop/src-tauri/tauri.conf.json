@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "StudyOS",
-  "version": "1.0.17",
-  "identifier": "app.opensunsama.desktop",
+  "version": "1.0.18",
+  "identifier": "app.studyos.desktop",
   "build": {
     "beforeDevCommand": "cd ../web && bun run dev",
     "devUrl": "http://localhost:3000",
@@ -78,7 +78,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc1M0VGQzIxNDQ0MDA0RDMKUldUVEJFQkVJZncrZGIySHVwNnp4dDh1MEI5eGtONlZ6NkQyZGNwZE1Ja1V5NllhSEtyV0JDYWsK",
       "endpoints": [
-        "https://api.opensunsama.com/releases/update/{{target}}/{{current_version}}"
+        "https://studyos-api-wy5w.onrender.com/releases/update/{{target}}/{{current_version}}"
       ]
     }
   }

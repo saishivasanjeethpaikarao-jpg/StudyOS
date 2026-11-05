@@ -15,7 +15,7 @@
 
 import { defineMarketingPage } from "../types";
 
-export const REPO = "ShadowWalker2014/open-sunsama";
+export const REPO = "saishivasanjeethpaikarao-jpg/StudyOS";
 const GITHUB = `https://github.com/${REPO}`;
 
 export const openSource = {
@@ -158,7 +158,7 @@ export default defineMarketingPage({
       heading: "Open Sunsama is an open-source task manager you can plan with, self-host and script",
       body: [
         "Open Sunsama is an open-source task manager and daily planner. Your tasks live on a board of days. Drag one onto the calendar to block time for it, right next to your Google, Outlook or iCloud meetings.",
-        "The code is public on [GitHub](https://github.com/ShadowWalker2014/open-sunsama). Run it on your own server with [Docker](/docs/self-hosting/docker), or use the hosted app. Either way you get a REST API and an MCP server, so Claude, ChatGPT or any AI agent can plan with you.",
+        "The code is public on [GitHub](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS). Run it on your own server with [Docker](/docs/self-hosting/docker), or use the hosted app. Either way you get a REST API and an MCP server, so Claude, ChatGPT or any AI agent can plan with you.",
         "The license is non-commercial. You can read it, run it and self-host it for personal use. Companies need a commercial license.",
       ],
       pointsTitle: "In short",
@@ -232,7 +232,7 @@ export default defineMarketingPage({
       heading: "One command runs the whole app on your own server",
       lead: "Clone the repo and start Docker Compose. You get the web app, the REST API, the MCP server and a PostgreSQL database.",
       body: [
-        "Run git clone https://github.com/ShadowWalker2014/open-sunsama.git, then cd open-sunsama and docker compose up -d --build. The first build takes a few minutes. Then open localhost:3000 and create your account.",
+        "Run git clone https://github.com/saishivasanjeethpaikarao-jpg/StudyOS.git, then cd open-sunsama and docker compose up -d --build. The first build takes a few minutes. Then open localhost:3000 and create your account.",
         "It starts four containers: the web app on port 3000, the API on port 3001, PostgreSQL 16 and Redis. The database and Redis listen on localhost only.",
         "Back up with one pg_dump command and restore with psql. To update, run git pull and the same compose command. New database migrations apply when the API starts.",
         "You need Docker 20.10 or newer with Compose 2.24 or newer, and 2 GB of RAM. The [Docker guide](/docs/self-hosting/docker) covers your domain, HTTPS and every setting.",
@@ -245,7 +245,7 @@ export default defineMarketingPage({
       heading: "Your scripts and your AI agent use the same API as the app",
       lead: "Every task and time block is one HTTP call away. Connect an agent with one URL, or point a coding agent at the repo and change the planner itself.",
       body: [
-        "The hosted MCP server lives at https://api.opensunsama.com/mcp. Claude, ChatGPT, Cursor or any MCP client signs in with OAuth and gets 24 tools. A self-hosted server serves the same tools at your own API address plus /mcp. See the [MCP guide](/docs/mcp/overview).",
+        "The hosted MCP server lives at https://studyos-api-wy5w.onrender.com/mcp. Claude, ChatGPT, Cursor or any MCP client signs in with OAuth and gets 24 tools. A self-hosted server serves the same tools at your own API address plus /mcp. See the [MCP guide](/docs/mcp/overview).",
         "The REST API covers tasks, subtasks and time blocks. Create an API key in Settings, pick its scopes, and send it in the X-API-Key header. See the [API reference](/docs/api/authentication).",
         "The code is public, so a coding agent like Claude Code or Cursor can read it and add the feature you want. The repo ships an AGENTS.md file that maps the code for them.",
       ],
@@ -259,7 +259,7 @@ export default defineMarketingPage({
       body: [
         "Allowed: personal use, education, non-profit groups, non-commercial open-source projects, and evaluation and testing.",
         "Needs a commercial license: for-profit companies using it in production, products or services sold for profit, and resale for commercial purposes. For a company license, email ceo@circo.so.",
-        "Because it limits commercial use, it is not open source by the strictest definition. If your company needs a license with no such limit, see Vikunja, Tududi or Super Productivity in the table below. The full text is in the [LICENSE file](https://github.com/ShadowWalker2014/open-sunsama/blob/main/LICENSE).",
+        "Because it limits commercial use, it is not open source by the strictest definition. If your company needs a license with no such limit, see Vikunja, Tududi or Super Productivity in the table below. The full text is in the [LICENSE file](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/blob/main/LICENSE).",
       ],
     },
     {
@@ -387,7 +387,7 @@ export default defineMarketingPage({
 
   faqs: {
     heading: "Questions self-hosters ask about Open Sunsama",
-    lead: "Something missing? Read the [docs](/docs) or open an [issue on GitHub](https://github.com/ShadowWalker2014/open-sunsama/issues).",
+    lead: "Something missing? Read the [docs](/docs) or open an [issue on GitHub](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/issues).",
     items: [
       {
         question: "What is the best open-source task manager?",
@@ -399,7 +399,7 @@ export default defineMarketingPage({
         question: "Is Open Sunsama really open source?",
         answer:
           "The code is public on GitHub. It uses a non-commercial license: you can read it, run it and self-host it for personal use. Companies need a commercial license.",
-        link: { label: "Read the LICENSE file", href: "https://github.com/ShadowWalker2014/open-sunsama/blob/main/LICENSE" },
+        link: { label: "Read the LICENSE file", href: "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/blob/main/LICENSE" },
       },
       {
         question: "What do I need to self-host Open Sunsama?",
@@ -427,7 +427,7 @@ export default defineMarketingPage({
       {
         question: "Can AI agents use my tasks?",
         answer:
-          "Yes. Add https://api.opensunsama.com/mcp to Claude, ChatGPT, Cursor or any MCP client and sign in. Your agent gets 24 tools for tasks, subtasks and time blocks. A self-hosted server serves the same thing at your API address plus /mcp.",
+          "Yes. Add https://studyos-api-wy5w.onrender.com/mcp to Claude, ChatGPT, Cursor or any MCP client and sign in. Your agent gets 24 tools for tasks, subtasks and time blocks. A self-hosted server serves the same thing at your API address plus /mcp.",
         link: { label: "Connect your AI", href: "/docs/mcp/overview" },
       },
       {

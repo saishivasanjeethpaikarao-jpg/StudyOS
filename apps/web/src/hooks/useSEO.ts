@@ -9,7 +9,7 @@ interface SEOConfig {
   noindex?: boolean;
 }
 
-const BASE_URL = "https://opensunsama.com";
+const BASE_URL = "https://studyos-web-8ruc.onrender.com";
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 const SITE_NAME = "StudyOS";
 
@@ -103,8 +103,8 @@ export const SEO_CONFIGS = {
     },
   },
   download: {
-    title: "Desktop App Coming Soon",
-    description: "StudyOS Desktop is not available for public download yet. Use the current student workspace in your browser.",
+    title: "Download StudyOS — Windows & Android Apps",
+    description: "Download official StudyOS apps for Windows (Setup.exe) and Android (APK). Scan QR code to install directly on mobile.",
     canonical: "/download",
   },
   login: {

@@ -41,6 +41,8 @@
     {
       "identifier": "http:default",
       "allow": [
+        { "url": "https://studyos-api-wy5w.onrender.com/**" },
+        { "url": "wss://studyos-api-wy5w.onrender.com/**" },
         { "url": "https://api.opensunsama.com/**" },
         { "url": "wss://api.opensunsama.com/**" },
         { "url": "http://localhost:3001/**" },

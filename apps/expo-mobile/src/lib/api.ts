@@ -2,7 +2,7 @@ import { createApi, createOpenSunsamaClient, type OpenSunsamaClient } from '@ope
 import * as SecureStore from 'expo-secure-store';
 
 // API URL from environment or default to production
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.opensunsama.com';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://studyos-api-wy5w.onrender.com';
 
 const AUTH_TOKEN_KEY = 'open_sunsama_token';
 

@@ -101,7 +101,7 @@ function StudyPlanPreview() {
 export function FutureStudyPlanSection() {
   return (
     <section
-      id="coming-soon"
+      id="study-sessions"
       className="relative scroll-mt-16 overflow-hidden border-t border-border/50 py-24 md:py-32"
     >
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
@@ -112,21 +112,21 @@ export function FutureStudyPlanSection() {
       <div className="container mx-auto grid max-w-6xl items-center gap-14 px-4 lg:grid-cols-[0.76fr_1.24fr] lg:gap-16">
         <Reveal className="mx-auto max-w-2xl lg:mx-0">
           <span className="inline-flex rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
-            Coming soon
+            Academic Execution Engine
           </span>
           <h2 className="mt-5 text-[34px] font-semibold leading-[1.05] tracking-[-0.035em] md:text-[48px]">
             From assignment to study plan.
           </h2>
           <p className="mt-4 text-[16px] leading-relaxed text-muted-foreground md:text-[17px]">
-            StudyOS is being designed to turn larger assignments into manageable
-            Study Sessions that fit around your day. The current app already
-            keeps the assignment and calendar visible; session planning is the
-            next step.
+            StudyOS turns large assignments, lectures, and exams into manageable
+            Study Sessions that fit around your day. Time block your study sessions,
+            synchronize with FocusTube, and track your daily academic mastery.
           </p>
-          <p className="mt-5 text-[13px] leading-relaxed text-muted-foreground">
-            Study Sessions are not included in the current build. This preview
-            shows the intended workflow, not a released feature.
-          </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-emerald-500">
+              ✓ Released across Web, Windows & Android
+            </span>
+          </div>
         </Reveal>
 
         <Reveal delay={140} y={28} className="min-w-0">

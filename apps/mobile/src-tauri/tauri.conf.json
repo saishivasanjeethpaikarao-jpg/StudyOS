@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "StudyOS",
-  "version": "1.0.17",
-  "identifier": "app.opensunsama.mobile",
+  "version": "1.0.18",
+  "identifier": "app.studyos.mobile",
   "build": {
     "beforeDevCommand": "",
     "devUrl": "http://192.168.4.159:3000",

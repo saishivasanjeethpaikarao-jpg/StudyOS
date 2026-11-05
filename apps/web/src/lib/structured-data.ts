@@ -115,7 +115,7 @@ export function softwareApplicationJsonLd(app: SoftwareApplicationInput) {
     author: {
       "@type": "Organization",
       name: "Open Sunsama contributors",
-      url: "https://github.com/ShadowWalker2014/open-sunsama",
+      url: "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS",
     },
   };
 }

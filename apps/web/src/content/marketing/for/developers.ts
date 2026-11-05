@@ -28,7 +28,7 @@ export const snippets: CodeSnippet[] = [
     file: "Terminal",
     code: [
       "# Add the hosted MCP server, then sign in once in the browser",
-      "claude mcp add --transport http open-sunsama https://api.opensunsama.com/mcp",
+      "claude mcp add --transport http open-sunsama https://studyos-api-wy5w.onrender.com/mcp",
     ].join("\n"),
     note: "Claude Code opens a sign-in page the first time. No API key to paste. [Claude setup](/docs/mcp/claude)",
   },
@@ -36,7 +36,7 @@ export const snippets: CodeSnippet[] = [
     id: "cursor",
     label: "Cursor",
     file: "~/.cursor/mcp.json",
-    code: ['{', '  "mcpServers": {', '    "open-sunsama": {', '      "url": "https://api.opensunsama.com/mcp"', "    }", "  }", "}"].join(
+    code: ['{', '  "mcpServers": {', '    "open-sunsama": {', '      "url": "https://studyos-api-wy5w.onrender.com/mcp"', "    }", "  }", "}"].join(
       "\n"
     ),
     note: "Then click **Connect** in Cursor Settings → MCP and allow access. [Cursor setup](/docs/mcp/cursor)",
@@ -47,7 +47,7 @@ export const snippets: CodeSnippet[] = [
     file: "Terminal",
     code: [
       "# Create a task for today with a 60-minute estimate",
-      'curl -X POST "https://api.opensunsama.com/tasks" \\',
+      'curl -X POST "https://studyos-api-wy5w.onrender.com/tasks" \\',
       '  -H "X-API-Key: os_live_xxx" \\',
       '  -H "Content-Type: application/json" \\',
       "  -d '{",
@@ -64,7 +64,7 @@ export const snippets: CodeSnippet[] = [
     label: "Docker",
     file: "Terminal",
     code: [
-      "git clone https://github.com/ShadowWalker2014/open-sunsama.git",
+      "git clone https://github.com/saishivasanjeethpaikarao-jpg/StudyOS.git",
       "cd open-sunsama",
       "docker compose up -d --build",
       "",
@@ -263,7 +263,7 @@ export default defineMarketingPage({
           icon: "github",
           title: "Code you can read",
           body: "A TypeScript monorepo on GitHub: Hono API, React web app, Tauri desktop. Point your agent at it and add what you need.",
-          href: "https://github.com/ShadowWalker2014/open-sunsama",
+          href: "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS",
         },
         {
           icon: "server",
@@ -372,7 +372,7 @@ export default defineMarketingPage({
 
   faqs: {
     heading: "Questions developers ask about Open Sunsama",
-    lead: "Something missing? Read the [docs](/docs) or open an issue on [GitHub](https://github.com/ShadowWalker2014/open-sunsama/issues).",
+    lead: "Something missing? Read the [docs](/docs) or open an issue on [GitHub](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/issues).",
     items: [
       {
         question: "What is the best task manager for developers?",
@@ -389,7 +389,7 @@ export default defineMarketingPage({
       {
         question: "How do I use Open Sunsama with Claude Code or Cursor?",
         answer:
-          "In Claude Code, run claude mcp add --transport http open-sunsama https://api.opensunsama.com/mcp and sign in. In Cursor, add the same URL to mcp.json and click Connect.",
+          "In Claude Code, run claude mcp add --transport http open-sunsama https://studyos-api-wy5w.onrender.com/mcp and sign in. In Cursor, add the same URL to mcp.json and click Connect.",
         link: { label: "MCP setup guides", href: "/docs/mcp/overview" },
       },
       {
@@ -408,7 +408,7 @@ export default defineMarketingPage({
         question: "Is Open Sunsama open source?",
         answer:
           "The code is public on GitHub. It uses a non-commercial license: you can read it, run it and self-host it for personal use. Companies need a commercial license.",
-        link: { label: "See the code", href: "https://github.com/ShadowWalker2014/open-sunsama" },
+        link: { label: "See the code", href: "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS" },
       },
       {
         question: "Does Open Sunsama integrate with GitHub, Linear or Jira?",

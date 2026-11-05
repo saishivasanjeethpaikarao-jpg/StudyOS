@@ -63,7 +63,7 @@ export function useGitHubStars(): number | null {
 const NAV: Array<{ label: string; href: string }> = [
   { label: "Features", href: "/#features" },
   { label: "How it works", href: "/#how-it-works" },
-  { label: "Coming soon", href: "/#coming-soon" },
+  { label: "Download App", href: "/download" },
 ];
 
 const NAV_LINK =

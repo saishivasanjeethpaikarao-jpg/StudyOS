@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "StudyOS",
-    "slug": "open-sunsama",
-    "version": "1.0.0",
+    "slug": "studyos",
+    "version": "1.0.18",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "opensunsama",
+    "scheme": "studyos",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -18,7 +18,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.opensunsama.mobile",
+      "bundleIdentifier": "app.studyos.mobile",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to unlock StudyOS"
       }
@@ -28,7 +28,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.opensunsama.mobile"
+      "package": "app.studyos.mobile"
     },
     "plugins": [
       "expo-router",

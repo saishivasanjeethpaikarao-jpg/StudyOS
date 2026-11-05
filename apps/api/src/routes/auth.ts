@@ -21,7 +21,6 @@ import { deleteFromS3ByUrl } from '../lib/s3.js';
 import { sendPasswordResetEmail, getThemeHexColor } from '../lib/email/index.js';
 import { issueBrowserSession, issueCsrfToken, revokeBrowserSession } from '../lib/account-sessions.js';
 import { googleAuthRouter } from './google-auth.js';
-import { UniversalSyllabusService } from '../services/academics/universal-syllabus.js';
 
 const authRouter = new Hono<{ Variables: AuthVariables }>();
 authRouter.route('/google', googleAuthRouter);

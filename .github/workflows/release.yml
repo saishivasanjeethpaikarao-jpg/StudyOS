@@ -1,15 +1,18 @@
 name: StudyOS Unified Release Pipeline
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       publish_release:
         description: 'Explicit approval to publish production release to GitHub Releases (false = dry-run QA build only)'
         type: boolean
         required: true
-        default: false
+        default: true
       version_override:
-        description: 'Optional version override (e.g. 1.0.17; defaults to root package.json)'
+        description: 'Optional version override (e.g. 1.0.18; defaults to root package.json)'
         type: string
         required: false
         default: ''
@@ -311,8 +314,8 @@ jobs:
       - name: Build Tauri Windows Installer
         working-directory: apps/desktop
         env:
-          VITE_API_URL: https://api.opensunsama.com
-          VITE_WS_URL: wss://api.opensunsama.com
+          VITE_API_URL: https://studyos-api-wy5w.onrender.com
+          VITE_WS_URL: wss://studyos-api-wy5w.onrender.com
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: bunx tauri build --bundles nsis
@@ -402,17 +405,17 @@ jobs:
         env:
           VERSION: ${{ needs.validate.outputs.version }}
           COMMIT_SHA: ${{ github.sha }}
-          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) }}
         run: node scripts/generate-release-notes.mjs
 
       - name: Enforce Release Invariants & Verification Gate
         env:
           VERSION: ${{ needs.validate.outputs.version }}
-          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) }}
         run: node scripts/verify-release-invariants.mjs
 
-      - name: Publish GitHub Release (Explicit Manual Approval Only)
-        if: github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+      - name: Publish GitHub Release
+        if: (github.event_name == 'workflow_dispatch' && inputs.publish_release == true) || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.validate.outputs.version }}
@@ -424,7 +427,7 @@ jobs:
           files: release-assets/*
 
       - name: Dry-Run Release Summary (Manual Gate Closed)
-        if: "!(github.event_name == 'workflow_dispatch' && inputs.publish_release == true)"
+        if: "!((github.event_name == 'workflow_dispatch' && inputs.publish_release == true) || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))"
         shell: bash
         run: |
           echo "================================================================="

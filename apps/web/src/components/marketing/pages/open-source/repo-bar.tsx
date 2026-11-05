@@ -68,10 +68,10 @@ export function RepoBar({ className }: { className?: string }) {
         <Link to="/download" className={CELL}>
           <span className={LABEL}>
             <Tag className="h-3 w-3 shrink-0" aria-hidden />
-            StudyOS Desktop
+            StudyOS Apps
           </span>
-          <span className={VALUE}>Coming soon</span>
-          <span className={META}>No public download yet</span>
+          <span className={VALUE}>v1.0.18 Live</span>
+          <span className={META}>Windows & Android APK</span>
         </Link>
       </div>
     </div>

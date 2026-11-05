@@ -1,4 +1,3 @@
-import { UniversalSyllabusService } from '../services/academics/universal-syllabus.js';
 import { createHash, randomBytes } from "node:crypto";
 import { Hono, type Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";

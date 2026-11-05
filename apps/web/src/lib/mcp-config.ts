@@ -13,14 +13,14 @@ export type McpClient = "cursor" | "claude" | "vscode" | "windsurf";
 export function generateMcpConfig(
   client: McpClient,
   apiKey: string,
-  apiUrl: string = "https://api.opensunsama.com"
+  apiUrl: string = "https://studyos-api-wy5w.onrender.com"
 ): string {
   const baseConfig = {
     command: "npx",
     args: ["-y", "@open-sunsama/mcp"],
     env: {
       OPENSUNSAMA_API_KEY: apiKey,
-      ...(apiUrl !== "https://api.opensunsama.com" && { OPENSUNSAMA_API_URL: apiUrl }),
+      ...(apiUrl !== "https://studyos-api-wy5w.onrender.com" && { OPENSUNSAMA_API_URL: apiUrl }),
     },
   };
 

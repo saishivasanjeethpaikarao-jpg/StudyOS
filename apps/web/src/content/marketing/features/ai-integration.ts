@@ -133,7 +133,7 @@ export default defineMarketingPage({
       ],
       pointsTitle: "In short",
       points: [
-        "One URL: https://api.opensunsama.com/mcp",
+        "One URL: https://studyos-api-wy5w.onrender.com/mcp",
         "Works in Claude, ChatGPT, Claude Code, Cursor and VS Code.",
         "24 tools for tasks, subtasks, time blocks and meetings.",
         "OAuth sign-in: your agent never sees your password.",
@@ -283,7 +283,7 @@ export default defineMarketingPage({
       steps: [
         {
           title: "Copy the URL",
-          body: "Copy **https://api.opensunsama.com/mcp**. It is also in Settings → MCP in the app.",
+          body: "Copy **https://studyos-api-wy5w.onrender.com/mcp**. It is also in Settings → MCP in the app.",
         },
         {
           title: "Add it to your AI app",
@@ -353,7 +353,7 @@ export default defineMarketingPage({
 
   faqs: {
     heading: "Questions about AI and MCP",
-    lead: "Something missing? Read the [MCP docs](/docs/mcp/overview) or ask on [GitHub](https://github.com/ShadowWalker2014/open-sunsama/issues).",
+    lead: "Something missing? Read the [MCP docs](/docs/mcp/overview) or ask on [GitHub](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/issues).",
     items: [
       {
         question: "What is the best AI daily planner?",
@@ -467,7 +467,7 @@ export default defineMarketingPage({
 
   software: {
     featureList: [
-      "Hosted MCP server at https://api.opensunsama.com/mcp",
+      "Hosted MCP server at https://studyos-api-wy5w.onrender.com/mcp",
       "24 MCP tools for tasks, subtasks, time blocks and calendar events",
       "OAuth 2.1 sign-in for Claude, ChatGPT, Cursor and any MCP client",
       "Read-only access to Google, Outlook and iCloud events",

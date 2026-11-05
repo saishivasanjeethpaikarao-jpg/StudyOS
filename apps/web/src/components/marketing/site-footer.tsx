@@ -10,7 +10,7 @@ const FOOTER_COLUMNS: Array<{ title: string; links: Array<[string, string]> }> =
       links: [
         ["Features", "/#features"],
         ["How it works", "/#how-it-works"],
-        ["Coming soon", "/#coming-soon"],
+        ["Download App", "/download"],
         ["Create workspace", "/register"],
         ["Sign in", "/login"],
       ],
