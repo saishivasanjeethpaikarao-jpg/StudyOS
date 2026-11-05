@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: studyos-api
+    env: docker
+    dockerfilePath: ./Dockerfile.api
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://postgres.sdydpcfttodngamwnjek:Sai238313%40%23%24@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
+      - key: TELEGRAM_BOT_TOKEN
+        value: 9182072811:AAFRPXdF5dQsl0xdOCZVwyS5O5YztmX0weA
+      - key: TELEGRAM_BOT_USERNAME
+        value: Study_OSbot
+      - key: TELEGRAM_WEBHOOK_SECRET
+        value: studyos_telegram_webhook_secret_prod
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: MIGRATE_ON_START
+        value: "false"
