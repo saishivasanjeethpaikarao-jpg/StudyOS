@@ -93,7 +93,7 @@ export const errorHandler: ErrorHandler = (err, c: Context) => {
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
-        message: isProduction ? 'Internal server error' : err.message || 'Unknown error',
+        message: err.message || 'Internal server error',
         statusCode: 500,
       },
     },
