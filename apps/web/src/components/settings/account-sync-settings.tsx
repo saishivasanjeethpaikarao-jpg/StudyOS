@@ -42,6 +42,8 @@ export function AccountSyncSettings() {
     syncNow,
     revokeDevice,
     pendingMutationCount,
+    hasConflicts,
+    clearConflicts,
   } = useAccountSync();
   const { data: identities = [] } = useQuery({
     queryKey: ["account", "identities"],
@@ -173,6 +175,20 @@ export function AccountSyncSettings() {
             browser and retried when you reconnect. Other changes still require
             an active connection.
           </p>
+          {hasConflicts && (
+            <div className="mt-3 flex items-center justify-between rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-700 dark:text-amber-400">
+              <span>Some offline changes conflict with newer data on the server.</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={clearConflicts}
+              >
+                Discard conflicting changes
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

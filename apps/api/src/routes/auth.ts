@@ -11,6 +11,7 @@ import type { User, AuthResponse } from '@open-sunsama/types';
 import { hashPassword, comparePassword } from '../lib/password.js';
 import { signToken, verifyTokenForRefresh } from '../lib/jwt.js';
 import { auth, type AuthVariables } from '../middleware/auth.js';
+import { authRateLimiter } from '../middleware/rate-limit.js';
 import {
   registerSchema, loginSchema, updateProfileSchema, changePasswordSchema,
   requestPasswordResetSchema, resetPasswordSchema,
@@ -38,7 +39,7 @@ function formatUser(user: typeof users.$inferSelect): Omit<User, 'passwordHash'>
 }
 
 /** POST /auth/register - Create a new user account */
-authRouter.post('/register', zValidator('json', registerSchema), async (c) => {
+authRouter.post('/register', authRateLimiter, zValidator('json', registerSchema), async (c) => {
   const { email, password, name } = c.req.valid('json');
   const db = getDb();
   const normalizedEmail = email.trim().toLowerCase();
@@ -56,7 +57,7 @@ authRouter.post('/register', zValidator('json', registerSchema), async (c) => {
 });
 
 /** POST /auth/login - Authenticate a user and return a JWT token */
-authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
+authRouter.post('/login', authRateLimiter, zValidator('json', loginSchema), async (c) => {
   const { email, password } = c.req.valid('json');
   const db = getDb();
 
@@ -196,7 +197,7 @@ authRouter.post('/change-password', auth, zValidator('json', changePasswordSchem
 });
 
 /** POST /auth/request-password-reset - Request a password reset email */
-authRouter.post('/request-password-reset', zValidator('json', requestPasswordResetSchema), async (c) => {
+authRouter.post('/request-password-reset', authRateLimiter, zValidator('json', requestPasswordResetSchema), async (c) => {
   const { email } = c.req.valid('json');
   const db = getDb();
 

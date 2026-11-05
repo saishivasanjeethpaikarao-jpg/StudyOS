@@ -104,3 +104,25 @@ export function clearQueuedSyncMutations(): void {
     /* ignore storage failures */
   }
 }
+
+export function clearConflictedSyncMutations(userId: string): void {
+  write(
+    read().filter((item) => {
+      if (item.userId !== userId) return true;
+      const isConflict =
+        item.attempts >= 3 ||
+        (item.lastError ? item.lastError.toLowerCase().includes("conflict") : false);
+      return !isConflict;
+    })
+  );
+}
+
+export function hasConflictedSyncMutations(userId: string): boolean {
+  return read().some((item) => {
+    if (item.userId !== userId) return false;
+    return (
+      item.attempts >= 3 ||
+      (item.lastError ? item.lastError.toLowerCase().includes("conflict") : false)
+    );
+  });
+}

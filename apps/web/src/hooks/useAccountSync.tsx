@@ -12,6 +12,8 @@ import {
   listQueuedSyncMutations,
   removeQueuedSyncMutation,
   updateQueuedSyncMutation,
+  clearConflictedSyncMutations,
+  hasConflictedSyncMutations,
 } from "@/lib/offline-sync-queue";
 
 type SyncState = "starting" | "idle" | "syncing" | "offline" | "error";
@@ -25,6 +27,8 @@ interface SyncContextValue {
   revokeDevice: (id: string) => Promise<void>;
   pendingMutationCount: number;
   queueMutation: (input: SyncMutationInput) => void;
+  hasConflicts: boolean;
+  clearConflicts: () => void;
 }
 const SyncContext = React.createContext<SyncContextValue | null>(null);
 const CLIENT_DEVICE_KEY = "studyos_web_device_id_v1";
@@ -135,6 +139,7 @@ export function AccountSyncProvider({
     null
   );
   const [pendingMutationCount, setPendingMutationCount] = React.useState(0);
+  const [hasConflicts, setHasConflicts] = React.useState(false);
   const running = React.useRef<Promise<void> | null>(null);
   const currentUserId = user?.id;
 
@@ -165,7 +170,9 @@ export function AccountSyncProvider({
         firstError ??= message;
       }
     }
-    setPendingMutationCount(listQueuedSyncMutations(userId).length);
+    const remaining = listQueuedSyncMutations(userId);
+    setPendingMutationCount(remaining.length);
+    setHasConflicts(hasConflictedSyncMutations(userId));
     return firstError;
   }, []);
 
@@ -249,6 +256,13 @@ export function AccountSyncProvider({
     return running.current;
   }, [currentUserId, flushQueuedMutations, isAuthenticated, queryClient]);
 
+  const clearConflicts = React.useCallback(() => {
+    if (!currentUserId) return;
+    clearConflictedSyncMutations(currentUserId);
+    setPendingMutationCount(listQueuedSyncMutations(currentUserId).length);
+    setHasConflicts(false);
+  }, [currentUserId]);
+
   const queueMutation = React.useCallback(
     (input: SyncMutationInput) => {
       if (!currentUserId) return;
@@ -306,6 +320,8 @@ export function AccountSyncProvider({
       revokeDevice,
       pendingMutationCount,
       queueMutation,
+      hasConflicts,
+      clearConflicts,
     }),
     [
       state,
@@ -317,6 +333,8 @@ export function AccountSyncProvider({
       revokeDevice,
       pendingMutationCount,
       queueMutation,
+      hasConflicts,
+      clearConflicts,
     ]
   );
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;

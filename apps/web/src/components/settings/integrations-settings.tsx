@@ -19,6 +19,7 @@ import {
   Search,
 } from "lucide-react";
 import { getApi } from "@/lib/api";
+import { QRCodeDisplay } from "@/components/ui/qr-code";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,32 +48,6 @@ export function IntegrationsSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Queries
-  const { data: connections, isLoading: loadingConns } = useQuery({
-    queryKey: ["integrations", "status"],
-    queryFn: () => getApi().integrations.getStatus(),
-  });
-
-  const { data: telegramSettings, isLoading: loadingTg } = useQuery({
-    queryKey: ["integrations", "telegram", "settings"],
-    queryFn: () => getApi().integrations.getTelegramSettings(),
-  });
-
-  const { data: agentStatus, isLoading: loadingAgent } = useQuery({
-    queryKey: ["integrations", "agent", "status"],
-    queryFn: () => getApi().integrations.getAgentStatus(),
-  });
-
-  const { data: automations, isLoading: loadingAuto } = useQuery({
-    queryKey: ["integrations", "automations"],
-    queryFn: () => getApi().integrations.listAutomations(),
-  });
-
-  const { data: proposals } = useQuery({
-    queryKey: ["integrations", "agent", "proposals"],
-    queryFn: () => getApi().integrations.listAgentProposals(),
-  });
-
   // Modals state
   const [driveModalOpen, setDriveModalOpen] = React.useState(false);
   const [driveSearch, setDriveSearch] = React.useState("");
@@ -91,6 +66,47 @@ export function IntegrationsSettings() {
   const [newAutoTitle, setNewAutoTitle] = React.useState("");
   const [newAutoType, setNewAutoType] = React.useState<any>("daily_briefing");
   const [newAutoTime, setNewAutoTime] = React.useState("08:00");
+
+  // Queries
+  const { data: connections, isLoading: loadingConns } = useQuery({
+    queryKey: ["integrations", "status"],
+    queryFn: () => getApi().integrations.getStatus(),
+  });
+
+  const { data: telegramSettings, isLoading: loadingTg } = useQuery({
+    queryKey: ["integrations", "telegram", "settings"],
+    queryFn: () => getApi().integrations.getTelegramSettings(),
+    refetchInterval: telegramModalOpen ? 2500 : false,
+  });
+
+  const { data: agentStatus, isLoading: loadingAgent } = useQuery({
+    queryKey: ["integrations", "agent", "status"],
+    queryFn: () => getApi().integrations.getAgentStatus(),
+  });
+
+  const { data: automations, isLoading: loadingAuto } = useQuery({
+    queryKey: ["integrations", "automations"],
+    queryFn: () => getApi().integrations.listAutomations(),
+  });
+
+  const { data: proposals } = useQuery({
+    queryKey: ["integrations", "agent", "proposals"],
+    queryFn: () => getApi().integrations.listAgentProposals(),
+  });
+
+
+  // Auto-detect Telegram link completion
+  React.useEffect(() => {
+    if (telegramModalOpen && telegramSettings?.isEnabled && telegramSettings?.chatId) {
+      setTelegramModalOpen(false);
+      toast({
+        title: "Telegram connected!",
+        description: `Linked to @${telegramSettings.username || "student"} successfully.`,
+      });
+    }
+  }, [telegramModalOpen, telegramSettings?.isEnabled, telegramSettings?.chatId, telegramSettings?.username, toast]);
+
+
 
   // Mutations
   const generateTgCodeMutation = useMutation({
@@ -566,12 +582,17 @@ export function IntegrationsSettings() {
               Securely link your Telegram account to receive StudyOS study alerts.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-3 py-2">
+            {telegramDeepLink && (
+              <div className="flex flex-col items-center justify-center p-3 bg-muted/20 rounded-lg border space-y-2">
+                <QRCodeDisplay value={telegramDeepLink} size={150} />
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Scan with your phone to open the bot and tap <strong>Start</strong>
+                </p>
+              </div>
+            )}
             <div className="p-3 bg-muted/40 rounded-lg text-xs space-y-2 border">
-              <p className="font-semibold text-foreground">Step 1: Open the StudyOS Bot</p>
-              <p className="text-muted-foreground">
-                Click the button below or open Telegram and search for the bot.
-              </p>
+              <p className="font-semibold text-foreground">Alternative: Open on this device</p>
               {telegramDeepLink && (
                 <Button size="sm" className="w-full gap-1.5" asChild>
                   <a href={telegramDeepLink} target="_blank" rel="noreferrer">
@@ -581,13 +602,12 @@ export function IntegrationsSettings() {
                 </Button>
               )}
             </div>
-            <div className="p-3 bg-muted/40 rounded-lg text-xs space-y-1 border">
-              <p className="font-semibold text-foreground">Step 2: Send Link Code</p>
-              <p className="text-muted-foreground">Or send this one-time command directly to the bot:</p>
-              <code className="block p-2 bg-background border rounded font-mono text-[11px] select-all">
+            <div className="p-2.5 bg-muted/40 rounded-lg text-xs space-y-1 border">
+              <p className="font-semibold text-foreground">Or send link command directly:</p>
+              <code className="block p-1.5 bg-background border rounded font-mono text-[11px] select-all">
                 /start {telegramLinkCode}
               </code>
-              <p className="text-[10px] text-muted-foreground italic">Code expires in 15 minutes.</p>
+              <p className="text-[10px] text-muted-foreground italic">Single-use token expires in 15 minutes.</p>
             </div>
           </div>
           <DialogFooter>

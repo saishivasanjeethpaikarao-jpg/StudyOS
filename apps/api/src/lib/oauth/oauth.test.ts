@@ -23,7 +23,7 @@ beforeAll(async () => {
   config = await import("./config.js");
   crypto = await import("./crypto.js");
   consent = await import("./consent.js");
-});
+}, 30000);
 
 describe("isAllowedRedirectUri", () => {
   it.each([

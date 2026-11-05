@@ -25,6 +25,23 @@ jobs:
     name: Checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: opensunsama
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/opensunsama
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/opensunsama
+      TZ: UTC
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +65,10 @@ jobs:
 
       - name: Lint
         run: bun run lint
+
+      - name: Migrate test database
+        working-directory: packages/database
+        run: bun run db:migrate
 
       - name: Unit tests
         run: bun run test
