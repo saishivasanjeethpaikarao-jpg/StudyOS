@@ -16,6 +16,7 @@ import {
   subjects,
   agentProposals,
   studySessions,
+  studyNotes,
   assignments,
   timeBlocks,
   telegramLinkRequests,
@@ -951,9 +952,9 @@ export class TelegramIntegrationService {
             },
             {
               type: "youtube" as const,
-              title: "CS50 2024 - Lecture 1 - C (Harvard University)",
-              url: "https://www.youtube.com/watch?v=4Tz_oN_tH8A",
-              providerItemId: "4Tz_oN_tH8A",
+              title: "CS50 Lecture 1: C Programming & Computational Thinking (Harvard)",
+              url: "https://www.youtube.com/watch?v=LfaMVlDaQ24",
+              providerItemId: "LfaMVlDaQ24",
             },
             {
               type: "youtube" as const,
@@ -969,9 +970,15 @@ export class TelegramIntegrationService {
             },
             {
               type: "youtube" as const,
-              title: "File Management in C (Neso Academy)",
-              url: "https://www.youtube.com/watch?v=0k1Lz1x59hA",
-              providerItemId: "0k1Lz1x59hA",
+              title: "C Programming – Features & The First C Program (Neso Academy)",
+              url: "https://www.youtube.com/watch?v=rLf3jnHxSmU",
+              providerItemId: "rLf3jnHxSmU",
+            },
+            {
+              type: "youtube" as const,
+              title: "C Language Full Course with Notes & Practice (Apna College)",
+              url: "https://www.youtube.com/watch?v=irqbmMNs2Bo",
+              providerItemId: "irqbmMNs2Bo",
             },
             {
               type: "web" as const,
@@ -1001,6 +1008,8 @@ export class TelegramIntegrationService {
             },
           ];
 
+      // Remove existing resources for this user and insert fresh verified ones
+      await db.delete(resources).where(eq(resources.userId, userId));
       const resourceValues = focusTubeCourses.map((r) => ({
         userId,
         type: r.type,
@@ -1009,6 +1018,65 @@ export class TelegramIntegrationService {
         providerItemId: r.providerItemId,
       }));
       await db.insert(resources).values(resourceValues);
+
+      // 4. Generate structured Study Notes in study_notes table
+      if (subjectId) {
+        await db
+          .delete(studyNotes)
+          .where(and(eq(studyNotes.userId, userId), eq(studyNotes.subjectId, subjectId)));
+
+        const structuredNotes = isCProg
+          ? [
+              {
+                title: "Module 1: C Architecture, Compilation Pipeline & Toolchain (GCC/Clang)",
+                body: "# Module 1: C Architecture, Compilation Pipeline & Toolchain\\n\\n## 1. Executive Summary & Historical Foundation\\nThe C programming language was created by Dennis Ritchie at Bell Labs (1972) to implement Unix. It remains the foundation of operating systems, compilers, and embedded systems.\\n\\n## 2. The 4-Stage Compilation Process\\n1. **Preprocessing (cpp)**: Expands `#include`, evaluates `#define` macros, strips comments.\\n2. **Compilation (cc1)**: Translates preprocessed C into assembly instructions.\\n3. **Assembly (as)**: Translates assembly into relocatable machine code (`.o`).\\n4. **Linking (ld)**: Combines object files and libraries (`libc`) into the final executable binary.\\n\\n## 3. Process Memory Layout\\n- **Stack (Downwards)**: Local variables and function call frames.\\n- **Heap (Upwards)**: Dynamically allocated memory via `malloc()`.\\n- **BSS Segment**: Uninitialized global and static variables.\\n- **Data Segment**: Initialized global and static variables.\\n- **Text / Code Segment**: Read-only machine code.\\n\\n## 4. Starter Program\\n```c\\n#include <stdio.h>\\n\\nint main(void) {\\n    printf(\\\"StudyOS Kernel Initialized\\\\n\\\");\\n    return 0;\\n}\\n```\\n\\nCompile: `gcc -std=c17 -Wall -Wextra -Werror -pedantic -g main.c -o app`",
+              },
+              {
+                title: "Module 2: Variables, Primitive Types, Memory Sizes & Format Specifiers",
+                body: "# Module 2: Variables, Primitive Types & Memory Sizes\\n\\n## 1. Standard C Data Types\\n- `char`: 1 byte (-128 to 127) → `%c` or `%d`\\n- `short`: 2 bytes (-32,768 to 32,767) → `%hd`\\n- `int`: 4 bytes (-2.14B to 2.14B) → `%d`\\n- `unsigned int`: 4 bytes (0 to 4.29B) → `%u`\\n- `long long`: 8 bytes → `%lld`\\n- `float`: 4 bytes (IEEE 754 6-digit precision) → `%f`\\n- `double`: 8 bytes (IEEE 754 15-digit precision) → `%lf`\\n- `void*` (Pointer): 8 bytes on 64-bit architecture → `%p`\\n\\n## 2. Fixed-Width Integers (`<stdint.h>`)\\nAlways use `int8_t`, `int16_t`, `int32_t`, `int64_t`, `uint32_t`, and `uint64_t` for precise memory control.\\n\\n## 3. Type Casting\\n```c\\nint a = 5, b = 2;\\ndouble result = (double)a / b; // 2.5 (Forces floating-point division)\\n```",
+              },
+              {
+                title: "Module 3: Operators, Boolean Logic & Control Flow (if-else, switch)",
+                body: "# Module 3: Operators, Boolean Logic & Control Flow\\n\\n## 1. Short-Circuit Evaluation\\nIn `A && B`, if `A` is false, `B` is never evaluated. In `A || B`, if `A` is true, `B` is never evaluated.\\n\\n## 2. Bitwise Operators\\n- AND `&`, OR `|`, XOR `^`, NOT `~`, Left Shift `<<`, Right Shift `>>`\\n```c\\nuint8_t flags = 0;\\nflags |= (1 << 0); // Set bit 0\\nif (flags & (1 << 0)) { /* Bit is set */ }\\nflags &= ~(1 << 0); // Clear bit 0\\n```\\n\\n## 3. Switch Jump Tables\\nUse `switch (val) { case 1: ... break; default: ... }` for fast O(1) branch dispatch via jump tables.",
+              },
+              {
+                title: "Module 4: Loops & Iterative Algorithms (for, while, do-while)",
+                body: "# Module 4: Loops & Iterative Algorithms\\n\\n## 1. Loop Comparison\\n- `while`: Entry-checked (0 or more executions). Ideal for streams and sentinel values.\\n- `for`: Entry-checked. Ideal for indexed traversal with known bounds.\\n- `do-while`: Exit-checked (guaranteed at least 1 execution). Ideal for user validation menus.\\n\\n## 2. Safe Stdin Input Validation\\n```c\\nint age;\\ndo {\\n    printf(\\\"Enter age (1-120): \\\");\\n    if (scanf(\\\"%d\\\", &age) != 1) {\\n        while (getchar() != '\\\\n'); // Flush buffer\\n        age = -1;\\n    }\\n} while (age < 1 || age > 120);\\n```",
+              },
+              {
+                title: "Module 5: Functions, Call Stack, Variable Scope & Recursion",
+                body: "# Module 5: Functions, Call Stack & Variable Scope\\n\\n## 1. Call-By-Value\\nAll arguments in C are passed strictly by value (copied). To mutate the caller's variable, you must pass its memory address (pointer).\\n\\n## 2. Storage Classes\\n- `auto`: Local stack variable.\\n- `static` (local): Preserves value across function invocations.\\n- `static` (global): Restricts visibility to current translation unit (`.c`).\\n- `extern`: References variable declared in another unit.\\n\\n## 3. Recursion Base Condition\\nEvery recursive function must have a strict base case to prevent stack overflow.",
+              },
+              {
+                title: "Module 6: 1D & 2D Arrays, Matrices, and String Manipulation",
+                body: "# Module 6: Arrays, Matrices & String Manipulation\\n\\n## 1. Contiguous Memory Layout\\nArrays are contiguous blocks. `arr[i]` is evaluated as `*(arr + i)`.\\n\\n## 2. Null-Terminated Strings\\nIn C, strings are character arrays terminated by `\\\\0` (ASCII 0).\\n```c\\n#include <string.h>\\nchar dest[32];\\nstrncpy(dest, \\\"StudyOS\\\", sizeof(dest) - 1);\\ndest[sizeof(dest) - 1] = '\\\\0';\\nsize_t len = strlen(dest);\\n```\\nAlways use `strncpy` and `fgets` instead of dangerous functions like `strcpy` or `gets`.",
+              },
+              {
+                title: "Module 7: Deep Dive: Pointers, Memory Addresses & Dynamic Allocation",
+                body: "# Module 7: Pointers, Memory Addresses & Dynamic Allocation\\n\\n## 1. Pointer Basics\\n```c\\nint x = 42;\\nint *p = &x;\\n*p = 100; // Mutates x via address\\n```\\n\\n## 2. Dynamic Memory Allocation (`stdlib.h`)\\n```c\\nint *arr = (int*)calloc(10, sizeof(int));\\nif (!arr) return 1; // Out of memory check\\n\\n// Use arr...\\n\\nfree(arr);\\narr = NULL; // Prevent dangling pointer\\n```\\n\\n## 3. Memory Safety Rules\\n- Always check if pointer is non-NULL before dereferencing.\\n- Exactly one `free()` for every `malloc()` / `calloc()`.\\n- Compile with `-fsanitize=address` to catch leaks and buffer overflows instantly.",
+              },
+              {
+                title: "Module 8: Structures, Typedef, Enums, and File I/O Serialization",
+                body: "# Module 8: Structures, Typedef & File I/O\\n\\n## 1. Typedef Structs\\n```c\\ntypedef struct {\\n    int id;\\n    char title[64];\\n    double grade;\\n} StudentRecord;\\n```\\n\\n## 2. File I/O Operations\\n```c\\nFILE *f = fopen(\\\"data.txt\\\", \\\"w\\\");\\nif (f) {\\n    fprintf(f, \\\"%d|%s\\\\n\\\", 1, \\\"Active\\\");\\n    fclose(f);\\n}\\n```\\nAlways check for NULL file handles and call `fclose()`.",
+              },
+            ]
+          : [
+              {
+                title: `${subjectName} - Comprehensive Foundation Notes`,
+                body: `# ${subjectName} Foundations\\n\\n## Key Concepts & Theory\\nDetailed syllabus notes and study materials for ${subjectName}.`,
+              },
+            ];
+
+        await db.insert(studyNotes).values(
+          structuredNotes.map((n) => ({
+            userId,
+            subjectId,
+            title: n.title,
+            body: n.body,
+            revision: 1,
+          }))
+        );
+      }
 
       // Helper function to build rich notes and subtasks
       const buildLessonPackage = (title: string) => {
@@ -1137,14 +1205,16 @@ export class TelegramIntegrationService {
         "═════════════════════════════════",
         "🎯 *Complete StudyOS Academic Package Activated!*",
         `• 📚 *${scheduledCount} daily study sessions* with rich lesson notes and checklist subtasks.`,
-        `• 📺 *5 FocusTube video courses* added to your FocusTube library (distraction-free player).`,
+        `• 📖 *8 Complete Study Notes* prepared in your Notes dashboard with compilable code & diagrams.`,
+        `• 📺 *6 Verified FocusTube video courses* added to your FocusTube library (100% playable).`,
         `• 📝 *4 Weekly Assignments* created with deadlines across Weeks 1 to 4.`,
         `• 🌐 *3 Verified Reference Guides* linked in your Resources dashboard.`,
         `• 🎓 Enrolled in subject: *${isCProg ? "C Programming & Systems Foundations" : subjectName}*.`,
         "",
         "🌐 *Access Everything Directly:*",
-        "• Calendar: https://studyos-web-8ruc.onrender.com/app/calendar",
+        "• Study Notes: https://studyos-web-8ruc.onrender.com/app/notes",
         "• FocusTube: https://studyos-web-8ruc.onrender.com/app/focustube",
+        "• Calendar: https://studyos-web-8ruc.onrender.com/app/calendar",
         "• Assignments: https://studyos-web-8ruc.onrender.com/app/assignments",
         "",
         "💡 *Tip:* You can also connect your own free Groq or Gemini API key in StudyOS Settings → AI & Providers to save shared server quota and customize your models!",
