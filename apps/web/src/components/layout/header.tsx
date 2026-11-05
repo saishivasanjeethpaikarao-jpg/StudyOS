@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   Calendar,
   LayoutGrid,
+  Play,
   List,
   Lightbulb,
   Search,
@@ -111,6 +112,12 @@ export function Header({ className }: HeaderProps) {
             icon={<GraduationCap className="h-3.5 w-3.5" />}
           >
             Subjects
+          </NavLink>
+          <NavLink
+            href="/app/focustube"
+            icon={<Play className="h-3.5 w-3.5 text-red-500 fill-red-500/20" />}
+          >
+            FocusTube
           </NavLink>
           <NavLink
             href="/app/resources"
@@ -332,6 +339,7 @@ interface NavLinkProps {
     | "/app/quizzes"
     | "/app/reminders"
     | "/app/calendar"
+    | "/app/focustube"
     | "/app/ideas";
   icon?: React.ReactNode;
   children: React.ReactNode;

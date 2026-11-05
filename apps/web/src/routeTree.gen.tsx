@@ -333,6 +333,12 @@ const appSubjectsRoute = createRoute({
   component: lazyRouteComponent(() => import("./routes/app/subjects")),
 });
 
+const appFocusTubeRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/focustube",
+  component: lazyRouteComponent(() => import("./routes/app/focustube")),
+});
+
 const appResourcesRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/resources",
@@ -433,6 +439,7 @@ const routeTree = rootRoute.addChildren([
     appTasksListRoute,
     appAssignmentsRoute,
     appSubjectsRoute,
+    appFocusTubeRoute,
     appResourcesRoute,
     appNotesRoute,
     appQuizzesRoute,
