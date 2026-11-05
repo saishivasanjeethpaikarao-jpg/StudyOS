@@ -15,6 +15,7 @@ import { getApi } from "@/lib/api";
 import { learningKeys } from "@/lib/query-keys";
 import { useSubjects } from "@/hooks/useSubjects";
 import { toast } from "@/hooks/use-toast";
+import { TeacherLectureViewer } from "./teacher-lecture-viewer";
 import {
   Badge,
   Button,
@@ -328,16 +329,16 @@ export function NotesPage() {
                 </div>
               </CardHeader>
 
-              <CardContent className="p-4 flex-1 flex flex-col">
-                <textarea
-                  value={body}
-                  onChange={(e) => {
-                    setBody(e.target.value);
-                    scheduleAutosave(title, e.target.value, noteSubjectId);
+              <CardContent className="p-4 flex-1 flex flex-col min-h-[500px]">
+                <TeacherLectureViewer
+                  title={title}
+                  body={body}
+                  subjectName={noteSubjectId ? subjectMap.get(noteSubjectId)?.name : undefined}
+                  onBodyChange={(newBody) => {
+                    setBody(newBody);
+                    scheduleAutosave(title, newBody, noteSubjectId);
                   }}
-                  placeholder="Write your study notes, key formulas, lecture takeaways..."
-                  className="w-full flex-1 resize-none bg-transparent outline-none font-sans text-sm leading-relaxed p-2"
-                  rows={20}
+                  isEditable={true}
                 />
               </CardContent>
             </Card>
