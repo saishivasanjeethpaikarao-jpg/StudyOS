@@ -411,15 +411,23 @@ export class TelegramIntegrationService {
     // Check if message is a natural language planning or scheduling request
     const isPlanningIntent = /^(plan|schedule|set up my schedule|create a schedule|plan my (?:day|week|month|study|sessions?))\b/i.test(text.trim());
     if (isPlanningIntent) {
+      const statusMsgId = await this.sendInitialStatusMessage(chatId, "🧠 *StudyOS AI is organizing your study schedule...* ⏳");
       await this.sendChatAction(chatId, "typing");
       const planResponse = await this.planAndSaveSchedule(user.userId, text);
+      if (statusMsgId) {
+        await this.deleteStatusMessage(chatId, statusMsgId);
+      }
       await this.sendMessageToChat(chatId, planResponse);
       return { handled: true, action: "plan_saved" };
     }
 
     // Default: conversational AI study tutor assistance
+    const statusMsgId = await this.sendInitialStatusMessage(chatId, "🤔 *StudyOS AI Tutor is thinking & preparing your answer...* ⏳");
     await this.sendChatAction(chatId, "typing");
     const aiResponse = await this.askAiTutor(user.userId, text);
+    if (statusMsgId) {
+      await this.deleteStatusMessage(chatId, statusMsgId);
+    }
     await this.sendMessageToChat(chatId, aiResponse);
     return { handled: true, action: "ai_chat" };
   }
@@ -768,34 +776,99 @@ export class TelegramIntegrationService {
       try {
         const aiRes = await LearningAssistantService.processAssistantRequest(userId, {
           action: "chat",
-          message: `Create an exhaustive, ChatGPT-style structured study plan and roadmap for: "${input}". Include visual ASCII flowcharts, weekly phases (Week 1 to Week 4), core concepts, code/theory breakdowns, traps to avoid, and practice milestones.`,
+          message: `Create an exhaustive, ChatGPT-style structured study plan and roadmap for: "${input}". Include visual ASCII flowcharts, weekly phases (Week 1 to Week 4), core concepts, code/theory breakdowns, traps to avoid, and practice milestones. Do not use raw hashtags for headers; use clear bold section titles with emojis.`,
         });
         aiRoadmap = aiRes.content || "";
       } catch (err) {
         console.warn("[Telegram] AI roadmap generation fallback:", err);
       }
 
-      // 2. Automatically seed 4 weekly milestone study tasks into the user's StudyOS calendar
-      const subjectName = input
-        .replace(/^(plan|schedule|create a schedule for|plan my|how to learn|study)\s*/i, "")
-        .replace(/\b(this month|month|to learn|roadmap|guide)\b/gi, "")
-        .trim() || "Focused Study";
+      // 2. Automatically generate and save a realistic 24-day progressive study schedule across the month
+      const isCProg = /c\s*(language|programming)?\b/i.test(input);
+      const subjectName = isCProg
+        ? "C Programming"
+        : input
+            .replace(/^(plan|schedule|create a schedule for|plan my|how to learn|study)\s*/i, "")
+            .replace(/\b(this month|month|to learn|roadmap|guide)\b/gi, "")
+            .trim() || "Focused Study";
 
-      const milestones = [
-        { title: `Week 1: ${subjectName} Foundations & Setup`, daysOffset: 0 },
-        { title: `Week 2: ${subjectName} Core Mechanics & Control Flow`, daysOffset: 7 },
-        { title: `Week 3: ${subjectName} Advanced Concepts & Memory`, daysOffset: 14 },
-        { title: `Week 4: ${subjectName} Capstone Project & Review`, daysOffset: 21 },
+      const cCurriculum = [
+        // Week 1: Foundations, Variables & Control Flow
+        "C Setup: GCC, Clang & First Hello World",
+        "C Data Types: int, float, char & %d %f %c",
+        "C Logic: Arithmetic & Relational Operators",
+        "C Control: if, else if & Switch Statements",
+        "C Loops: while & do-while Loops",
+        "C Loops: for Loops & Nested Patterns",
+        // Week 2: Functions, Scope & Arrays
+        "C Functions: Prototypes & Return Values",
+        "C Scope: Call-by-Value & Local Variables",
+        "C Arrays: 1D Arrays & Contiguous Memory",
+        "C Arrays: 2D Arrays & Matrix Operations",
+        "C Strings: char arrays & null terminator '\\0'",
+        "C Strings: string.h (strlen, strcpy, strcmp)",
+        // Week 3: Pointers, Memory & Structs
+        "C Pointers: Memory Addresses & & Operator",
+        "C Pointers: Dereference * & Pointer Math",
+        "C Pointers: Passing Pointers to Functions",
+        "C Memory: Dynamic Allocation (malloc & calloc)",
+        "C Memory: free() & Preventing Memory Leaks",
+        "C Structs: User-Defined Types & typedef",
+        // Week 4: Advanced Structs, File I/O & Capstone
+        "C Structs: Pointers to Structs & -> Operator",
+        "C Files: fopen, fclose, fprintf, fscanf",
+        "C Preprocessor: #define, #include & Macros",
+        "C Project: CLI Student / Task Manager Part 1",
+        "C Project: File Storage & Search Part 2",
+        "C Review: Final Mock Exam & Comprehensive Debugging",
       ];
 
-      for (const m of milestones) {
-        const milestoneDate = new Date(Date.now() + m.daysOffset * 86400000);
-        const dateStr = milestoneDate.toISOString().split("T")[0]!;
-        const [inserted] = await db
+      const dailyLessons = isCProg
+        ? cCurriculum
+        : [
+            `Week 1 Day 1: ${subjectName} Core Foundations`,
+            `Week 1 Day 2: ${subjectName} Syntax & Setup`,
+            `Week 1 Day 3: ${subjectName} Fundamental Concepts`,
+            `Week 1 Day 4: ${subjectName} Logic & Flow Control`,
+            `Week 1 Day 5: ${subjectName} Practice Exercises`,
+            `Week 1 Day 6: ${subjectName} Weekly Review & Quiz`,
+            `Week 2 Day 1: ${subjectName} Intermediate Principles`,
+            `Week 2 Day 2: ${subjectName} Core Patterns & Structures`,
+            `Week 2 Day 3: ${subjectName} Architecture & Components`,
+            `Week 2 Day 4: ${subjectName} Hands-on Implementation`,
+            `Week 2 Day 5: ${subjectName} Problem Solving Drills`,
+            `Week 2 Day 6: ${subjectName} Mid-point Review`,
+            `Week 3 Day 1: ${subjectName} Advanced Mechanics`,
+            `Week 3 Day 2: ${subjectName} Deep-dive Topics`,
+            `Week 3 Day 3: ${subjectName} Optimization & Debugging`,
+            `Week 3 Day 4: ${subjectName} Complex Problem Solving`,
+            `Week 3 Day 5: ${subjectName} Best Practices & Design`,
+            `Week 3 Day 6: ${subjectName} Week 3 Drill & Assessment`,
+            `Week 4 Day 1: ${subjectName} Capstone Project Architecture`,
+            `Week 4 Day 2: ${subjectName} Capstone Implementation Part 1`,
+            `Week 4 Day 3: ${subjectName} Capstone Implementation Part 2`,
+            `Week 4 Day 4: ${subjectName} Testing & Edge Case Handling`,
+            `Week 4 Day 5: ${subjectName} Final Review & Polish`,
+            `Week 4 Day 6: ${subjectName} Comprehensive Evaluation`,
+          ];
+
+      // Schedule all 24 lessons across Monday–Saturday (Sundays reserved for review & rest)
+      let currentDate = new Date();
+      let scheduledCount = 0;
+
+      for (const lesson of dailyLessons) {
+        // Skip Sundays
+        if (currentDate.getDay() === 0) {
+          currentDate = new Date(currentDate.getTime() + 86400000);
+        }
+
+        const dateStr = currentDate.toISOString().split("T")[0]!;
+
+        const [insertedTask] = await db
           .insert(tasks)
           .values({
             userId,
-            title: m.title,
+            title: lesson,
             scheduledDate: dateStr,
             estimatedMins: 90,
             priority: "P1",
@@ -805,26 +878,31 @@ export class TelegramIntegrationService {
 
         await db.insert(timeBlocks).values({
           userId,
-          taskId: inserted?.id,
-          title: m.title,
+          taskId: insertedTask?.id,
+          title: lesson,
           date: dateStr,
-          startTime: "17:00",
-          endTime: "18:30",
+          startTime: "18:00",
+          endTime: "19:30",
           durationMins: 90,
-          color: "#6366F1",
+          color: "#4F46E5",
         });
+
+        scheduledCount++;
+        // Advance to next day
+        currentDate = new Date(currentDate.getTime() + 86400000);
       }
 
       const syncNotice = [
         "",
         "═════════════════════════════════",
-        "📅 *StudyOS Calendar & Device Sync Activated*",
-        `• 4 Weekly Milestone blocks have been added to your Planner for Weeks 1 to 4.`,
-        `• Synced across Web, Windows Desktop, and Android APK.`,
-        `• You will receive study reminders and device alarms for each session!`,
+        "📅 *Full-Month StudyOS Timetable Activated!*",
+        `• *${scheduledCount} daily study sessions* scheduled across 4 weeks (Mon–Sat, 18:00–19:30).`,
+        `• Sundays reserved for review and rest.`,
+        `• Visible in your Month & Week Planner on Web, Desktop, and Android APK.`,
+        `• Device alarms and Telegram reminders active for every single session!`,
       ].join("\n");
 
-      return aiRoadmap ? `${aiRoadmap}\n${syncNotice}` : `📅 *${subjectName} 4-Week Plan Created!*\n${syncNotice}`;
+      return aiRoadmap ? `${aiRoadmap}\n${syncNotice}` : `📅 *${subjectName} 30-Day Timetable Scheduled!*\n${syncNotice}`;
     }
 
     // 1. Determine target date
@@ -1147,6 +1225,92 @@ export class TelegramIntegrationService {
   }
 
   /**
+   * Send initial thinking status message so user receives instant feedback under 200ms.
+   */
+  private async sendInitialStatusMessage(chatId: string, text: string): Promise<number | undefined> {
+    const token = this.getBotToken();
+    if (!token) return undefined;
+    try {
+      const res = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: "Markdown",
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { result?: { message_id?: number } };
+        return data.result?.message_id;
+      }
+    } catch {
+      // non-fatal status indicator failure
+    }
+    return undefined;
+  }
+
+  /**
+   * Delete temporary thinking placeholder message once answer is ready.
+   */
+  private async deleteStatusMessage(chatId: string, messageId: number): Promise<void> {
+    const token = this.getBotToken();
+    if (!token || !messageId) return;
+    try {
+      await fetch(`${TELEGRAM_API}/bot${token}/deleteMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          message_id: messageId,
+        }),
+      });
+    } catch {
+      // non-fatal deletion failure
+    }
+  }
+
+  /**
+   * Format standard AI markdown into clean, native Telegram format:
+   * 1. Replaces markdown header hashes (###, ##, #) with bold section titles with emojis (📌, 📁, 📚)
+   * 2. Converts markdown bold (**text**) to Telegram bold (*text*)
+   * 3. Converts markdown horizontal rules (---, ***) to clean divider lines
+   * 4. Cleans up symbol clutter so messages look polished and readable without hashtag spam
+   */
+  private formatForTelegram(text: string): string {
+    let out = text;
+    // Replace markdown headers with bold emojis so Telegram doesn't display raw '###'
+    out = out.replace(/^#{3,6}\s*(.+)$/gm, "📌 *$1*");
+    out = out.replace(/^##\s*(.+)$/gm, "📁 *$1*");
+    out = out.replace(/^#\s*(.+)$/gm, "📚 *$1*");
+
+    // Replace horizontal lines with clean dividers
+    out = out.replace(/^[*\-_]{3,}$/gm, "─────────────────────────");
+
+    // Convert bold-italic ***text*** to *text*
+    out = out.replace(/\*\*\*(.+?)\*\*\*/g, "*$1*");
+
+    // Convert standard markdown **bold** to Telegram *bold*
+    out = out.replace(/\*\*([^\*\n]+?)\*\*/g, "*$1*");
+
+    return out.trim();
+  }
+
+  /**
+   * Clean text for plain-text fallback delivery, removing all markdown artifacts (*, #, ```)
+   * so students read smooth, clean text without any weird symbols.
+   */
+  private cleanForPlainText(text: string): string {
+    return text
+      .replace(/\*([^\*\n]+?)\*/g, "$1")
+      .replace(/^#{1,6}\s*/gm, "")
+      .replace(/```[a-z]*\n?/gi, "")
+      .replace(/```/g, "")
+      .replace(/_([^_]+)_/g, "$1")
+      .trim();
+  }
+
+  /**
    * Send chat action indicator (e.g. typing) to Telegram.
    */
   private async sendChatAction(chatId: string, action = "typing"): Promise<void> {
@@ -1215,11 +1379,12 @@ export class TelegramIntegrationService {
     return chunks.filter(Boolean);
   }
 
-  private async sendMessageToChat(chatId: string, text: string): Promise<boolean> {
+  private async sendMessageToChat(chatId: string, rawText: string): Promise<boolean> {
     const token = this.getBotToken();
-    if (!token || !text?.trim()) return false;
+    if (!token || !rawText?.trim()) return false;
 
-    const chunks = this.splitMessage(text);
+    const formattedText = this.formatForTelegram(rawText);
+    const chunks = this.splitMessage(formattedText);
     let allOk = true;
 
     for (let i = 0; i < chunks.length; i++) {
@@ -1244,12 +1409,13 @@ export class TelegramIntegrationService {
           const errText = await res.text();
           console.warn(`[Telegram] markdown delivery failed (${res.status}): ${errText}`);
           // 2. Always fallback cleanly to plain text if Markdown fails for any reason
+          const plainChunk = this.cleanForPlainText(chunk);
           const fallbackRes = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               chat_id: chatId,
-              text: chunk,
+              text: plainChunk,
             }),
           });
           sent = fallbackRes.ok;
@@ -1262,12 +1428,13 @@ export class TelegramIntegrationService {
         console.error("[Telegram] sendMessage network error:", err);
         // 3. One retry with plain text on network interruption
         try {
+          const plainChunk = this.cleanForPlainText(chunk);
           const retryRes = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               chat_id: chatId,
-              text: chunk,
+              text: plainChunk,
             }),
           });
           sent = retryRes.ok;
