@@ -6,7 +6,7 @@ export const frontmatter = {
   section: "api",
 };
 
-The Tasks API lets you manage tasks in Open Sunsama. All endpoints require authentication via JWT token or API key with the appropriate scopes.
+The Tasks API lets you manage tasks in StudyOS. All endpoints require authentication via JWT token or API key with the appropriate scopes.
 
 ## Task Object
 
@@ -70,7 +70,7 @@ GET /tasks
 
 ```bash
 # Get today's incomplete tasks
-curl -X GET "https://api.opensunsama.com/tasks?date=2024-01-15&completed=false" \
+curl -X GET "https://api.studyos-web-8ruc.onrender.com/tasks?date=2024-01-15&completed=false" \
   -H "X-API-Key: os_live_xxx"
 ```
 
@@ -107,7 +107,7 @@ GET /tasks/:id
 ### Example
 
 ```bash
-curl -X GET "https://api.opensunsama.com/tasks/550e8400-e29b-41d4-a716-446655440000" \
+curl -X GET "https://api.studyos-web-8ruc.onrender.com/tasks/550e8400-e29b-41d4-a716-446655440000" \
   -H "X-API-Key: os_live_xxx"
 ```
 
@@ -147,7 +147,7 @@ POST /tasks
 ### Example
 
 ```bash
-curl -X POST "https://api.opensunsama.com/tasks" \
+curl -X POST "https://api.studyos-web-8ruc.onrender.com/tasks" \
   -H "X-API-Key: os_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{
@@ -170,7 +170,7 @@ Only include fields you want to update. Set a field to `null` to clear it.
 
 ```bash
 # Update title and priority
-curl -X PATCH "https://api.opensunsama.com/tasks/550e8400-e29b-41d4-a716-446655440000" \
+curl -X PATCH "https://api.studyos-web-8ruc.onrender.com/tasks/550e8400-e29b-41d4-a716-446655440000" \
   -H "X-API-Key: os_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{
@@ -179,7 +179,7 @@ curl -X PATCH "https://api.opensunsama.com/tasks/550e8400-e29b-41d4-a716-4466554
   }'
 
 # Move to backlog
-curl -X PATCH "https://api.opensunsama.com/tasks/550e8400-e29b-41d4-a716-446655440000" \
+curl -X PATCH "https://api.studyos-web-8ruc.onrender.com/tasks/550e8400-e29b-41d4-a716-446655440000" \
   -H "X-API-Key: os_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{"scheduledDate": null}'
@@ -196,7 +196,7 @@ Marks a task as complete by setting `completedAt` to the current time.
 ### Example
 
 ```bash
-curl -X POST "https://api.opensunsama.com/tasks/550e8400-e29b-41d4-a716-446655440000/complete" \
+curl -X POST "https://api.studyos-web-8ruc.onrender.com/tasks/550e8400-e29b-41d4-a716-446655440000/complete" \
   -H "X-API-Key: os_live_xxx"
 ```
 
@@ -219,7 +219,7 @@ Permanently deletes a task and all its subtasks.
 ### Example
 
 ```bash
-curl -X DELETE "https://api.opensunsama.com/tasks/550e8400-e29b-41d4-a716-446655440000" \
+curl -X DELETE "https://api.studyos-web-8ruc.onrender.com/tasks/550e8400-e29b-41d4-a716-446655440000" \
   -H "X-API-Key: os_live_xxx"
 ```
 

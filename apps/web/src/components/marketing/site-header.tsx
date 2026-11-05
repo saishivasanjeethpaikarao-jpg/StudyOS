@@ -19,13 +19,13 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-export const GITHUB_URL = "https://github.com/ShadowWalker2014/open-sunsama";
+export const GITHUB_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS";
 
 // One request per page load, shared by every component that shows the count
 let starsRequest: Promise<number | null> | null = null;
 function fetchStars(): Promise<number | null> {
   starsRequest ??= fetch(
-    "https://api.github.com/repos/ShadowWalker2014/open-sunsama"
+    "https://api.github.com/repos/saishivasanjeethpaikarao-jpg/StudyOS"
   )
     .then((res) => (res.ok ? res.json() : null))
     .then((repo: { stargazers_count?: number } | null) =>

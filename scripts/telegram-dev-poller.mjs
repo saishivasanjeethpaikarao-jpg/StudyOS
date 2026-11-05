@@ -20,7 +20,10 @@ async function poll() {
           try {
             const hookRes = await fetch(localWebhook, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'x-telegram-bot-api-secret-token': process.env.TELEGRAM_WEBHOOK_SECRET || 'studyos_telegram_webhook_secret_prod',
+              },
               body: JSON.stringify(update),
             });
             const hookData = await hookRes.json();

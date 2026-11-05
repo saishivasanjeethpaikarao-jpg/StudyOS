@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { RichText, SmartLink } from "./rich-text";
 import { BODY, CARD, CONTAINER, EYEBROW, H2, MEDIA_WRAP, SECTION } from "./tokens";
 
-export const MCP_URL = "https://api.opensunsama.com/mcp";
+export const MCP_URL = "https://studyos-api-wy5w.onrender.com/mcp";
 
 function CopyUrl() {
   const [copied, setCopied] = React.useState(false);

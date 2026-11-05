@@ -68,7 +68,7 @@ GET /time-blocks
 
 ```bash
 # Get today's schedule
-curl -X GET "https://api.opensunsama.com/time-blocks?date=2024-01-15" \
+curl -X GET "https://api.studyos-web-8ruc.onrender.com/time-blocks?date=2024-01-15" \
   -H "X-API-Key: os_live_xxx"
 ```
 
@@ -147,7 +147,7 @@ POST /time-blocks
 ### Example
 
 ```bash
-curl -X POST "https://api.opensunsama.com/time-blocks" \
+curl -X POST "https://api.studyos-web-8ruc.onrender.com/time-blocks" \
   -H "X-API-Key: os_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{
@@ -170,7 +170,7 @@ Only include fields you want to update.
 
 ```bash
 # Reschedule a time block
-curl -X PATCH "https://api.opensunsama.com/time-blocks/550e8400-e29b-41d4-a716-446655440010" \
+curl -X PATCH "https://api.studyos-web-8ruc.onrender.com/time-blocks/550e8400-e29b-41d4-a716-446655440010" \
   -H "X-API-Key: os_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{
@@ -179,7 +179,7 @@ curl -X PATCH "https://api.opensunsama.com/time-blocks/550e8400-e29b-41d4-a716-4
   }'
 
 # Link to a different task
-curl -X PATCH "https://api.opensunsama.com/time-blocks/550e8400-e29b-41d4-a716-446655440010" \
+curl -X PATCH "https://api.studyos-web-8ruc.onrender.com/time-blocks/550e8400-e29b-41d4-a716-446655440010" \
   -H "X-API-Key: os_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{
@@ -187,7 +187,7 @@ curl -X PATCH "https://api.opensunsama.com/time-blocks/550e8400-e29b-41d4-a716-4
   }'
 
 # Unlink from task
-curl -X PATCH "https://api.opensunsama.com/time-blocks/550e8400-e29b-41d4-a716-446655440010" \
+curl -X PATCH "https://api.studyos-web-8ruc.onrender.com/time-blocks/550e8400-e29b-41d4-a716-446655440010" \
   -H "X-API-Key: os_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{"taskId": null}'
@@ -204,7 +204,7 @@ Deletes the time block. Any linked task is **not** deleted.
 ### Example
 
 ```bash
-curl -X DELETE "https://api.opensunsama.com/time-blocks/550e8400-e29b-41d4-a716-446655440010" \
+curl -X DELETE "https://api.studyos-web-8ruc.onrender.com/time-blocks/550e8400-e29b-41d4-a716-446655440010" \
   -H "X-API-Key: os_live_xxx"
 ```
 

@@ -26,9 +26,9 @@ import { useMcpConnections, useDisconnectMcpConnection } from "@/hooks/useMcpCon
 import type { ApiKeyScope } from "@open-sunsama/types";
 import { AppLogo } from "./app-logo";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://api.opensunsama.com";
+const API_URL = import.meta.env.VITE_API_URL || "https://studyos-api-wy5w.onrender.com";
 const MCP_URL = `${API_URL.replace(/\/$/, "")}/mcp`;
-const IS_HOSTED = API_URL.replace(/\/$/, "") === "https://api.opensunsama.com";
+const IS_HOSTED = API_URL.replace(/\/$/, "") === "https://studyos-api-wy5w.onrender.com";
 
 const MCP_KEY_NAME = "MCP Integration";
 const MCP_KEY_STORAGE_KEY = "opensunsama_mcp_key";

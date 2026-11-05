@@ -82,7 +82,7 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="container mx-auto mt-12 flex max-w-6xl flex-col items-center justify-between gap-2 border-t border-border/50 px-4 pt-6 text-[12px] text-muted-foreground sm:flex-row">
-        <span>StudyOS · Built on the Open Sunsama foundation</span>
+        <span>StudyOS · The Student Productivity & Academic OS</span>
         <span className="flex items-center gap-1.5">
           <BookOpen className="h-3 w-3" />
           Student-first by design

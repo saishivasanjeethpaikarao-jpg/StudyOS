@@ -51,7 +51,7 @@ export function ProductComparisonSchema({
                   priceCurrency: mainProduct.priceCurrency || "USD",
                 }
               : undefined,
-            url: mainProduct.url || "https://opensunsama.com",
+            url: mainProduct.url || "https://studyos-web-8ruc.onrender.com",
           },
         },
         ...comparedProducts.map((product, index) => ({

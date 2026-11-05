@@ -11,7 +11,7 @@ interface ShareButtonsProps {
   className?: string;
 }
 
-const BASE_URL = "https://opensunsama.com";
+const BASE_URL = "https://studyos-web-8ruc.onrender.com";
 
 /**
  * Social share buttons for blog posts

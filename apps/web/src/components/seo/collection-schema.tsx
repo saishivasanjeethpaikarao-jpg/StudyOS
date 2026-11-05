@@ -9,7 +9,7 @@ interface CollectionSchemaProps {
   maxItems?: number;
 }
 
-const BASE_URL = "https://opensunsama.com";
+const BASE_URL = "https://studyos-web-8ruc.onrender.com";
 
 /**
  * JSON-LD structured data for CollectionPage (blog listing)

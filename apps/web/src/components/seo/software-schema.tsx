@@ -24,7 +24,7 @@ export function SoftwareApplicationSchema({
   priceCurrency = "USD",
   aggregateRating,
   featureList,
-  url = "https://opensunsama.com",
+  url = "https://studyos-web-8ruc.onrender.com",
 }: SoftwareSchemaProps) {
   useEffect(() => {
     const script = document.createElement("script");
@@ -39,14 +39,14 @@ export function SoftwareApplicationSchema({
       "applicationCategory": applicationCategory,
       "operatingSystem": operatingSystem,
       "url": url,
-      "downloadUrl": "https://opensunsama.com/download",
+      "downloadUrl": "https://studyos-web-8ruc.onrender.com/download",
       "offers": price
         ? { "@type": "Offer", "price": price, "priceCurrency": priceCurrency }
         : undefined,
       "author": {
         "@type": "Organization",
-        "name": "Open Sunsama contributors",
-        "url": "https://github.com/ShadowWalker2014/open-sunsama"
+        "name": "StudyOS Team",
+        "url": "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS"
       }
     };
     

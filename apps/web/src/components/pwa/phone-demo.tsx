@@ -105,7 +105,7 @@ export function PhoneDemo({ guide, phase, scale = 1, className }: PhoneDemoProps
                 <AppIcon size={24} />
                 <div className="leading-tight">
                   <div className="text-[9px] font-semibold">StudyOS</div>
-                  <div className="text-[7.5px] text-black/45">opensunsama.com</div>
+                  <div className="text-[7.5px] text-black/45">studyos.app</div>
                 </div>
               </div>
               <div className="overflow-hidden rounded-[12px] bg-white">
@@ -212,7 +212,7 @@ function AddressBar({ icon, top, pressed }: { icon: React.ReactNode; top?: boole
       )}
     >
       <div className="flex h-[26px] flex-1 items-center justify-center rounded-full bg-black/[0.06] text-[8.5px] text-black/70">
-        <span className="mr-[3px] text-[7px]">🔒</span>opensunsama.com
+        <span className="mr-[3px] text-[7px]">🔒</span>studyos.app
       </div>
       <div
         className={cn(
@@ -290,7 +290,7 @@ function ConfirmDialog({ guide, show }: { guide: InstallGuide; show: boolean }) 
           <AppIcon size={30} />
           <div className="leading-tight">
             <div className="text-[10px] font-medium">StudyOS</div>
-            <div className="mt-[2px] text-[7.5px] text-black/40">opensunsama.com</div>
+            <div className="mt-[2px] text-[7.5px] text-black/40">studyos.app</div>
           </div>
         </div>
       </div>

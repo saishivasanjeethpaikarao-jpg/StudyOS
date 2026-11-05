@@ -31,26 +31,26 @@ export function DocsSchema({
       dateModified: dateModified || new Date().toISOString().split("T")[0],
       author: {
         "@type": "Organization",
-        name: "Open Sunsama contributors",
-        url: "https://github.com/ShadowWalker2014/open-sunsama",
+        name: "StudyOS Team",
+        url: "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS",
       },
       publisher: {
         "@type": "Organization",
         name: "StudyOS",
-        url: "https://opensunsama.com",
+        url: "https://studyos-web-8ruc.onrender.com",
         logo: {
           "@type": "ImageObject",
-          url: "https://opensunsama.com/open-sunsama-logo.png",
+          url: "https://studyos-web-8ruc.onrender.com/open-sunsama-logo.png",
         },
       },
       mainEntityOfPage: {
         "@type": "WebPage",
-        "@id": `https://opensunsama.com/docs/${slug}`,
+        "@id": `https://studyos-web-8ruc.onrender.com/docs/${slug}`,
       },
       articleSection: section,
       inLanguage: "en",
       isAccessibleForFree: true,
-      image: "https://opensunsama.com/og-image.png",
+      image: "https://studyos-web-8ruc.onrender.com/og-image.png",
     });
 
     // Remove existing schema if present

@@ -25,12 +25,12 @@ const FAQS: MarketingFaq[] = [
       "There is no public StudyOS desktop or Android release in this phase. The current web workspace is responsive, while native packaging and release work remain separate future milestones.",
   },
   {
-    question: "How does StudyOS relate to Open Sunsama?",
+    question: "Where can I find the source code and contribute?",
     answer:
-      "StudyOS is being built incrementally on the inherited Open Sunsama foundation. The project preserves upstream attribution and license information while developing a student-first product.",
+      "StudyOS is completely open source. You can explore the codebase, report issues, suggest new academic tools, and track progress on GitHub.",
     link: {
-      label: "View the inherited foundation",
-      href: "https://github.com/ShadowWalker2014/open-sunsama",
+      label: "View StudyOS on GitHub",
+      href: "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS",
     },
   },
 ];

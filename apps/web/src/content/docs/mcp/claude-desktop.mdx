@@ -1,23 +1,23 @@
 export const frontmatter = {
   title: "Claude Desktop Setup",
   description:
-    "Connect Open Sunsama to Claude Desktop. Add it once as a connector with OAuth sign-in, or run the local MCP server with an API key.",
+    "Connect StudyOS to Claude Desktop. Add it once as a connector with OAuth sign-in, or run the local MCP server with an API key.",
   order: 5,
   section: "mcp",
 };
 
-Claude Desktop uses the same connectors as claude.ai. If you've already added Open Sunsama on the web, it's available in the Desktop app too. There's nothing to install and no config file to edit.
+Claude Desktop uses the same connectors as claude.ai. If you've already added StudyOS on the web, it's available in the Desktop app too. There's nothing to install and no config file to edit.
 
 ## Recommended: add the connector
 
 1. In Claude Desktop, open **Settings → Customize → Connectors** and click **Add**.
-2. Enter the name **Open Sunsama** and this MCP server URL:
+2. Enter the name **StudyOS** and this MCP server URL:
 
    ```
-   https://api.opensunsama.com/mcp
+   https://api.studyos-web-8ruc.onrender.com/mcp
    ```
 
-3. Click **Continue**, keep the detected sign-in settings, and click **Add**. Then click **Connect**, sign in to Open Sunsama, and click **Allow access**.
+3. Click **Continue**, keep the detected sign-in settings, and click **Add**. Then click **Connect**, sign in to StudyOS, and click **Allow access**.
 
 The full walkthrough, including Team and Enterprise plans, is in [Claude setup](/docs/mcp/claude).
 
@@ -25,7 +25,7 @@ The full walkthrough, including Team and Enterprise plans, is in [Claude setup](
 
 Use this if your organization blocks custom connectors, or if you point Claude Desktop at a self-hosted instance that isn't reachable from the internet.
 
-1. In Open Sunsama, open **Settings → MCP**, expand **Use an API key instead**, and click **Generate key**.
+1. In StudyOS, open **Settings → MCP**, expand **Use an API key instead**, and click **Generate key**.
 2. In Claude Desktop, open **Settings → Developer → Edit Config**. This opens `claude_desktop_config.json`:
    - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
    - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -48,7 +48,7 @@ Use this if your organization blocks custom connectors, or if you point Claude D
    For a self-hosted instance, add `"OPENSUNSAMA_API_URL": "https://api.your-domain.com"` to `env`.
 4. Quit and reopen Claude Desktop.
 
-The local server needs Node.js 18 or newer. To check it outside Claude, run `OPENSUNSAMA_API_KEY=os_your_key npx @open-sunsama/mcp`. It should print `Open Sunsama MCP Server running on stdio`.
+The local server needs Node.js 18 or newer. To check it outside Claude, run `OPENSUNSAMA_API_KEY=os_your_key npx @open-sunsama/mcp`. It should print `StudyOS MCP Server running on stdio`.
 
 Logs are at `~/Library/Logs/Claude/mcp-server-open-sunsama.log` on macOS and `%APPDATA%\Claude\logs\mcp-server-open-sunsama.log` on Windows.
 

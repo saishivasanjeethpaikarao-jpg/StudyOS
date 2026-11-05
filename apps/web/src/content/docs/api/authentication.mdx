@@ -1,12 +1,12 @@
 export const frontmatter = {
   title: "Authentication",
   description:
-    "Learn how to authenticate with the Open Sunsama API using JWT tokens or API keys.",
+    "Learn how to authenticate with the StudyOS API using JWT tokens or API keys.",
   order: 1,
   section: "api",
 };
 
-The Open Sunsama API supports two authentication methods: **JWT tokens** for user sessions and **API keys** for programmatic access.
+The StudyOS API supports two authentication methods: **JWT tokens** for user sessions and **API keys** for programmatic access.
 
 ## Authentication Methods
 
@@ -36,7 +36,7 @@ X-API-Key: os_live_abc123...
 
 ## Getting an API Key
 
-1. Log into Open Sunsama at [opensunsama.com/app](https://opensunsama.com/app)
+1. Log into StudyOS at [studyos-web-8ruc.onrender.com/app](https://studyos-web-8ruc.onrender.com/app)
 2. Go to **Settings** → **API Keys**
 3. Click **Generate New Key**
 4. Select the scopes you need:
@@ -57,7 +57,7 @@ API keys follow this format:
 os_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-- `os_` - Prefix identifying Open Sunsama keys
+- `os_` - Prefix identifying StudyOS keys
 - `live_` - Environment (`live` for production, `test` for sandbox)
 - 32 character random string
 
@@ -65,18 +65,18 @@ os_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 | Environment       | Base URL                      |
 | ----------------- | ----------------------------- |
-| Production        | `https://api.opensunsama.com` |
+| Production        | `https://api.studyos-web-8ruc.onrender.com` |
 | Local Development | `http://localhost:3001`       |
 
 ## Example Request
 
 ```bash
 # Using API Key
-curl -X GET "https://api.opensunsama.com/tasks" \
+curl -X GET "https://api.studyos-web-8ruc.onrender.com/tasks" \
   -H "X-API-Key: os_live_your_api_key_here"
 
 # Using JWT Token
-curl -X GET "https://api.opensunsama.com/tasks" \
+curl -X GET "https://api.studyos-web-8ruc.onrender.com/tasks" \
   -H "Authorization: Bearer your_jwt_token_here"
 ```
 

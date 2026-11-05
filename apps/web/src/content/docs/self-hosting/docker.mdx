@@ -1,12 +1,12 @@
 export const frontmatter = {
   title: "Docker Deployment",
   description:
-    "Self-host Open Sunsama with Docker Compose: one command builds the API and web app, starts PostgreSQL and creates the database tables.",
+    "Self-host StudyOS with Docker Compose: one command builds the API and web app, starts PostgreSQL and creates the database tables.",
   order: 1,
   section: "self-hosting",
 };
 
-One command builds Open Sunsama from source, starts PostgreSQL, and creates the database tables. You get the web app, the REST API, and the MCP connector for AI agents, all on your own machine or server.
+One command builds StudyOS from source, starts PostgreSQL, and creates the database tables. You get the web app, the REST API, and the MCP connector for AI agents, all on your own machine or server.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ One command builds Open Sunsama from source, starts PostgreSQL, and creates the 
 ## Quick Start
 
 ```bash
-git clone https://github.com/ShadowWalker2014/open-sunsama.git
+git clone https://github.com/saishivasanjeethpaikarao-jpg/StudyOS.git
 cd open-sunsama
 docker compose up -d --build
 ```
@@ -31,7 +31,7 @@ This starts four containers:
 - **redis:** Redis, which relays live updates between the API and open browser tabs. Also bound to localhost.
 - **web:** the web app on port 3000.
 
-`docker compose up -d postgres` starts only PostgreSQL, on `localhost:5431`. That is the setup for [running from source](https://github.com/ShadowWalker2014/open-sunsama#-get-started).
+`docker compose up -d postgres` starts only PostgreSQL, on `localhost:5431`. That is the setup for [running from source](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS#-get-started).
 
 ## Run on a Server
 
@@ -135,7 +135,7 @@ Tasks, time blocks, focus mode, rollover, the REST API and the MCP connector wor
 
 ## Desktop and Mobile Apps
 
-The desktop and mobile apps on the [download page](/download) connect only to `https://api.opensunsama.com`. Their API address is fixed when they are built, so they can't sign in to your server. Use the web app in your browser instead.
+The desktop and mobile apps on the [download page](/download) connect only to `https://api.studyos-web-8ruc.onrender.com`. Their API address is fixed when they are built, so they can't sign in to your server. Use the web app in your browser instead.
 
 To run the desktop app against your server, build it yourself: set `VITE_API_URL` (and `VITE_WS_URL`, for example `wss://api.tasks.your-domain.com`) when you build `apps/desktop`, and add your API's `https://` and `wss://` URLs to the `http:default` allow list in `apps/desktop/src-tauri/capabilities/default.json`.
 

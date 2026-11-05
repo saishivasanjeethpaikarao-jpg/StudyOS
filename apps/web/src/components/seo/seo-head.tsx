@@ -12,7 +12,7 @@ interface SEOHeadProps {
   noindex?: boolean;
 }
 
-const BASE_URL = "https://opensunsama.com";
+const BASE_URL = "https://studyos-web-8ruc.onrender.com";
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 const SITE_NAME = "StudyOS";
 
