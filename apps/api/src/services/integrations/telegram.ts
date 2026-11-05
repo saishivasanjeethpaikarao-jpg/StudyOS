@@ -755,10 +755,80 @@ export class TelegramIntegrationService {
 
   private async planAndSaveSchedule(userId: string, input: string): Promise<string> {
     const db = getDb();
-    
+    const lower = input.toLowerCase();
+
+    // Check if the student is asking for a subject roadmap, curriculum, or multi-week study plan
+    const isSubjectOrCurriculum =
+      /(month|curriculum|roadmap|learn|syllabus|prepare|guide|semester|beginner|course)\b/i.test(input) &&
+      !/(at\s+\d{1,2}|from\s+\d{1,2}|:\d{2}|\d+\s*(?:hours?|hrs?|mins?))/i.test(input);
+
+    if (isSubjectOrCurriculum) {
+      // 1. Generate full ChatGPT-grade curriculum with flowcharts and parts via AI
+      let aiRoadmap = "";
+      try {
+        const aiRes = await LearningAssistantService.processAssistantRequest(userId, {
+          action: "chat",
+          message: `Create an exhaustive, ChatGPT-style structured study plan and roadmap for: "${input}". Include visual ASCII flowcharts, weekly phases (Week 1 to Week 4), core concepts, code/theory breakdowns, traps to avoid, and practice milestones.`,
+        });
+        aiRoadmap = aiRes.content || "";
+      } catch (err) {
+        console.warn("[Telegram] AI roadmap generation fallback:", err);
+      }
+
+      // 2. Automatically seed 4 weekly milestone study tasks into the user's StudyOS calendar
+      const subjectName = input
+        .replace(/^(plan|schedule|create a schedule for|plan my|how to learn|study)\s*/i, "")
+        .replace(/\b(this month|month|to learn|roadmap|guide)\b/gi, "")
+        .trim() || "Focused Study";
+
+      const milestones = [
+        { title: `Week 1: ${subjectName} Foundations & Setup`, daysOffset: 0 },
+        { title: `Week 2: ${subjectName} Core Mechanics & Control Flow`, daysOffset: 7 },
+        { title: `Week 3: ${subjectName} Advanced Concepts & Memory`, daysOffset: 14 },
+        { title: `Week 4: ${subjectName} Capstone Project & Review`, daysOffset: 21 },
+      ];
+
+      for (const m of milestones) {
+        const milestoneDate = new Date(Date.now() + m.daysOffset * 86400000);
+        const dateStr = milestoneDate.toISOString().split("T")[0]!;
+        const [inserted] = await db
+          .insert(tasks)
+          .values({
+            userId,
+            title: m.title,
+            scheduledDate: dateStr,
+            estimatedMins: 90,
+            priority: "P1",
+            revision: 1,
+          })
+          .returning({ id: tasks.id });
+
+        await db.insert(timeBlocks).values({
+          userId,
+          taskId: inserted?.id,
+          title: m.title,
+          date: dateStr,
+          startTime: "17:00",
+          endTime: "18:30",
+          durationMins: 90,
+          color: "#6366F1",
+        });
+      }
+
+      const syncNotice = [
+        "",
+        "═════════════════════════════════",
+        "📅 *StudyOS Calendar & Device Sync Activated*",
+        `• 4 Weekly Milestone blocks have been added to your Planner for Weeks 1 to 4.`,
+        `• Synced across Web, Windows Desktop, and Android APK.`,
+        `• You will receive study reminders and device alarms for each session!`,
+      ].join("\n");
+
+      return aiRoadmap ? `${aiRoadmap}\n${syncNotice}` : `📅 *${subjectName} 4-Week Plan Created!*\n${syncNotice}`;
+    }
+
     // 1. Determine target date
     let targetDate = new Date();
-    const lower = input.toLowerCase();
     if (lower.includes("tomorrow")) {
       targetDate = new Date(Date.now() + 86400000);
     } else if (lower.includes("day after tomorrow")) {
