@@ -21,6 +21,7 @@ import { deleteFromS3ByUrl } from '../lib/s3.js';
 import { sendPasswordResetEmail, getThemeHexColor } from '../lib/email/index.js';
 import { issueBrowserSession, issueCsrfToken, revokeBrowserSession } from '../lib/account-sessions.js';
 import { googleAuthRouter } from './google-auth.js';
+import { UniversalSyllabusService } from '../services/academics/universal-syllabus.js';
 
 const authRouter = new Hono<{ Variables: AuthVariables }>();
 authRouter.route('/google', googleAuthRouter);
@@ -50,6 +51,7 @@ authRouter.post('/register', authRateLimiter, zValidator('json', registerSchema)
   const passwordHash = await hashPassword(password);
   const [newUser] = await db.insert(users).values({ email: normalizedEmail, passwordHash, name: name || null }).returning();
   if (!newUser) throw new Error('Failed to create user');
+  void UniversalSyllabusService.seedNewUserWorkspace(newUser.id).catch((err) => console.error('Starter seed error:', err));
 
   const token = signToken(newUser.id);
   if (isWebSessionRequest(c)) await issueBrowserSession(c, newUser.id);

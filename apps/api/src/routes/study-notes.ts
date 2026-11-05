@@ -14,6 +14,7 @@ import { ConflictError, NotFoundError, uuidSchema } from "@open-sunsama/utils";
 import { jwtAuth, type AuthVariables } from "../middleware/auth.js";
 import { notifyLearning, validateLearningLinks } from "../services/learning.js";
 import { expectedRevision } from "../validation/study-sessions.js";
+import { UniversalSyllabusService } from "../services/academics/universal-syllabus.js";
 
 const router = new Hono<{ Variables: AuthVariables }>();
 router.use("*", jwtAuth);
@@ -55,6 +56,47 @@ router.get("/", zValidator("query", filters), async (c) => {
     .limit(200);
   return c.json({ success: true, data });
 });
+
+router.get("/catalogs", (c) => {
+  const catalogs = UniversalSyllabusService.listCuratedSubjects();
+  return c.json({ success: true, data: catalogs });
+});
+
+router.post(
+  "/generate-curriculum",
+  zValidator(
+    "json",
+    z.object({
+      topic: z.string().trim().min(1).max(200),
+    })
+  ),
+  async (c) => {
+    const { topic } = c.req.valid("json");
+    const userId = c.get("userId");
+    try {
+      const curriculum = await UniversalSyllabusService.resolveCurriculum(topic);
+      const enrollment = await UniversalSyllabusService.enrollPackage(userId, curriculum);
+      notifyLearning(userId, "notes");
+      notifyLearning(userId, "resources");
+      return c.json(
+        {
+          success: true,
+          data: {
+            package: curriculum,
+            enrollment,
+          },
+        },
+        201
+      );
+    } catch (err: any) {
+      console.error("[generate-curriculum] Failed:", err);
+      return c.json(
+        { success: false, error: err?.message || "Failed to generate curriculum" },
+        500
+      );
+    }
+  }
+);
 
 router.post("/", zValidator("json", fields), async (c) => {
   const db = getDb(),

@@ -1,3 +1,4 @@
+import { UniversalSyllabusService } from '../services/academics/universal-syllabus.js';
 import { createHash, randomBytes } from "node:crypto";
 import { Hono, type Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
@@ -183,6 +184,7 @@ router.get("/callback", async (c) => {
           return createdUser;
         });
         userId = created.id;
+        void UniversalSyllabusService.seedNewUserWorkspace(userId).catch((err) => console.error('OAuth starter seed error:', err));
       }
     }
     if (!userId) return c.redirect(appRedirect("failed"));

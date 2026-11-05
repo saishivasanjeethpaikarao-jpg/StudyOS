@@ -5,15 +5,19 @@ import {
   Check,
   FileEdit,
   FileText,
+  GraduationCap,
+  Layers,
   Loader2,
   Plus,
   Search,
+  Sparkles,
   Trash2,
+  Video,
 } from "lucide-react";
 import type { StudyNote, Subject } from "@open-sunsama/types";
 import { getApi } from "@/lib/api";
 import { learningKeys } from "@/lib/query-keys";
-import { useSubjects } from "@/hooks/useSubjects";
+import { useSubjects, subjectKeys } from "@/hooks/useSubjects";
 import { toast } from "@/hooks/use-toast";
 import { TeacherLectureViewer } from "./teacher-lecture-viewer";
 import {
@@ -23,6 +27,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Input,
   Label,
   ScrollArea,
@@ -34,12 +44,28 @@ import {
   Skeleton,
 } from "@/components/ui";
 
+const CURATED_PRESETS = [
+  { id: "c-programming", label: "C Programming & Systems", icon: "💻" },
+  { id: "python", label: "Python & Data Science", icon: "🐍" },
+  { id: "dsa", label: "Data Structures & Algorithms", icon: "⚡" },
+  { id: "web-react", label: "Fullstack Web & React", icon: "⚛️" },
+  { id: "java", label: "Java & Object-Oriented", icon: "☕" },
+  { id: "machine-learning", label: "Machine Learning & AI", icon: "🤖" },
+  { id: "operating-systems", label: "Operating Systems & Arch", icon: "🖥️" },
+  { id: "database-sql", label: "SQL & Database Systems", icon: "🗄️" },
+];
+
 export function NotesPage() {
   const client = useQueryClient();
   const { data: activeSubjects = [] } = useSubjects({ archived: false });
   const [selectedSubjectId, setSelectedSubjectId] = React.useState<string>("all");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedNoteId, setSelectedNoteId] = React.useState<string | null>(null);
+
+  // AI Generator Modal state
+  const [generateModalOpen, setGenerateModalOpen] = React.useState(false);
+  const [customTopic, setCustomTopic] = React.useState("");
+  const [selectedPreset, setSelectedPreset] = React.useState<string | null>(null);
 
   // Active note editor state
   const [title, setTitle] = React.useState("");
@@ -140,6 +166,34 @@ export function NotesPage() {
     },
   });
 
+  const generateCurriculumMutation = useMutation({
+    mutationFn: async (topic: string) => {
+      return (await (getApi().notes as any).generateCurriculum(topic)) as {
+        package: any;
+        enrollment: any;
+      };
+    },
+    onSuccess: (res) => {
+      void client.invalidateQueries({ queryKey: learningKeys.notes });
+      void client.invalidateQueries({ queryKey: subjectKeys.all });
+      void client.invalidateQueries({ queryKey: learningKeys.resources });
+      toast({
+        title: "Curriculum Enrolled! 🎓",
+        description: `Generated 8 lecture slide decks, 4 assignments, and 24 daily schedule blocks for ${res?.enrollment?.subjectName || "your subject"}.`,
+      });
+      setGenerateModalOpen(false);
+      setCustomTopic("");
+      setSelectedPreset(null);
+    },
+    onError: (err) => {
+      toast({
+        variant: "destructive",
+        title: "Could not generate curriculum",
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    },
+  });
+
   // Autosave handler
   const scheduleAutosave = React.useCallback(
     (newTitle: string, newBody: string, newSubjectId: string) => {
@@ -178,9 +232,19 @@ export function NotesPage() {
             Capture lecture summaries, formula sheets, and study session notes with autosave.
           </p>
         </div>
-        <Button onClick={() => createNoteMutation.mutate()} disabled={createNoteMutation.isPending}>
-          <Plus className="mr-2 h-4 w-4" /> New Note
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="border-indigo-500/40 hover:bg-indigo-500/10 text-indigo-400 hover:text-indigo-300 gap-2 shadow-sm"
+            onClick={() => setGenerateModalOpen(true)}
+          >
+            <Sparkles className="h-4 w-4 text-indigo-400 animate-pulse" />
+            AI Course Deck & Notes
+          </Button>
+          <Button onClick={() => createNoteMutation.mutate()} disabled={createNoteMutation.isPending}>
+            <Plus className="mr-2 h-4 w-4" /> New Note
+          </Button>
+        </div>
       </div>
 
       {/* Main Split Layout */}
@@ -220,8 +284,16 @@ export function NotesPage() {
                 ))}
               </div>
             ) : filteredNotes.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">
-                No notes found.
+              <div className="p-8 text-center text-muted-foreground text-sm space-y-3">
+                <p>No notes found.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs border-indigo-500/40 text-indigo-400 hover:bg-indigo-500/10"
+                  onClick={() => setGenerateModalOpen(true)}
+                >
+                  <Sparkles className="h-3.5 w-3.5" /> Generate Course Decks
+                </Button>
               </div>
             ) : (
               <div className="space-y-1">
@@ -347,20 +419,132 @@ export function NotesPage() {
               <FileText className="h-12 w-12 text-muted-foreground/30 mb-3" />
               <h3 className="text-lg font-medium text-foreground">No note selected</h3>
               <p className="text-sm mt-1 max-w-sm">
-                Choose a note from the sidebar or create a new one to start writing.
+                Choose a lecture deck from the sidebar or generate an academic course package with slides, videos, and daily schedules.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => createNoteMutation.mutate()}
-              >
-                <Plus className="mr-2 h-4 w-4" /> Create note
-              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                <Button
+                  size="sm"
+                  className="gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-sm"
+                  onClick={() => setGenerateModalOpen(true)}
+                >
+                  <Sparkles className="h-4 w-4" /> AI Course Deck & Notes
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => createNoteMutation.mutate()}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Blank note
+                </Button>
+              </div>
             </Card>
           )}
         </div>
       </div>
+
+      {/* AI Generate Course Deck Dialog */}
+      <Dialog open={generateModalOpen} onOpenChange={setGenerateModalOpen}>
+        <DialogContent className="max-w-2xl bg-card border-border">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-indigo-400">
+              <Sparkles className="h-5 w-5" />
+              <DialogTitle className="text-xl">AI Course Deck & Curriculum Generator</DialogTitle>
+            </div>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Select a curated foundational subject or type any topic. StudyOS will instantly construct 8 teacher lecture decks (ready for slides and printable PDF), 4 assignments, 24 daily schedule blocks, and verified video courses.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-xs uppercase font-semibold text-muted-foreground tracking-wider mb-2 block">
+                Popular Curated Subjects
+              </Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {CURATED_PRESETS.map((p) => {
+                  const isSelected = selectedPreset === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      disabled={generateCurriculumMutation.isPending}
+                      onClick={() => {
+                        setSelectedPreset(p.id);
+                        setCustomTopic(p.label);
+                      }}
+                      className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all text-xs font-medium ${
+                        isSelected
+                          ? "border-indigo-500 bg-indigo-500/10 text-foreground ring-1 ring-indigo-500"
+                          : "border-border/60 hover:border-border hover:bg-muted/40 text-muted-foreground"
+                      }`}
+                    >
+                      <span className="text-lg mb-1">{p.icon}</span>
+                      <span className="font-semibold text-foreground line-clamp-1">{p.label}</span>
+                      <span className="text-[10px] text-muted-foreground">8 PPT Decks • 4 Projects</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="custom-topic" className="text-xs uppercase font-semibold text-muted-foreground tracking-wider">
+                Or Type Any Custom Topic / Subject
+              </Label>
+              <Input
+                id="custom-topic"
+                placeholder="e.g., Rust Systems, Computer Vision, Docker & Kubernetes, Quantum Computing..."
+                value={customTopic}
+                onChange={(e) => {
+                  setCustomTopic(e.target.value);
+                  setSelectedPreset(null);
+                }}
+                disabled={generateCurriculumMutation.isPending}
+                className="h-10 text-sm"
+              />
+            </div>
+
+            {generateCurriculumMutation.isPending && (
+              <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/5 p-4 flex items-center gap-3 text-sm text-indigo-300">
+                <Loader2 className="h-5 w-5 animate-spin text-indigo-400 shrink-0" />
+                <div className="space-y-1">
+                  <p className="font-medium text-indigo-200">Building Academic Package...</p>
+                  <p className="text-xs text-muted-foreground">
+                    Generating 8 modular lecture slide decks, syllabus, assignments, FocusTube video courses, and 24 calendar blocks.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setGenerateModalOpen(false)}
+              disabled={generateCurriculumMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white gap-2"
+              disabled={!customTopic.trim() || generateCurriculumMutation.isPending}
+              onClick={() => generateCurriculumMutation.mutate(customTopic.trim())}
+            >
+              {generateCurriculumMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Generate Curriculum & Notes
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

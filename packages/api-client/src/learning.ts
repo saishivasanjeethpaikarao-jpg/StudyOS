@@ -105,6 +105,14 @@ export function createLearningApi(client: OpenSunsamaClient) {
       delete: async (id: string, rev: number) => {
         await client.delete(`study-notes/${id}`, revision(rev));
       },
+      catalogs: async () =>
+        (await client.get<Result<any[]>>("study-notes/catalogs")).data,
+      generateCurriculum: async (topic: string) =>
+        (
+          await client.post<Result<any>>("study-notes/generate-curriculum", {
+            topic,
+          })
+        ).data,
     },
     reminders: {
       list: async (state?: StudyReminder["state"]) =>
