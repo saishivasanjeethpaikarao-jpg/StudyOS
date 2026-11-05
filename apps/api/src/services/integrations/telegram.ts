@@ -5,13 +5,19 @@ import {
   and,
   gte,
   ne,
+  isNull,
   users,
+  tasks,
+  subjects,
+  agentProposals,
   studySessions,
   assignments,
   telegramLinkRequests,
   telegramSettings,
   integrationAuditLogs,
 } from "@open-sunsama/database";
+import { HermesBridgeService } from "./hermes-bridge.js";
+import { LearningAssistantService } from "../ai/learning-assistant.js";
 import type { TelegramLinkResponse, TelegramSettings } from "@open-sunsama/types";
 
 const TELEGRAM_API = "https://api.telegram.org";
@@ -278,7 +284,7 @@ export class TelegramIntegrationService {
 
       await this.sendMessageToChat(
         chatId,
-        `✅ Success! Your Telegram account is now connected to StudyOS.\n\nYou will receive your study reminders here.\n\nCommands:\n• /today - Today's schedule & sessions\n• /assignments - Upcoming assignments\n• /help - Usage guide`
+        `✅ Success! Your Telegram account is now connected to StudyOS.\n\nYou will receive your study reminders and AI assistance here.\n\nCommands:\n• /today - Today's schedule & focus sessions\n• /assignments - Upcoming deadlines\n• /task <title> - Add task to your board\n• /briefing - Daily workload briefing\n• /subjects - Enrolled courses & grades\n• /focus [mins] - Log focus session\n• /ask <question> - Ask AI Tutor\n• /proposals - Hermes Agent suggestions\n• /help - Full commands guide`
       );
 
       return { handled: true, action: "link_success" };
@@ -313,20 +319,71 @@ export class TelegramIntegrationService {
       return { handled: true, action: "assignments_summary" };
     }
 
+    if (text.startsWith("/task ") || text.startsWith("/add ")) {
+      const title = text.replace(/^\/(task|add)\s+/, "").trim();
+      if (!title) {
+        await this.sendMessageToChat(chatId, "⚠️ Please provide a task title, e.g. /task Complete Math Exercise 3.2");
+        return { handled: true, action: "task_empty" };
+      }
+      const response = await this.createQuickTask(user.userId, title);
+      await this.sendMessageToChat(chatId, response);
+      return { handled: true, action: "task_created" };
+    }
+
+    if (text === "/briefing" || text === "/summary") {
+      const briefing = await this.buildBriefingSummary(user.userId);
+      await this.sendMessageToChat(chatId, briefing);
+      return { handled: true, action: "briefing_summary" };
+    }
+
+    if (text === "/subjects") {
+      const summary = await this.buildSubjectsSummary(user.userId);
+      await this.sendMessageToChat(chatId, summary);
+      return { handled: true, action: "subjects_summary" };
+    }
+
+    if (text.startsWith("/focus") || text.startsWith("/pomodoro")) {
+      const parts = text.split(" ");
+      const mins = parts[1] ? parseInt(parts[1], 10) : 25;
+      const validMins = isNaN(mins) || mins <= 0 || mins > 240 ? 25 : mins;
+      const response = await this.logFocusSession(user.userId, validMins);
+      await this.sendMessageToChat(chatId, response);
+      return { handled: true, action: "focus_session" };
+    }
+
+    if (text === "/proposals" || text === "/proposal") {
+      const response = await this.buildProposalsSummary(user.userId);
+      await this.sendMessageToChat(chatId, response);
+      return { handled: true, action: "proposals_summary" };
+    }
+
+    if (text.startsWith("/accept ") || text.startsWith("/confirm ")) {
+      const proposalId = text.split(" ")[1]?.trim();
+      if (!proposalId) {
+        await this.sendMessageToChat(chatId, "⚠️ Usage: /accept <proposal_id>. Use /proposals to see pending suggestions.");
+        return { handled: true, action: "accept_empty" };
+      }
+      const response = await this.acceptProposal(user.userId, proposalId);
+      await this.sendMessageToChat(chatId, response);
+      return { handled: true, action: "accept_proposal" };
+    }
+
+    if (text.startsWith("/ask ")) {
+      const question = text.replace(/^\/ask\s+/, "").trim();
+      const response = await this.askAiTutor(user.userId, question);
+      await this.sendMessageToChat(chatId, response);
+      return { handled: true, action: "ai_question" };
+    }
+
     if (text === "/help") {
-      await this.sendMessageToChat(
-        chatId,
-        `📚 *StudyOS Telegram Bot*\n\nAvailable commands:\n• /today - View today's study plan and focus sessions\n• /assignments - View your upcoming assignment deadlines\n• /help - Show this help message\n\nYou can customize your notification preferences anytime in StudyOS Settings → Integrations.`
-      );
+      await this.sendMessageToChat(chatId, this.buildHelpMessage());
       return { handled: true, action: "help" };
     }
 
-    // Default polite response
-    await this.sendMessageToChat(
-      chatId,
-      "I received your message. Use /today to see your schedule or /help for commands."
-    );
-    return { handled: true, action: "echo" };
+    // Default: conversational AI study tutor assistance
+    const aiResponse = await this.askAiTutor(user.userId, text);
+    await this.sendMessageToChat(chatId, aiResponse);
+    return { handled: true, action: "ai_chat" };
   }
 
   /**
@@ -486,6 +543,201 @@ export class TelegramIntegrationService {
     });
 
     return `📝 *Active Assignments*\n\n${lines.join("\n")}`;
+  }
+
+  private async createQuickTask(userId: string, title: string): Promise<string> {
+    const db = getDb();
+    const today = new Date().toISOString().split("T")[0];
+    await db.insert(tasks).values({
+      userId,
+      title: title.slice(0, 500),
+      scheduledDate: today,
+      priority: "P2",
+      revision: 1,
+    });
+    return [
+      "✅ *Task Added to StudyOS!*",
+      "",
+      `📌 *Title:* ${title}`,
+      "📅 *Scheduled:* Today",
+      "🎯 *Priority:* Normal (P2)",
+      "",
+      "You can view and reorder it on your StudyOS Today board anytime.",
+    ].join("\n");
+  }
+
+  private async buildBriefingSummary(userId: string): Promise<string> {
+    const db = getDb();
+    const now = new Date();
+    const todayStr: string = now.toISOString().split("T")[0] || "";
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const [todayTasks, pendingAssignments, todaySessions] = await Promise.all([
+      db.select({ id: tasks.id, title: tasks.title, priority: tasks.priority })
+        .from(tasks)
+        .where(and(eq(tasks.userId, userId), eq(tasks.scheduledDate, todayStr), isNull(tasks.completedAt))),
+      db.select({ id: assignments.id, title: assignments.title, dueAt: assignments.dueAt })
+        .from(assignments)
+        .where(and(eq(assignments.userId, userId), eq(assignments.status, "in_progress")))
+        .limit(5),
+      db.select({ id: studySessions.id, plannedMinutes: studySessions.plannedMinutes })
+        .from(studySessions)
+        .where(and(eq(studySessions.userId, userId), gte(studySessions.startAt, startOfDay))),
+    ]);
+
+    const totalMinutes = todaySessions.reduce((acc, s) => acc + s.plannedMinutes, 0);
+
+    const taskLines = todayTasks.length > 0
+      ? todayTasks.slice(0, 5).map((t) => `• [${t.priority}] ${t.title}`).join("\n")
+      : "• No pending tasks for today";
+
+    const assignmentLines = pendingAssignments.length > 0
+      ? pendingAssignments.map((a) => {
+          const d = new Date(a.dueAt).toLocaleDateString([], { month: "short", day: "numeric" });
+          return `• *${a.title}* (Due: ${d})`;
+        }).join("\n")
+      : "• No urgent assignments";
+
+    return [
+      "🌅 *StudyOS Daily Briefing*",
+      "",
+      `⏱ *Planned Study:* ${totalMinutes} mins across ${todaySessions.length} session(s)`,
+      "",
+      `📋 *Today's Tasks (${todayTasks.length}):*`,
+      taskLines,
+      "",
+      `📝 *Upcoming Deadlines (${pendingAssignments.length}):*`,
+      assignmentLines,
+      "",
+      "_Tip: Use /task to add tasks or /focus to log study time._",
+    ].join("\n");
+  }
+
+  private async buildSubjectsSummary(userId: string): Promise<string> {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: subjects.id,
+        name: subjects.name,
+        color: subjects.color,
+      })
+      .from(subjects)
+      .where(and(eq(subjects.userId, userId), isNull(subjects.archivedAt)))
+      .limit(10);
+
+    if (rows.length === 0) {
+      return "📚 *Enrolled Subjects*\n\nYou haven't created any subjects yet. Open StudyOS → Subjects to add courses!";
+    }
+
+    const lines = rows.map((s) => `• *${s.name}*`);
+    return `📚 *Your Enrolled Subjects (${rows.length})*\n\n${lines.join("\n")}`;
+  }
+
+  private async logFocusSession(userId: string, minutes: number): Promise<string> {
+    const db = getDb();
+    const now = new Date();
+    const todayStr: string = now.toISOString().split("T")[0] || "";
+    await db.insert(tasks).values({
+      userId,
+      title: `🎯 Focus Session (${minutes}m)`,
+      scheduledDate: todayStr,
+      estimatedMins: minutes,
+      actualMins: minutes,
+      completedAt: now,
+      priority: "P1",
+      revision: 1,
+    });
+    return [
+      "🎯 *Focus Session Logged!*",
+      "",
+      `⏱ Logged *${minutes} minutes* of deep focus directly to your StudyOS board.`,
+      "Keep up the great momentum! 🚀",
+    ].join("\n");
+  }
+
+  private async buildProposalsSummary(userId: string): Promise<string> {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: agentProposals.id,
+        title: agentProposals.title,
+        summary: agentProposals.summary,
+      })
+      .from(agentProposals)
+      .where(and(eq(agentProposals.userId, userId), eq(agentProposals.status, "pending_approval")))
+      .limit(5);
+
+    if (rows.length === 0) {
+      return "🤖 *Hermes Agent Proposals*\n\nNo pending proposals right now. When Hermes generates study recommendations or revision plans, you can review and accept them here!";
+    }
+
+    const lines = rows.map((p) => `• *${p.title}*\n  ID: ${p.id}\n  ${p.summary || ""}\n  Approve: /accept ${p.id}`);
+    return `🤖 *Pending Hermes Proposals (${rows.length})*\n\n${lines.join("\n\n")}`;
+  }
+
+  private async acceptProposal(userId: string, proposalId: string): Promise<string> {
+    try {
+      const hermes = new HermesBridgeService();
+      const res = await hermes.confirmProposal(userId, proposalId);
+      return `✅ *Hermes Proposal Confirmed!*\n\nAction executed: ${res.actionTaken}. Check your StudyOS timetable or notes.`;
+    } catch (err) {
+      return `❌ Could not accept proposal: ${err instanceof Error ? err.message : "Invalid or expired proposal"}`;
+    }
+  }
+
+  private async askAiTutor(userId: string, question: string): Promise<string> {
+    try {
+      const res = await LearningAssistantService.processAssistantRequest(userId, {
+        action: "chat",
+        message: question,
+      });
+      if (res && res.content) {
+        return `🤖 *StudyOS AI Tutor*\n\n${res.content}`;
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("AI service unavailable") || msg.includes("Provider") || msg.includes("key")) {
+        return [
+          "🤖 *StudyOS AI Tutor*",
+          "",
+          "To enable AI answers directly in Telegram, please add your free Gemini API key in **StudyOS Settings → AI & Providers**!",
+          "",
+          "In the meantime, you can use:",
+          "• /today - Daily plan",
+          "• /assignments - Upcoming deadlines",
+          "• /task <title> - Add a task",
+          "• /briefing - Daily briefing",
+          "• /subjects - Course list",
+          "• /focus [mins] - Log focus session",
+        ].join("\n");
+      }
+    }
+    return `I received your message: "${question}".\n\nUse /today to check your schedule, /task <title> to add a task, or /help to view all available commands.`;
+  }
+
+  private buildHelpMessage(): string {
+    return [
+      "📚 *StudyOS Telegram Bot Guide*",
+      "",
+      "📋 *Tasks & Planning*",
+      "• /today - View today's study schedule & sessions",
+      "• /assignments - View upcoming assignment deadlines",
+      "• /task <title> - Quickly add a task for today (e.g. /task Revise Math Chapter 3)",
+      "• /briefing - Complete daily workload briefing",
+      "",
+      "⏱ *Study & Focus*",
+      "• /focus [mins] - Log focus session (e.g. /focus 30)",
+      "• /subjects - View your enrolled academic courses",
+      "",
+      "🤖 *AI & Hermes Agent*",
+      "• /ask <question> - Ask the AI Study Tutor any question",
+      "• /proposals - View pending Hermes Agent suggestions",
+      "• /accept <id> - Approve a Hermes revision plan or task proposal",
+      "• /help - Show this guide",
+      "",
+      "⚙️ *Preferences*",
+      "Manage notifications and quiet hours in StudyOS Settings → Integrations & Agent.",
+    ].join("\n");
   }
 
   private async sendMessageToChat(chatId: string, text: string): Promise<boolean> {
