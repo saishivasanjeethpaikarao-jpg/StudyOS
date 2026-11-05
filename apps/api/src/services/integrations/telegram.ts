@@ -1589,42 +1589,76 @@ export class TelegramIntegrationService {
   }
 
   /**
-   * Format standard AI markdown into clean, native Telegram format:
-   * 1. Replaces markdown header hashes (###, ##, #) with bold section titles with emojis (📌, 📁, 📚)
-   * 2. Converts markdown bold (**text**) to Telegram bold (*text*)
-   * 3. Converts markdown horizontal rules (---, ***) to clean divider lines
-   * 4. Cleans up symbol clutter so messages look polished and readable without hashtag spam
+   * Format standard AI markdown into safe, polished Telegram HTML:
+   * 1. Preserves code blocks & inline code with HTML escaping (&, <, >)
+   * 2. Preserves snake_case variables (uint32_t, snake_case) without Telegram Markdown entity crashes
+   * 3. Replaces headers (###, ##, #) with bold section titles with emojis (📌, 📁, 📚)
+   * 4. Converts bold (**text** or *text*) to <b>text</b>
+   * 5. Converts horizontal rules to clean dividers
    */
-  private formatForTelegram(text: string): string {
-    let out = text;
-    // Replace markdown headers with bold emojis so Telegram doesn't display raw '###'
-    out = out.replace(/^#{3,6}\s*(.+)$/gm, "📌 *$1*");
-    out = out.replace(/^##\s*(.+)$/gm, "📁 *$1*");
-    out = out.replace(/^#\s*(.+)$/gm, "📚 *$1*");
+  private formatForTelegram(md: string): string {
+    let s = md;
 
-    // Replace horizontal lines with clean dividers
-    out = out.replace(/^[*\-_]{3,}$/gm, "─────────────────────────");
+    // 1. Extract and escape code blocks
+    const codeBlocks: string[] = [];
+    s = s.replace(/```([a-z0-9_-]*)\n([\s\S]*?)```/gi, (_match, _lang, code) => {
+      const idx = codeBlocks.length;
+      const escapedCode = code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      codeBlocks.push(`<pre><code>${escapedCode}</code></pre>`);
+      return `___CB_${idx}___`;
+    });
 
-    // Convert bold-italic ***text*** to *text*
-    out = out.replace(/\*\*\*(.+?)\*\*\*/g, "*$1*");
+    // 2. Extract and escape inline code
+    const inlineCodes: string[] = [];
+    s = s.replace(/`([^`\n]+)`/g, (_match, code) => {
+      const idx = inlineCodes.length;
+      const escapedCode = code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      inlineCodes.push(`<code>${escapedCode}</code>`);
+      return `___IC_${idx}___`;
+    });
 
-    // Convert standard markdown **bold** to Telegram *bold*
-    out = out.replace(/\*\*([^\*\n]+?)\*\*/g, "*$1*");
+    // 3. Escape HTML special characters in regular text
+    s = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    return out.trim();
+    // 4. Headers to clean bold titles
+    s = s.replace(/^#{3,6}\s*(.+)$/gm, "📌 <b>$1</b>");
+    s = s.replace(/^##\s*(.+)$/gm, "📁 <b>$1</b>");
+    s = s.replace(/^#\s*(.+)$/gm, "📚 <b>$1</b>");
+
+    // 5. Bold **text** and *text*
+    s = s.replace(/\*\*([^\*\n]+?)\*\*/g, "<b>$1</b>");
+    s = s.replace(/\*([^\*\n]+?)\*/g, "<b>$1</b>");
+
+    // 6. Horizontal dividers
+    s = s.replace(/^[*\-_]{3,}$/gm, "─────────────────────────");
+
+    // 7. Restore inline code and code blocks
+    s = s.replace(/___IC_(\d+)___/g, (_, idx) => inlineCodes[Number(idx)] || "");
+    s = s.replace(/___CB_(\d+)___/g, (_, idx) => codeBlocks[Number(idx)] || "");
+
+    return s.trim();
   }
 
   /**
-   * Clean text for plain-text fallback delivery, removing all markdown artifacts (*, #, ```)
+   * Clean text for plain-text fallback delivery, removing all HTML markup
    * so students read smooth, clean text without any weird symbols.
    */
   private cleanForPlainText(text: string): string {
     return text
-      .replace(/\*([^\*\n]+?)\*/g, "$1")
-      .replace(/^#{1,6}\s*/gm, "")
-      .replace(/```[a-z]*\n?/gi, "")
-      .replace(/```/g, "")
-      .replace(/_([^_]+)_/g, "$1")
+      .replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/gi, "$1\n")
+      .replace(/<code>(.*?)<\/code>/gi, "$1")
+      .replace(/<b>(.*?)<\/b>/gi, "$1")
+      .replace(/<i>(.*?)<\/i>/gi, "$1")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&")
       .trim();
   }
 
@@ -1709,7 +1743,7 @@ export class TelegramIntegrationService {
       const chunk = chunks[i]!;
       let sent = false;
 
-      // 1. Attempt sending with Markdown formatting
+      // 1. Attempt sending with HTML formatting
       try {
         const res = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
           method: "POST",
@@ -1717,7 +1751,7 @@ export class TelegramIntegrationService {
           body: JSON.stringify({
             chat_id: chatId,
             text: chunk,
-            parse_mode: "Markdown",
+            parse_mode: "HTML",
             disable_web_page_preview: true,
             link_preview_options: { is_disabled: true },
           }),
@@ -1727,7 +1761,7 @@ export class TelegramIntegrationService {
           sent = true;
         } else {
           const errText = await res.text();
-          console.warn(`[Telegram] markdown delivery failed (${res.status}): ${errText}`);
+          console.warn(`[Telegram] HTML delivery failed (${res.status}): ${errText}`);
           // 2. Always fallback cleanly to plain text if Markdown fails for any reason
           const plainChunk = this.cleanForPlainText(chunk);
           const fallbackRes = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
