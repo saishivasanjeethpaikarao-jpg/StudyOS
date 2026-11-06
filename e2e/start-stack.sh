@@ -45,7 +45,7 @@ echo $! >"$LOG_DIR/api.pid"
 (
   cd "$ROOT/apps/web"
   VITE_API_URL="http://localhost:$API_PORT" VITE_WS_URL="ws://localhost:$API_PORT" \
-    nohup npx vite --port "$WEB_PORT" --strictPort >"$LOG_DIR/web.log" 2>&1 &
+    nohup bunx vite --port "$WEB_PORT" --strictPort >"$LOG_DIR/web.log" 2>&1 &
   echo $! >"$LOG_DIR/web.pid"
 )
 

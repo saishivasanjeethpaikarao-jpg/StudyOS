@@ -23,9 +23,9 @@ import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 const CURRENT_VERSION = "v1.0.18";
 const GITHUB_REPO_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS";
 const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases`;
-const WINDOWS_EXE_URL = RELEASES_PAGE_URL; // redirect to releases until artifacts exist
-const WINDOWS_MSI_URL = RELEASES_PAGE_URL;
-const ANDROID_APK_URL = RELEASES_PAGE_URL;
+const WINDOWS_EXE_URL = "/downloads/StudyOS_1.0.18_x64-setup.exe";
+const WINDOWS_MSI_URL = "/downloads/StudyOS_Setup.exe";
+const ANDROID_APK_URL = "https://studyos-web-8ruc.onrender.com/downloads/StudyOS_1.0.18.apk";
 
 export default function DownloadPage() {
   useSEO(SEO_CONFIGS.download);
@@ -99,9 +99,9 @@ export default function DownloadPage() {
 
               <div className="space-y-3 pt-2">
                 <Button size="lg" className="w-full gap-2 text-sm font-semibold shadow-md" asChild>
-                  <a href={WINDOWS_EXE_URL} target="_blank" rel="noopener noreferrer">
+                  <a href={WINDOWS_EXE_URL} download="StudyOS_1.0.18_x64-setup.exe">
                     <Download className="h-4 w-4" />
-                    View & Download on GitHub
+                    Download Setup (.exe)
                   </a>
                 </Button>
                 <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
@@ -171,9 +171,9 @@ export default function DownloadPage() {
 
               <div className="space-y-2 pt-4">
                 <Button size="lg" className="w-full gap-2 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90" asChild>
-                  <a href={ANDROID_APK_URL} target="_blank" rel="noopener noreferrer">
+                  <a href={ANDROID_APK_URL} download="StudyOS_1.0.18.apk">
                     <Download className="h-4 w-4" />
-                    View Downloads on GitHub
+                    Download APK directly
                   </a>
                 </Button>
                 <button

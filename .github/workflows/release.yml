@@ -311,6 +311,20 @@ jobs:
       - name: Prepare Desktop Frontend Assets
         run: node apps/desktop/scripts/prepare-frontend.mjs
 
+      - name: Configure Tauri Signing Fallback
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}" ]; then
+            node -e '
+              const fs = require("fs");
+              const confPath = "apps/desktop/src-tauri/tauri.conf.json";
+              const conf = JSON.parse(fs.readFileSync(confPath, "utf8"));
+              conf.bundle.createUpdaterArtifacts = false;
+              fs.writeFileSync(confPath, JSON.stringify(conf, null, 2), "utf8");
+              console.log("Disabled createUpdaterArtifacts for unsigned build");
+            '
+          fi
+
       - name: Build Tauri Windows Installer
         working-directory: apps/desktop
         env:

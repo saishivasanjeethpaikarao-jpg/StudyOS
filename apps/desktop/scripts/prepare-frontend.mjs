@@ -11,7 +11,7 @@ const dest = join(desktopDir, "dist");
 
 const isMarketingAsset = (path) => {
   const rel = relative(src, path).split("\\").join("/");
-  return rel.startsWith("blog-") || rel === "landing" || rel.startsWith("landing/") || rel === "og-image.png";
+  return rel.startsWith("blog-") || rel === "landing" || rel.startsWith("landing/") || rel === "og-image.png" || rel === "downloads" || rel.startsWith("downloads/");
 };
 
 rmSync(dest, { recursive: true, force: true });
