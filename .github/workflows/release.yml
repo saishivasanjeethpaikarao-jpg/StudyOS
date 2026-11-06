@@ -206,52 +206,9 @@ jobs:
         run: ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
 
       - name: Stage Android Release Packages
-        shell: bash
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          mkdir -p android-dist
-          
-          # Inspect signing status provenance
-          STATUS_FILE="apps/expo-mobile/android/signing-status.json"
-          IS_PROD_SIGNED=false
-          if [ -f "$STATUS_FILE" ]; then
-            cp "$STATUS_FILE" "android-dist/signing-status.json"
-            if grep -q '"isProductionSigned": true' "$STATUS_FILE"; then
-              IS_PROD_SIGNED=true
-            fi
-          fi
-
-          echo "Android production signed: $IS_PROD_SIGNED"
-
-          # Stage APK with strict labelling
-          APK_PATH=$(find apps/expo-mobile/android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          if [ -n "$APK_PATH" ] && [ -f "$APK_PATH" ]; then
-            if [ "$IS_PROD_SIGNED" = "true" ]; then
-              echo "Staging production-signed APK: StudyOS_${VERSION}.apk"
-              cp "$APK_PATH" "android-dist/StudyOS_${VERSION}.apk"
-            else
-              echo "Staging QA debug-signed APK: StudyOS_${VERSION}_qa-debug.apk"
-              cp "$APK_PATH" "android-dist/StudyOS_${VERSION}_qa-debug.apk"
-            fi
-          else
-            echo "::error::Android release APK was not found in outputs"
-            exit 1
-          fi
-
-          # Stage AAB with strict labelling
-          AAB_PATH=$(find apps/expo-mobile/android/app/build/outputs/bundle/release -name "*.aab" | head -n 1)
-          if [ -n "$AAB_PATH" ] && [ -f "$AAB_PATH" ]; then
-            if [ "$IS_PROD_SIGNED" = "true" ]; then
-              echo "Staging production-signed AAB: StudyOS_${VERSION}.aab"
-              cp "$AAB_PATH" "android-dist/StudyOS_${VERSION}.aab"
-            else
-              echo "Staging QA debug-signed AAB: StudyOS_${VERSION}_qa-debug.aab"
-              cp "$AAB_PATH" "android-dist/StudyOS_${VERSION}_qa-debug.aab"
-            fi
-          else
-            echo "::error::Android release AAB was not found in outputs"
-            exit 1
-          fi
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: node scripts/stage-android-dist.mjs
 
       - name: Upload Android Packages Artifact
         uses: actions/upload-artifact@v4
@@ -324,30 +281,9 @@ jobs:
           fi
 
       - name: Stage Windows Release Installers
-        shell: bash
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          mkdir -p windows-dist
-
-          # Find and stage NSIS setup executable
-          EXE_PATH=$(find apps/desktop/src-tauri/target/release/bundle/nsis -name "*-setup.exe" 2>/dev/null | head -n 1)
-          if [ -z "$EXE_PATH" ]; then
-            EXE_PATH=$(find apps/desktop/src-tauri/target -name "*setup*.exe" 2>/dev/null | head -n 1)
-          fi
-          if [ -n "$EXE_PATH" ] && [ -f "$EXE_PATH" ]; then
-            echo "Found Windows installer: $EXE_PATH"
-            cp "$EXE_PATH" "windows-dist/StudyOS_${VERSION}_x64-setup.exe"
-          else
-            echo "::error::Windows installer executable was not found"
-            exit 1
-          fi
-
-          # Stage MSI installer if generated
-          MSI_PATH=$(find apps/desktop/src-tauri/target/release/bundle/msi -name "*.msi" 2>/dev/null | head -n 1)
-          if [ -n "$MSI_PATH" ] && [ -f "$MSI_PATH" ]; then
-            echo "Found MSI installer: $MSI_PATH"
-            cp "$MSI_PATH" "windows-dist/StudyOS_${VERSION}_x64.msi"
-          fi
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: node scripts/stage-windows-dist.mjs
 
       - name: Upload Windows Installers Artifact
         uses: actions/upload-artifact@v4
