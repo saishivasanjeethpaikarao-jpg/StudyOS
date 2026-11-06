@@ -5,7 +5,6 @@ import {
   Smartphone,
   Monitor,
   Globe,
-  QrCode,
   CheckCircle2,
   ArrowRight,
   ExternalLink,
@@ -22,10 +21,11 @@ import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 
 const CURRENT_VERSION = "v1.0.18";
 const GITHUB_REPO_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS";
-const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases`;
+const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases/tag/v1.0.18`;
 const WINDOWS_EXE_URL = "/downloads/StudyOS_1.0.18_x64-setup.exe";
-const WINDOWS_MSI_URL = "/downloads/StudyOS_Setup.exe";
+const WINDOWS_EXE_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.0.18/StudyOS_1.0.18_x64-setup.exe";
 const ANDROID_APK_URL = "https://studyos-web-8ruc.onrender.com/downloads/StudyOS_1.0.18.apk";
+const ANDROID_APK_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.0.18/StudyOS_1.0.18.apk";
 
 export default function DownloadPage() {
   useSEO(SEO_CONFIGS.download);
@@ -107,12 +107,12 @@ export default function DownloadPage() {
                 <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
                   <span>Version {CURRENT_VERSION} (x64)</span>
                   <a
-                    href={WINDOWS_MSI_URL}
+                    href={WINDOWS_EXE_MIRROR}
                     className="underline hover:text-foreground"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    All Downloads
+                    GitHub CDN Mirror
                   </a>
                 </div>
               </div>
