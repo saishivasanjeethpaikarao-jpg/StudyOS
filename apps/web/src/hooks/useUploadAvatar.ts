@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@open-sunsama/types";
 import { toast } from "@/hooks/use-toast";
-import { sessionFetch } from "@/lib/api";
+import { sessionFetch, API_BASE_URL } from "@/lib/api";
 
 const AUTH_USER_KEY = "open_sunsama_user";
 
@@ -63,7 +63,7 @@ export function useUploadAvatar() {
       formData.append("file", file);
 
       // Get base URL from environment
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const baseUrl = API_BASE_URL;
 
       // Upload to API
       const response = await sessionFetch(`${baseUrl}/uploads/avatar`, {

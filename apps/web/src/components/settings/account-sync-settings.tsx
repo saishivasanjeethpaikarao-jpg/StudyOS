@@ -19,12 +19,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
-import { getApi } from "@/lib/api";
+import { getApi, API_BASE_URL } from "@/lib/api";
 import { useAccountSync } from "@/hooks/useAccountSync";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_URL = API_BASE_URL;
 const deviceIcon = (platform: string) =>
   platform === "android" || platform === "ios"
     ? Smartphone

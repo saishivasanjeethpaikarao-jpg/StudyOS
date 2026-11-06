@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { sessionFetch } from "@/lib/api";
+import { sessionFetch, API_BASE_URL } from "@/lib/api";
 
 // File size limits
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -102,7 +102,7 @@ export function useUploadAttachment() {
       }
 
       // Get API base URL
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const baseUrl = API_BASE_URL;
 
       // Create FormData
       const formData = new FormData();

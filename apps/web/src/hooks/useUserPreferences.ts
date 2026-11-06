@@ -4,7 +4,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import type { UserPreferences, User } from "@open-sunsama/types";
-import { sessionFetch } from "@/lib/api";
+import { sessionFetch, API_BASE_URL } from "@/lib/api";
 
 const AUTH_USER_KEY = "open_sunsama_user";
 
@@ -23,7 +23,7 @@ export function useSavePreferences() {
         return null;
       }
 
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const baseUrl = API_BASE_URL;
       const response = await sessionFetch(`${baseUrl}/auth/me`, {
         method: "PATCH",
         headers: {

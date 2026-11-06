@@ -8,7 +8,9 @@ import { sessionFetch } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
 // API base URL for direct fetch calls (push subscription doesn't go through api-client)
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "http://localhost:3001" : "https://studyos-api-wy5w.onrender.com");
 
 /**
  * Query key factory for notification preferences

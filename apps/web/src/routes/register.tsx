@@ -8,6 +8,7 @@ import { Button, Input, Label } from "@/components/ui";
 import { toast } from "@/hooks/use-toast";
 import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 import { getSafeRedirect } from "@/lib/auth-redirect";
+import { API_BASE_URL } from "@/lib/api";
 
 interface RegisterForm {
   name: string;
@@ -100,7 +101,7 @@ export default function RegisterPage() {
         variant="outline"
         className="w-full h-10"
         onClick={() => {
-          const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+          const apiUrl = API_BASE_URL;
           window.location.assign(`${apiUrl}/auth/google/start`);
         }}
       >

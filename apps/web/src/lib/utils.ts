@@ -91,7 +91,9 @@ export function resolveUploadUrl(
 ): string | null {
   if (!url) return null;
   if (/^(https?:|data:|blob:)/.test(url)) return url;
-  const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+  const apiBaseUrl =
+    import.meta.env.VITE_API_URL ||
+    (import.meta.env.DEV ? "http://localhost:3001" : "https://studyos-api-wy5w.onrender.com");
   if (url.startsWith("/uploads/")) return `${apiBaseUrl}${url}`;
   return url;
 }

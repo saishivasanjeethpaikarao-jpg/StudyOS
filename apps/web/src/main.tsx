@@ -1,6 +1,6 @@
 import * as React from "react";
 import ReactDOM from "react-dom/client";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { RouterProvider, createRouter, createHashHistory } from "@tanstack/react-router";
 import {
   QueryClient,
   QueryClientProvider,
@@ -48,8 +48,12 @@ function TimezoneSync({ children }: { children: React.ReactNode }) {
 // `defaultPreloadStaleTime` controls how long preloaded data is reused before
 // the router considers it stale. Bumping this off 0 means hovering a link
 // doesn't trigger a redundant fetch on every hover.
+const isTauriApp = typeof window !== "undefined" && ("__TAURI_INTERNALS__" in window || "__TAURI__" in window);
+const desktopHistory = typeof window !== "undefined" && isTauriApp ? createHashHistory() : undefined;
+
 const router = createRouter({
   routeTree,
+  history: desktopHistory,
   defaultPreload: "intent",
   defaultPreloadStaleTime: 30_000,
   defaultPreloadGcTime: 5 * 60_000,

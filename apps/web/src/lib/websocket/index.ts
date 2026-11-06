@@ -97,7 +97,7 @@ type EventHandler = (event: WebSocketEvent) => void;
 // Falls back to the API URL (http→ws, https→wss), so self-hosters only set VITE_API_URL
 const WS_URL =
   import.meta.env.VITE_WS_URL ||
-  (import.meta.env.VITE_API_URL || "http://localhost:3001").replace(
+  (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://studyos-api-wy5w.onrender.com")).replace(
     /^http/,
     "ws"
   );

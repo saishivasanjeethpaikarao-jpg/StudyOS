@@ -12,7 +12,9 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "StudyOS",
+        "url": "index.html",
         "width": 1200,
         "height": 800,
         "minWidth": 800,

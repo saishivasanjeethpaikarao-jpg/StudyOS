@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Attachment } from "@open-sunsama/types";
 import { toast } from "@/hooks/use-toast";
-import { sessionFetch } from "@/lib/api";
+import { sessionFetch, API_BASE_URL } from "@/lib/api";
 import { validateFile } from "./useUploadAttachment";
 
 /**
@@ -39,7 +39,7 @@ export function useTaskAttachments(taskId: string) {
   const { data: attachments = [], isLoading, error, isError } = useQuery({
     queryKey: attachmentKeys.list(taskId),
     queryFn: async (): Promise<Attachment[]> => {
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const baseUrl = API_BASE_URL;
       const response = await sessionFetch(`${baseUrl}/attachments?taskId=${taskId}`);
 
       // For 404 responses, treat as empty attachments (task has no attachments)
@@ -81,7 +81,7 @@ export function useTaskAttachments(taskId: string) {
       formData.append("file", file);
       formData.append("taskId", taskId);
 
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const baseUrl = API_BASE_URL;
       const response = await sessionFetch(`${baseUrl}/uploads/attachments`, {
         method: "POST",
         body: formData,
@@ -121,7 +121,7 @@ export function useTaskAttachments(taskId: string) {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (attachmentId: string): Promise<string> => {
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+      const baseUrl = API_BASE_URL;
       const response = await sessionFetch(
         `${baseUrl}/attachments/${attachmentId}`,
         {

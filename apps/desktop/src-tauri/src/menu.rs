@@ -216,7 +216,7 @@ pub fn create_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
             "reset_local_data" => crate::recovery::reset_local_data(app),
             "documentation" => {
                 let _ = tauri::async_runtime::spawn(async {
-                    let _ = open::that("https://opensunsama.com/docs");
+                    let _ = open::that("https://studyos-web-8ruc.onrender.com/docs");
                 });
             }
             "report_issue" => {

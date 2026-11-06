@@ -13,12 +13,12 @@ import { AuthLayout } from "@/components/layout/auth-layout";
 import { AppLogo } from "@/components/settings/app-logo";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
-import { sessionFetch } from "@/lib/api";
+import { sessionFetch, API_BASE_URL } from "@/lib/api";
 import { useSEO } from "@/hooks/useSEO";
 import { withRedirect } from "@/lib/auth-redirect";
 import { trackGoal } from "@/lib/analytics";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_URL = API_BASE_URL;
 
 interface ConsentDetails {
   client: {

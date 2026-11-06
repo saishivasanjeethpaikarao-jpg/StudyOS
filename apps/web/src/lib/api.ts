@@ -1,7 +1,12 @@
 import { createApi, createOpenSunsamaClient, type OpenSunsamaClient } from "@open-sunsama/api-client";
 import { isDesktop } from "./desktop";
 
-const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
+export const PRODUCTION_API_URL = "https://studyos-api-wy5w.onrender.com";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "http://localhost:3001" : PRODUCTION_API_URL);
+
+const baseUrl = API_BASE_URL;
 
 const desktopFetch: typeof globalThis.fetch = async (input, init) => {
   const { fetch } = await import("@tauri-apps/plugin-http");

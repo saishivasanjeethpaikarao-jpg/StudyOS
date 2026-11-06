@@ -120,6 +120,9 @@ jobs:
         run: bun run test
 
       - name: Build Web Application & API
+        env:
+          VITE_API_URL: https://studyos-api-wy5w.onrender.com
+          VITE_WS_URL: wss://studyos-api-wy5w.onrender.com
         run: bunx turbo run build --filter='!@open-sunsama/desktop' --filter='!@open-sunsama/mobile' --filter='!@open-sunsama/expo-mobile'
 
       - name: Package Web Distribution
@@ -255,6 +258,9 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build Web Frontend
+        env:
+          VITE_API_URL: https://studyos-api-wy5w.onrender.com
+          VITE_WS_URL: wss://studyos-api-wy5w.onrender.com
         run: bun run build --filter=@open-sunsama/web
 
       - name: Prepare Desktop Frontend Assets
