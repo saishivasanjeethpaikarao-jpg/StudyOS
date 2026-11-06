@@ -9,7 +9,7 @@ import { getDb, eq, pushSubscriptions } from '@open-sunsama/database';
 // VAPID keys for authentication with push services
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@opensunsama.com';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@studyos.app';
 
 // Track if VAPID is configured
 let vapidConfigured = false;

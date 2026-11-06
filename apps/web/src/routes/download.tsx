@@ -23,9 +23,9 @@ import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 const CURRENT_VERSION = "v1.0.18";
 const GITHUB_REPO_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS";
 const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases`;
-const WINDOWS_EXE_URL = `${GITHUB_REPO_URL}/releases/download/${CURRENT_VERSION}/StudyOS_${CURRENT_VERSION.replace("v", "")}_x64-setup.exe`;
-const WINDOWS_MSI_URL = `${GITHUB_REPO_URL}/releases/download/${CURRENT_VERSION}/StudyOS_${CURRENT_VERSION.replace("v", "")}_x64.msi`;
-const ANDROID_APK_URL = `${GITHUB_REPO_URL}/releases/download/${CURRENT_VERSION}/StudyOS_${CURRENT_VERSION.replace("v", "")}.apk`;
+const WINDOWS_EXE_URL = RELEASES_PAGE_URL; // redirect to releases until artifacts exist
+const WINDOWS_MSI_URL = RELEASES_PAGE_URL;
+const ANDROID_APK_URL = RELEASES_PAGE_URL;
 
 export default function DownloadPage() {
   useSEO(SEO_CONFIGS.download);
@@ -101,7 +101,7 @@ export default function DownloadPage() {
                 <Button size="lg" className="w-full gap-2 text-sm font-semibold shadow-md" asChild>
                   <a href={WINDOWS_EXE_URL} target="_blank" rel="noopener noreferrer">
                     <Download className="h-4 w-4" />
-                    Download Setup (.exe)
+                    View & Download on GitHub
                   </a>
                 </Button>
                 <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
@@ -112,7 +112,7 @@ export default function DownloadPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Download .msi
+                    All Downloads
                   </a>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function DownloadPage() {
                 <Button size="lg" className="w-full gap-2 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90" asChild>
                   <a href={ANDROID_APK_URL} target="_blank" rel="noopener noreferrer">
                     <Download className="h-4 w-4" />
-                    Download APK ({CURRENT_VERSION})
+                    View Downloads on GitHub
                   </a>
                 </Button>
                 <button

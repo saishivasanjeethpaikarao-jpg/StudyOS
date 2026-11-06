@@ -13,14 +13,14 @@ function trimTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");
 }
 
-/** e.g. https://api.opensunsama.com */
+/** e.g. https://studyos-api-wy5w.onrender.com */
 export function getIssuer(): string {
   return trimTrailingSlash(
     process.env.OAUTH_ISSUER || process.env.API_URL || "http://localhost:3001"
   );
 }
 
-/** The MCP endpoint users paste into Claude/ChatGPT: e.g. https://api.opensunsama.com/mcp */
+/** The MCP endpoint users paste into Claude/ChatGPT: e.g. https://studyos-api-wy5w.onrender.com/mcp */
 export function getMcpResource(): string {
   return `${getIssuer()}/mcp`;
 }
@@ -36,7 +36,7 @@ export function getWebAppUrl(): string {
   );
 }
 
-export const MCP_DOCS_URL = "https://opensunsama.com/docs/mcp/overview";
+export const MCP_DOCS_URL = "https://studyos-web-8ruc.onrender.com/docs/mcp/overview";
 
 /** Scopes an MCP token can carry; mirrors the API key scopes the tools need. */
 export const RESOURCE_SCOPES: readonly string[] = MCP_TOOL_SCOPES;

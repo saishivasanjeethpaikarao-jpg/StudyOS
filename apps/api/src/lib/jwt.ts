@@ -6,7 +6,7 @@
 import jwt from 'jsonwebtoken';
 import type { Secret, SignOptions } from 'jsonwebtoken';
 
-const JWT_SECRET: Secret = process.env.JWT_SECRET || 'open-sunsama-dev-secret-change-in-production';
+const JWT_SECRET: Secret = process.env.JWT_SECRET || 'studyos-dev-secret-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 /**

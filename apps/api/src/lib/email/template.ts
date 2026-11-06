@@ -126,7 +126,7 @@ export function generateEmailHTML(options: GenerateEmailHTMLOptions): string {
               <div style="border-top: 1px solid ${EMAIL_COLORS.border}; padding-top: 24px;">
                 ${footerContent}
                 <p style="margin: 0; font-size: 13px; color: ${EMAIL_COLORS.textLight};">
-                  StudyOS · Built on the Open Sunsama foundation
+                  StudyOS · Your Academic Operating System
                 </p>
               </div>
             </td>
