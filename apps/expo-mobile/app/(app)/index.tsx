@@ -32,7 +32,7 @@ export default function TasksScreen() {
     scheduledDate: dateString,
   });
   const { data: sessions = [] } = useStudySessions();
-  const todaySessions = sessions.filter(
+  const rawTodaySessions = sessions.filter(
     (session) =>
       session.status === 'planned' &&
       formatInZone(session.startAt, session.timezone, {
@@ -46,6 +46,7 @@ export default function TasksScreen() {
           day: '2-digit',
         })
   );
+  const todaySessions = Array.from(new Map(rawTodaySessions.map((s) => [s.id, s])).values());
 
   const goToPreviousDay = useCallback(() => {
     setSelectedDate((prev) => subDays(prev, 1));
@@ -76,18 +77,19 @@ export default function TasksScreen() {
 
   const handleSetAlarm = async (startAt: string | Date, timezone: string, title?: string) => {
     const res = await openClockAlarm(startAt, title || 'Study Session', timezone);
-    if (res === 'unsupported') {
-      Alert.alert('Device Alarm', 'Android built-in Clock intent is supported on Android devices.');
+    if (res === 'opened') {
+      Alert.alert('Alarm Set! ⏰', 'Alarm scheduled in your device clock app.');
     }
   };
 
-  // Sort tasks: incomplete first (by position), then completed
+  // Sort tasks: deduplicate by ID, incomplete first (by position), then completed
+  const uniqueTasks = Array.from(new Map((tasks || []).map((t) => [t.id, t])).values());
   const sortedTasks =
-    tasks?.slice().sort((a, b) => {
+    uniqueTasks.slice().sort((a, b) => {
       if (a.completedAt && !b.completedAt) return 1;
       if (!a.completedAt && b.completedAt) return -1;
       return a.position - b.position;
-    }) ?? [];
+    });
 
   const incompleteTasks = sortedTasks.filter((t) => !t.completedAt);
   const completedTasks = sortedTasks.filter((t) => t.completedAt);

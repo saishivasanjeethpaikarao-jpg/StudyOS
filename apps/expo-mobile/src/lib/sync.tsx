@@ -106,7 +106,13 @@ export function AccountSyncProvider({ children }: { children: React.ReactNode })
     try {
       const api = getApi();
       const deviceId = await getDeviceId();
-      await api.account.registerDevice({ clientDeviceId: deviceId!, platform: 'android', displayName: 'StudyOS Android' });
+      let activeDeviceId = deviceId!;
+      try {
+        const registered = await api.account.registerDevice({ clientDeviceId: deviceId!, platform: 'android', displayName: 'StudyOS Android' });
+        if (registered?.id) activeDeviceId = registered.id;
+      } catch {
+        // Fallback to client device ID
+      }
       let queue = await readJson<QueueItem[]>(key(user.id, 'queue'), []);
       let conflicts = 0;
       for (const item of queue) {
@@ -143,7 +149,7 @@ export function AccountSyncProvider({ children }: { children: React.ReactNode })
         let pageToken: string | undefined;
         let snapshotCursor = '0';
         do {
-          const page = await api.sync.bootstrap({ deviceId: deviceId!, pageToken, pageSize: 200 });
+          const page = await api.sync.bootstrap({ deviceId: activeDeviceId, pageToken, pageSize: 200 });
           const changes: SyncChange[] = page.entries.map((entry) => ({
             sequence: Number(page.snapshotSequence), entityType: entry.entityType,
             entityId: entry.entityId, revision: null, operation: 'upsert',

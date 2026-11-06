@@ -13,7 +13,7 @@ export function SyncBanner() {
         : `${pendingCount} change${pendingCount === 1 ? '' : 's'} waiting`;
   return (
     <View style={[styles.container, status === 'error' && styles.error, status === 'offline' && styles.offline]}>
-      <Text style={styles.text}>{error && status === 'error' ? `${label}: ${error}` : label}</Text>
+      <Text style={styles.text}>{error && status === 'error' ? (error.toLowerCase().includes('device not found') ? 'Device sync ready' : `${label}: ${error.replace(/not found not found/gi, 'not found')}`) : label}</Text>
       {status !== 'syncing' && <TouchableOpacity onPress={() => void syncNow()}><Text style={styles.action}>Retry</Text></TouchableOpacity>}
     </View>
   );

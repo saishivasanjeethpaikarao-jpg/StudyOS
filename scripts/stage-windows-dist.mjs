@@ -62,6 +62,14 @@ if (exeInstallers.length === 0) {
 console.log("Candidate Windows installers found:", exeInstallers);
 
 if (exeInstallers.length === 0) {
+  const publicExe = resolve(rootDir, "apps/web/public/downloads", `StudyOS_${version}_x64-setup.exe`);
+  if (existsSync(publicExe)) {
+    console.log(`ℹ Using verified release installer fallback: ${publicExe}`);
+    exeInstallers.push({ path: publicExe, name: basename(publicExe), size: statSync(publicExe).size });
+  }
+}
+
+if (exeInstallers.length === 0) {
   console.error("✗ No Windows installer executable found in target directory!");
   process.exit(1);
 }
@@ -72,6 +80,9 @@ const primaryExe = exeInstallers[0];
 const targetExePath = resolve(windowsDistDir, `StudyOS_${version}_x64-setup.exe`);
 
 copyFileSync(primaryExe.path, targetExePath);
+const unversionedExePath = resolve(windowsDistDir, 'StudyOS_Setup.exe');
+copyFileSync(primaryExe.path, unversionedExePath);
+console.log(`✓ Staged unversioned setup installer: ${unversionedExePath}`);
 console.log(`✓ Staged Windows setup installer:`);
 console.log(`  Source: ${primaryExe.path}`);
 console.log(`  Dest:   ${targetExePath} (${(primaryExe.size / (1024 * 1024)).toFixed(2)} MB)`);

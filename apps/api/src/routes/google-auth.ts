@@ -43,7 +43,7 @@ function safeMobileRedirect(value: string | undefined): string | null {
   if (!value) return null;
   try {
     const url = new URL(value);
-    if (url.protocol === "opensunsama:") {
+    if (url.protocol === "studyos:" || url.protocol === "opensunsama:") {
       const path = (url.host ? `${url.host}${url.pathname}` : url.pathname.replace(/^\/\//, "")).toLowerCase();
       return path.startsWith("auth/callback") || path === "auth/callback" ? value : null;
     }

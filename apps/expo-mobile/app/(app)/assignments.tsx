@@ -7,7 +7,8 @@ import { useAssignments, useCreateAssignment, useCreateSubject, useSubjects } fr
 import { SyncBanner } from '@/components/SyncBanner';
 
 export default function AssignmentsScreen() {
-  const { data: assignments = [], isLoading, refetch } = useAssignments();
+  const { data: rawAssignments = [], isLoading, refetch } = useAssignments();
+  const assignments = Array.from(new Map(rawAssignments.map((a) => [a.id, a])).values());
   const { data: subjects = [] } = useSubjects();
   const createAssignment = useCreateAssignment();
   const createSubject = useCreateSubject();

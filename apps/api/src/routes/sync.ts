@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import {
   and,
+  or,
   asc,
   eq,
   getDb,
@@ -369,7 +370,7 @@ router.post("/bootstrap", zValidator("json", bootstrapRequest), async (c) => {
         .from(accountDevices)
         .where(
           and(
-            eq(accountDevices.id, input.deviceId),
+            or(eq(accountDevices.id, input.deviceId), eq(accountDevices.clientDeviceId, input.deviceId)),
             eq(accountDevices.userId, userId),
             isNull(accountDevices.revokedAt)
           )
@@ -447,9 +448,9 @@ router.get("/changes", zValidator("query", pullQuery), async (c) => {
       .from(accountDevices)
       .where(
         and(
-          eq(accountDevices.id, input.deviceId),
-          eq(accountDevices.userId, userId),
-          isNull(accountDevices.revokedAt)
+          or(eq(accountDevices.id, input.deviceId), eq(accountDevices.clientDeviceId, input.deviceId)),
+            eq(accountDevices.userId, userId),
+            isNull(accountDevices.revokedAt)
         )
       )
       .limit(1);
@@ -503,9 +504,9 @@ router.get("/changes", zValidator("query", pullQuery), async (c) => {
       })
       .where(
         and(
-          eq(accountDevices.id, input.deviceId),
-          eq(accountDevices.userId, userId),
-          isNull(accountDevices.revokedAt)
+          or(eq(accountDevices.id, input.deviceId), eq(accountDevices.clientDeviceId, input.deviceId)),
+            eq(accountDevices.userId, userId),
+            isNull(accountDevices.revokedAt)
         )
       );
   }

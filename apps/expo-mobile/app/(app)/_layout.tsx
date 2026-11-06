@@ -2,24 +2,27 @@ import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet, useColorScheme } from 'react-native';
 
 /**
- * Tab icon component
+ * Tab icon component with clear Unicode visual glyphs and focused highlights
  */
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const icons: Record<string, string> = {
-    index: 'Today',
-    plan: 'Plan',
-    assignments: 'Learn',
-    focus: 'Focus',
-    settings: 'More',
+    index: '📅',
+    plan: '📋',
+    assignments: '🎓',
+    focus: '🎯',
+    settings: '⚙️',
   };
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   return (
-    <View style={styles.iconContainer}>
-      <Text style={[styles.icon, isDark && styles.iconDark, focused && (isDark ? styles.iconFocusedDark : styles.iconFocused)]}>
-        {icons[name] || '•'}
-      </Text>
+    <View
+      style={[
+        styles.iconContainer,
+        focused && (isDark ? styles.iconFocusedContainerDark : styles.iconFocusedContainer),
+      ]}
+    >
+      <Text style={styles.icon}>{icons[name] || '•'}</Text>
     </View>
   );
 }
@@ -34,8 +37,8 @@ export default function AppLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: isDark ? '#818cf8' : '#6366f1',
-        tabBarInactiveTintColor: isDark ? '#6b7280' : '#9ca3af',
+        tabBarActiveTintColor: isDark ? '#a78bfa' : '#6d28d9',
+        tabBarInactiveTintColor: isDark ? '#94a3b8' : '#64748b',
         tabBarStyle: isDark ? styles.tabBarDark : styles.tabBar,
         tabBarLabelStyle: isDark ? styles.tabBarLabelDark : styles.tabBarLabel,
         headerStyle: isDark ? styles.headerDark : styles.header,
@@ -93,62 +96,63 @@ export default function AppLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#ffffff',
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#e2e8f0',
     borderTopWidth: 1,
-    height: 84,
-    paddingTop: 8,
-    paddingBottom: 28,
+    height: 64,
+    paddingTop: 6,
+    paddingBottom: 8,
   },
   tabBarDark: {
-    backgroundColor: '#111827',
-    borderTopColor: '#374151',
+    backgroundColor: '#0f172a',
+    borderTopColor: '#1e293b',
     borderTopWidth: 1,
-    height: 84,
-    paddingTop: 8,
-    paddingBottom: 28,
+    height: 64,
+    paddingTop: 6,
+    paddingBottom: 8,
   },
   tabBarLabel: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 0,
   },
   tabBarLabelDark: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#9ca3af',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 0,
+    color: '#94a3b8',
   },
   header: {
     backgroundColor: '#ffffff',
   },
   headerDark: {
-    backgroundColor: '#111827',
+    backgroundColor: '#0f172a',
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
+    fontWeight: '700',
+    color: '#1e293b',
   },
   headerTitleDark: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#f9fafb',
+    fontWeight: '700',
+    color: '#f8fafc',
   },
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginBottom: 2,
+  },
+  iconFocusedContainer: {
+    backgroundColor: '#ede9fe',
+  },
+  iconFocusedContainerDark: {
+    backgroundColor: '#312e81',
   },
   icon: {
-    fontSize: 20,
-    color: '#9ca3af',
-  },
-  iconDark: {
-    color: '#6b7280',
-  },
-  iconFocused: {
-    color: '#6366f1',
-  },
-  iconFocusedDark: {
-    color: '#818cf8',
+    fontSize: 17,
+    textAlign: 'center',
   },
 });

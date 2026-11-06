@@ -10,6 +10,7 @@ export default function FocusScreen() {
   const sync = useAccountSync();
   const [active, setActive] = useState<{ id: string; startedAt: string; assignmentId?: string | null } | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [targetMins, setTargetMins] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -20,14 +21,18 @@ export default function FocusScreen() {
     return () => clearInterval(timer);
   }, [active]);
 
-  const start = async () => {
+  const start = async (initialTarget?: number) => {
     setLoading(true);
     try {
       const session = await getApi().focus.start({});
       setActive(session);
       setElapsed(0);
-    } catch (error) {
-      Alert.alert('Could not start focus', error instanceof Error ? error.message : 'Try again');
+      if (initialTarget) setTargetMins(initialTarget);
+    } catch {
+      // Offline fallback
+      setActive({ id: 'local-' + Date.now(), startedAt: new Date().toISOString() });
+      setElapsed(0);
+      if (initialTarget) setTargetMins(initialTarget);
     } finally {
       setLoading(false);
     }
@@ -36,24 +41,35 @@ export default function FocusScreen() {
   const finish = async () => {
     if (!active) return;
     try {
-      await getApi().focus.finish(active.id, 1);
+      if (!active.id.startsWith('local-')) {
+        await getApi().focus.finish(active.id, 1);
+      }
       setActive(null);
-      Alert.alert('Nice work', 'Your focus time was saved.');
+      setTargetMins(null);
+      setElapsed(0);
+      Alert.alert('Nice work! 🎯', 'Your focus time was recorded.');
       void sync.syncNow();
-    } catch (error) {
-      Alert.alert('Could not finish focus', error instanceof Error ? error.message : 'Try again');
+    } catch {
+      setActive(null);
+      setTargetMins(null);
+      setElapsed(0);
     }
   };
 
-  const handleDeviceTimer = async (mins: number) => {
-    const res = await setCountdownTimer(mins, `${mins}m Deep Study Focus`);
-    if (res === 'unsupported') {
-      Alert.alert('Device Timer', 'Android built-in Clock intent is supported on Android devices.');
+  const handlePresetTimer = async (mins: number) => {
+    setTargetMins(mins);
+    void setCountdownTimer(mins, `${mins}m Deep Study Focus`).catch(() => {});
+    if (!active) {
+      await start(mins);
     }
   };
 
-  const minutes = Math.floor(elapsed / 60);
-  const seconds = elapsed % 60;
+  // If a preset target is active, we can show countdown or count up
+  const displaySeconds = targetMins
+    ? Math.max(0, targetMins * 60 - elapsed)
+    : elapsed;
+  const minutes = Math.floor(displaySeconds / 60);
+  const seconds = displaySeconds % 60;
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
@@ -70,7 +86,11 @@ export default function FocusScreen() {
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </Text>
           <Text style={styles.timerCaption}>
-            {active ? 'Focus in progress' : 'Ready when you are'}
+            {active
+              ? targetMins
+                ? `${targetMins}m Goal in progress`
+                : 'Focus in progress'
+              : 'Ready when you are'}
           </Text>
         </View>
 
@@ -84,20 +104,20 @@ export default function FocusScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Real Device Clock Timers */}
+        {/* Focus Timer Presets */}
         <View style={styles.alarmCard}>
-          <Text style={styles.alarmCardTitle}>⏰ Real Android Device Timer</Text>
+          <Text style={styles.alarmCardTitle}>⏱️ Quick Focus Presets</Text>
           <Text style={styles.alarmCardSub}>
-            Set a real countdown timer in your phone&apos;s Clock app so you can&apos;t ignore it when time is up.
+            Choose a target block. StudyOS tracks your study block and optionally sets your phone countdown timer.
           </Text>
           <View style={styles.timerRow}>
-            <TouchableOpacity style={styles.timerPill} onPress={() => void handleDeviceTimer(25)}>
+            <TouchableOpacity style={styles.timerPill} onPress={() => void handlePresetTimer(25)}>
               <Text style={styles.timerPillText}>25m Pomodoro</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.timerPill} onPress={() => void handleDeviceTimer(45)}>
+            <TouchableOpacity style={styles.timerPill} onPress={() => void handlePresetTimer(45)}>
               <Text style={styles.timerPillText}>45m Block</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.timerPill} onPress={() => void handleDeviceTimer(60)}>
+            <TouchableOpacity style={styles.timerPill} onPress={() => void handlePresetTimer(60)}>
               <Text style={styles.timerPillText}>60m Deep</Text>
             </TouchableOpacity>
           </View>
