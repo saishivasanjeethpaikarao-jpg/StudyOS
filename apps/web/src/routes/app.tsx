@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import type { Task } from "@open-sunsama/types";
 import { useAuth } from "@/hooks/useAuth";
+import { getToken } from "@/lib/api";
 import { Header } from "@/components/layout/header";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
@@ -50,7 +51,7 @@ export default function AppLayout() {
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !getToken()) {
       void navigate({ to: "/login" });
     }
   }, [isAuthenticated, isLoading, navigate]);

@@ -8,7 +8,7 @@ import { Button, Input, Label } from "@/components/ui";
 import { toast } from "@/hooks/use-toast";
 import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 import { getSafeRedirect } from "@/lib/auth-redirect";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, getToken } from "@/lib/api";
 
 interface LoginForm {
   email: string;
@@ -35,7 +35,11 @@ export default function LoginPage() {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      goNext();
+      if (getToken()) {
+        goNext();
+      } else {
+        goNext();
+      }
     }
   }, [isAuthenticated, goNext]);
 
@@ -67,7 +71,11 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login(data);
-      goNext();
+      if (getToken()) {
+        goNext();
+      } else {
+        goNext();
+      }
     } catch (error) {
       toast({
         variant: "destructive",

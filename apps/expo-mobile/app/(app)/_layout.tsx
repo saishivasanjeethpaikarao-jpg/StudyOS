@@ -1,158 +1,250 @@
-import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import React, { useRef, useCallback, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  BackHandler,
+  Platform,
+  ActivityIndicator,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
+import { WebView } from 'react-native-webview';
+import type { WebViewMessageEvent, WebViewNavigation } from 'react-native-webview';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '@/lib/auth';
+import { openClockAlarm, setCountdownTimer, openClock } from '@/lib/alarms';
+import { router } from 'expo-router';
+
+const WEB_APP_URL = 'https://studyos-web-8ruc.onrender.com';
+const API_URL = 'https://studyos-api-wy5w.onrender.com';
+
+const ALLOWED_ORIGINS = [
+  WEB_APP_URL,
+  API_URL,
+  'https://accounts.google.com',
+  'https://ssl.gstatic.com',
+  'https://www.googleapis.com',
+  'https://apis.google.com',
+];
 
 /**
- * Tab icon component with clear Unicode visual glyphs and focused highlights
- */
-function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    index: '📅',
-    plan: '📋',
-    assignments: '🎓',
-    focus: '🎯',
-    settings: '⚙️',
-  };
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  return (
-    <View
-      style={[
-        styles.iconContainer,
-        focused && (isDark ? styles.iconFocusedContainerDark : styles.iconFocusedContainer),
-      ]}
-    >
-      <Text style={styles.icon}>{icons[name] || '•'}</Text>
-    </View>
-  );
-}
-
-/**
- * App layout - tab navigator for main screens
+ * Full-screen production WebView container that loads the complete StudyOS web app.
+ * Bridges native Android clock alarm intents, focus countdown timers, and auth tokens.
  */
 export default function AppLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { token, logout } = useAuth();
+  const webViewRef = useRef<WebView>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  // Injected JavaScript to seed localStorage with current auth token and register native bridges
+  const injectedJS = React.useMemo(
+    () => `
+    (function() {
+      try {
+        var tk = ${JSON.stringify(token || '')};
+        if (tk && !localStorage.getItem('open_sunsama_token')) {
+          localStorage.setItem('open_sunsama_token', tk);
+        }
+        window.__STUDYOS_NATIVE__ = true;
+        window.__STUDYOS_PLATFORM__ = ${JSON.stringify(Platform.OS)};
+        window.StudyOSNative = {
+          setAlarm: function(startAt, label, timezone) {
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'SET_ALARM',
+                startAt: startAt,
+                label: label,
+                timezone: timezone
+              }));
+            }
+          },
+          setTimer: function(minutes, label) {
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'SET_TIMER',
+                minutes: minutes,
+                label: label
+              }));
+            }
+          },
+          openClock: function() {
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_CLOCK' }));
+            }
+          },
+          logout: function() {
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOGOUT' }));
+            }
+          }
+        };
+      } catch(e) {}
+    })();
+    true;
+  `,
+    [token],
+  );
+
+  // Handle messages sent from the StudyOS web application
+  const handleMessage = useCallback(
+    async (event: WebViewMessageEvent) => {
+      try {
+        const data = JSON.parse(event.nativeEvent.data);
+        switch (data.type) {
+          case 'SET_ALARM':
+            await openClockAlarm(data.startAt, data.label, data.timezone);
+            break;
+          case 'SET_TIMER':
+            await setCountdownTimer(data.minutes || 25, data.label || 'Study Focus Timer');
+            break;
+          case 'OPEN_CLOCK':
+            await openClock();
+            break;
+          case 'LOGOUT':
+            logout();
+            router.replace('/(auth)/login');
+            break;
+        }
+      } catch {
+        // Silently ignore unexpected message formats
+      }
+    },
+    [logout],
+  );
+
+  // Hardware back button navigation inside WebView
+  React.useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (webViewRef.current) {
+        webViewRef.current.goBack();
+        return true;
+      }
+      return false;
+    });
+    return () => handler.remove();
+  }, []);
+
+  const handleNavigation = useCallback((request: WebViewNavigation) => {
+    const url = request.url;
+    if (ALLOWED_ORIGINS.some((origin) => url.startsWith(origin))) {
+      return true;
+    }
+    if (url.startsWith('about:') || url.startsWith('data:')) {
+      return true;
+    }
+    // Allow Google auth callbacks
+    if (url.includes('google') || url.includes('render.com')) {
+      return true;
+    }
+    return false;
+  }, []);
+
+  const handleReload = () => {
+    setHasError(false);
+    setIsLoading(true);
+    webViewRef.current?.reload();
+  };
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: isDark ? '#a78bfa' : '#6d28d9',
-        tabBarInactiveTintColor: isDark ? '#94a3b8' : '#64748b',
-        tabBarStyle: isDark ? styles.tabBarDark : styles.tabBar,
-        tabBarLabelStyle: isDark ? styles.tabBarLabelDark : styles.tabBarLabel,
-        headerStyle: isDark ? styles.headerDark : styles.header,
-        headerTitleStyle: isDark ? styles.headerTitleDark : styles.headerTitle,
-        headerShadowVisible: false,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Today',
-          tabBarIcon: ({ focused }) => <TabIcon name="index" focused={focused} />,
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <WebView
+        ref={webViewRef}
+        source={{ uri: `${WEB_APP_URL}/app` }}
+        injectedJavaScriptBeforeContentLoaded={injectedJS}
+        onMessage={handleMessage}
+        onLoadStart={() => setIsLoading(true)}
+        onLoadEnd={() => setIsLoading(false)}
+        onError={() => {
+          setIsLoading(false);
+          setHasError(true);
         }}
+        onShouldStartLoadWithRequest={handleNavigation}
+        javaScriptEnabled
+        domStorageEnabled
+        startInLoadingState={false}
+        allowsBackForwardNavigationGestures
+        sharedCookiesEnabled
+        thirdPartyCookiesEnabled
+        mediaPlaybackRequiresUserAction={false}
+        allowsInlineMediaPlayback
+        mixedContentMode="compatibility"
+        originWhitelist={['https://*', 'http://*']}
+        userAgent="Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 StudyOS-Mobile/1.0.19"
+        style={styles.webview}
       />
-      <Tabs.Screen
-        name="plan"
-        options={{
-          title: 'Plan',
-          tabBarIcon: ({ focused }) => <TabIcon name="plan" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="assignments"
-        options={{
-          title: 'Learn',
-          tabBarIcon: ({ focused }) => <TabIcon name="assignments" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="focus"
-        options={{
-          title: 'Focus',
-          tabBarIcon: ({ focused }) => <TabIcon name="focus" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'More',
-          tabBarIcon: ({ focused }) => <TabIcon name="settings" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen name="calendar" options={{ href: null, title: 'Calendar' }} />
-      <Tabs.Screen name="focustube" options={{ href: null, title: 'FocusTube' }} />
-      <Tabs.Screen name="assignment/[id]" options={{ href: null, title: 'Assignment' }} />
-      <Tabs.Screen name="resources" options={{ href: null, title: 'Resources' }} />
-      <Tabs.Screen name="notes" options={{ href: null, title: 'Notes' }} />
-      <Tabs.Screen name="quizzes" options={{ href: null, title: 'Knowledge checks' }} />
-      <Tabs.Screen name="quiz/[id]" options={{ href: null, title: 'Quiz' }} />
-      <Tabs.Screen name="reminders" options={{ href: null, title: 'Reminders' }} />
-    </Tabs>
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#6366f1" />
+          <Text style={styles.loadingText}>Loading StudyOS...</Text>
+        </View>
+      )}
+      {hasError && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>Unable to reach StudyOS</Text>
+          <Text style={styles.errorSub}>Please verify your internet connection and try again.</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleReload}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: '#ffffff',
-    borderTopColor: '#e2e8f0',
-    borderTopWidth: 1,
-    height: 64,
-    paddingTop: 6,
-    paddingBottom: 8,
-  },
-  tabBarDark: {
-    backgroundColor: '#0f172a',
-    borderTopColor: '#1e293b',
-    borderTopWidth: 1,
-    height: 64,
-    paddingTop: 6,
-    paddingBottom: 8,
-  },
-  tabBarLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 0,
-  },
-  tabBarLabelDark: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 0,
-    color: '#94a3b8',
-  },
-  header: {
+  container: {
+    flex: 1,
     backgroundColor: '#ffffff',
   },
-  headerDark: {
-    backgroundColor: '#0f172a',
+  webview: {
+    flex: 1,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1e293b',
-  },
-  headerTitleDark: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#f8fafc',
-  },
-  iconContainer: {
-    alignItems: 'center',
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginBottom: 2,
+    alignItems: 'center',
+    zIndex: 10,
   },
-  iconFocusedContainer: {
-    backgroundColor: '#ede9fe',
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
   },
-  iconFocusedContainerDark: {
-    backgroundColor: '#312e81',
+  errorContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    zIndex: 20,
   },
-  icon: {
-    fontSize: 17,
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 8,
+  },
+  errorSub: {
+    fontSize: 14,
+    color: '#64748b',
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useAuth } from '@/lib/auth';
 import { API_URL } from '@/lib/api';
 import * as ExpoLinking from 'expo-linking';
@@ -34,6 +34,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await login({ email: email.trim(), password });
+      router.replace('/(app)');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Login failed';
       Alert.alert('Login Failed', message);

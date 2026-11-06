@@ -11,7 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useAuth } from '@/lib/auth';
 import { FormInput } from '@/components/FormInput';
 
@@ -49,6 +49,7 @@ export default function RegisterScreen() {
         password,
         name: name.trim() || undefined,
       });
+      router.replace('/(app)');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Registration failed';
       Alert.alert('Registration Failed', message);

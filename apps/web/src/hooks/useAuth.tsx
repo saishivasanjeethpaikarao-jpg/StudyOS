@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User, LoginInput, CreateUserInput, AuthResponse, UpdateUserInput } from "@open-sunsama/types";
-import { getApi, clearApiClient, clearCsrfToken, getToken, setAuthToken } from "@/lib/api";
+import { getApi, clearApiClient, clearCsrfToken, getToken, setAuthToken, refreshAuthToken } from "@/lib/api";
 import { clearPersistedCache } from "@/lib/query-persister";
 import { identifyUser, trackGoal } from "@/lib/analytics";
 
@@ -48,9 +48,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (tokenFromUrl) {
       setAuthToken(tokenFromUrl);
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState(null, "", cleanUrl);
       setHasSession(true);
+      try {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete("token");
+        if (currentUrl.hash.includes("token=")) {
+          const newHash = currentUrl.hash.replace(/[?&]?token=[^&]+/, "").replace(/^#\??$/, "");
+          currentUrl.hash = newHash;
+        }
+        window.history.replaceState(null, "", currentUrl.toString());
+      } catch {
+        // Fallback for non-standard browser URL schemes
+      }
       void queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     }
   }, [queryClient]);
@@ -69,6 +78,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                        (error as { response?: { status?: number } } | null)?.response?.status;
         const msg = error instanceof Error ? error.message : "";
         if (status === 401 || msg.includes("Authentication required") || msg.includes("Unauthorized")) {
+          // Attempt token refresh before clearing the session —
+          // prevents redirect loop when background refetch races against a fresh login
+          const currentToken = getToken();
+          if (currentToken) {
+            try {
+              const refreshedToken = await refreshAuthToken();
+              if (refreshedToken) {
+                try {
+                  const me = await getApi().auth.getMe();
+                  setHasSession(true);
+                  setCachedUser(me);
+                  storeUser(me);
+                  return me;
+                } catch {
+                  // Fall through
+                }
+              }
+            } catch {
+              // Refresh failed
+            }
+          }
           clearAuthData();
           setCachedUser(null);
           setHasSession(false);
@@ -110,8 +140,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
-  const login = React.useCallback(async (credentials: LoginInput) => { await loginMutation.mutateAsync(credentials); }, [loginMutation]);
-  const register = React.useCallback(async (data: CreateUserInput) => { await registerMutation.mutateAsync(data); }, [registerMutation]);
+  const login = React.useCallback(async (credentials: LoginInput) => {
+    const result = await loginMutation.mutateAsync(credentials);
+    if (result.token) setAuthToken(result.token);
+    if (result.user) {
+      storeUser(result.user);
+      setCachedUser(result.user);
+      setHasSession(true);
+      queryClient.setQueryData(["auth", "me"], result.user);
+    }
+  }, [loginMutation, queryClient]);
+
+  const register = React.useCallback(async (data: CreateUserInput) => {
+    const result = await registerMutation.mutateAsync(data);
+    if (result.token) setAuthToken(result.token);
+    if (result.user) {
+      storeUser(result.user);
+      setCachedUser(result.user);
+      setHasSession(true);
+      queryClient.setQueryData(["auth", "me"], result.user);
+    }
+  }, [registerMutation, queryClient]);
+
   const logout = React.useCallback(async () => {
     try { if (hasSession || getToken()) await getApi().auth.logout(); } finally {
       clearAuthData(); setHasSession(false); setCachedUser(null); setCheckingSession(false);
@@ -122,14 +172,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const effectiveUser = user ?? cachedUser;
   React.useEffect(() => { if (effectiveUser) identifyUser(effectiveUser); }, [effectiveUser?.id, effectiveUser?.email, effectiveUser?.name, effectiveUser?.avatarUrl]);
-  const isAuthenticated = hasSession || (checkingSession && !!cachedUser && !!getToken());
+  const hasToken = !!getToken();
+  const isAuthenticated = hasToken || hasSession || (checkingSession && !!cachedUser);
   const value = React.useMemo<AuthContextValue>(() => ({
     user: effectiveUser,
     token: getToken() ?? null,
     isAuthenticated,
-    isLoading: checkingSession && !cachedUser,
+    isLoading: checkingSession && !hasToken && !cachedUser,
     login, register, logout, updateUser,
-  }), [effectiveUser, isAuthenticated, checkingSession, cachedUser, login, register, logout, updateUser]);
+  }), [effectiveUser, isAuthenticated, checkingSession, cachedUser, hasToken, login, register, logout, updateUser]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

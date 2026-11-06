@@ -46,8 +46,15 @@ const customFetch: typeof globalThis.fetch = async (input, init = {}) => {
     headers.set("Authorization", `Bearer ${authToken}`);
   }
   if (unsafe.has(method)) {
-    const requestUrl = new URL(typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url);
-    if (!authBootstrapPaths.has(requestUrl.pathname.replace(baseUrl, ""))) {
+    const rawUrl = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    let pathname = "";
+    try {
+      pathname = new URL(rawUrl, baseUrl).pathname;
+    } catch {
+      pathname = rawUrl;
+    }
+    const cleanPath = pathname.replace(/^\/api\/v1/, "").replace(baseUrl, "");
+    if (!authBootstrapPaths.has(cleanPath)) {
       const token = await getCsrfToken();
       if (token) headers.set("X-CSRF-Token", token);
     }
@@ -63,12 +70,39 @@ export function getToken(): string | undefined {
   return localStorage.getItem(TOKEN_KEY) || undefined;
 }
 
+const attemptTokenRefresh = async (): Promise<string | null> => {
+  const currentToken = getToken();
+  if (!currentToken) return null;
+  try {
+    const res = await transportFetch(`${baseUrl}/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`,
+        "X-StudyOS-Web-Session": "1",
+      },
+      credentials: "include",
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { data?: { token?: string } };
+    const newToken = body?.data?.token;
+    if (newToken) {
+      setAuthToken(newToken);
+      return newToken;
+    }
+  } catch {
+    /* refresh failed */
+  }
+  return null;
+};
+
 const config = {
   baseUrl,
   customFetch,
   credentials: "include" as RequestCredentials,
   defaultHeaders: { "X-StudyOS-Web-Session": "1" },
   getToken,
+  onUnauthorized: attemptTokenRefresh,
 };
 let client: OpenSunsamaClient = createOpenSunsamaClient(config);
 let api = createApi(config);
@@ -81,7 +115,9 @@ export function setAuthToken(token: string | null): void {
     localStorage.removeItem(TOKEN_KEY);
   }
 }
-export function refreshAuthToken(): Promise<string | null> { return Promise.resolve(null); }
+export function refreshAuthToken(): Promise<string | null> {
+  return attemptTokenRefresh();
+}
 export function onTokenRefreshed(_listener: (token: string) => void): () => void { return () => undefined; }
 export function getTokenExpiryMs(_token: string): number | null { return null; }
 

@@ -12,7 +12,7 @@ if (!version) {
     const rootPkg = JSON.parse(readFileSync(resolve(rootDir, "package.json"), "utf8"));
     version = rootPkg.version;
   } catch {
-    version = "1.0.18";
+    version = "1.0.20";
   }
 }
 
