@@ -71,6 +71,11 @@ export function Header({ className }: HeaderProps) {
         "hidden lg:block sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
         className
       )}
+      style={{
+        paddingTop: "max(env(safe-area-inset-top, 0px), 0px)",
+        paddingLeft: "max(env(safe-area-inset-left, 0px), 0px)",
+        paddingRight: "max(env(safe-area-inset-right, 0px), 0px)",
+      }}
     >
       <div className="flex h-11 w-full items-center px-3 sm:px-4">
         {/* Logo */}

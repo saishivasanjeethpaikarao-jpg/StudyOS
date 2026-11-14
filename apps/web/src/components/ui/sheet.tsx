@@ -59,6 +59,7 @@ const SheetContent = React.forwardRef<
       className={cn(sheetVariants({ side }), className)}
       style={{
         paddingTop: "max(env(safe-area-inset-top, 0px), 24px)",
+        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)",
         ...style,
       }}
       {...props}

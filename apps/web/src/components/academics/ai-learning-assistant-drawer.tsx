@@ -165,7 +165,13 @@ export function AiLearningAssistantDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-md p-0 flex flex-col"
+        style={{
+          paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0px)",
+        }}
+      >
         <SheetHeader className="p-4 border-b">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-md bg-primary/10 text-primary">
@@ -219,7 +225,7 @@ export function AiLearningAssistantDrawer({
         </SheetHeader>
 
         {/* Chat Thread */}
-        <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto space-y-4 text-xs">
+        <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto space-y-4 text-xs scrollbar-thin">
           {messages.map((msg, idx) => (
             <div
               key={idx}
@@ -268,7 +274,7 @@ export function AiLearningAssistantDrawer({
         </div>
 
         {/* Quick Action Chips */}
-        <div className="p-2 border-t bg-muted/20 flex items-center gap-1.5 overflow-x-auto text-[11px]">
+        <div className="p-2 border-t bg-muted/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-[11px]">
           <Button
             variant="outline"
             size="sm"
@@ -304,7 +310,12 @@ export function AiLearningAssistantDrawer({
         </div>
 
         {/* Input Bar */}
-        <div className="p-3 border-t bg-background flex items-center gap-2">
+        <div
+          className="p-3 border-t bg-background flex items-center gap-2"
+          style={{
+            paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)",
+          }}
+        >
           <Input
             placeholder="Ask a question about your subject or notes..."
             value={inputText}
