@@ -1,5 +1,12 @@
-const token = '9182072811:AAFRPXdF5dQsl0xdOCZVwyS5O5YztmX0weA';
-const chatId = '8556795729';
+import 'dotenv/config';
+
+const token = process.env.TELEGRAM_BOT_TOKEN;
+const chatId = process.env.TELEGRAM_CHAT_ID;
+
+if (!token || !chatId) {
+  console.error('ERROR: TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID environment variables are required.');
+  process.exit(1);
+}
 
 function markdownToTelegramHtml(md) {
   let s = md;

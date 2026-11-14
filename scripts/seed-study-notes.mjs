@@ -838,6 +838,9 @@ export async function seedLectureDecksForUser(userId) {
 }
 
 if (process.argv[1]?.endsWith('seed-study-notes.mjs')) {
-  process.env.DATABASE_URL = 'postgresql://postgres.sdydpcfttodngamwnjek:Sai238313%40%23%24@aws-0-eu-west-1.pooler.supabase.com:6543/postgres';
+  if (!process.env.DATABASE_URL) {
+    console.error('ERROR: DATABASE_URL environment variable is required.');
+    process.exit(1);
+  }
   await seedLectureDecksForUser('96d642b2-83ee-4eec-8fa2-cca75f04f87f');
 }

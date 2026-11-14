@@ -1,8 +1,22 @@
 // StudyOS Telegram Local Development Poller
 // Forwards updates from Telegram getUpdates to local webhook for testing
 import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ path: 'apps/api/.env' });
 
-const token = process.env.TELEGRAM_BOT_TOKEN || '9182072811:AAFRPXdF5dQsl0xdOCZVwyS5O5YztmX0weA';
+const token = process.env.TELEGRAM_BOT_TOKEN;
+const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+
+if (!token) {
+  console.error('[Telegram Poller] ERROR: TELEGRAM_BOT_TOKEN environment variable is missing.');
+  process.exit(1);
+}
+
+if (!webhookSecret) {
+  console.error('[Telegram Poller] ERROR: TELEGRAM_WEBHOOK_SECRET environment variable is missing.');
+  process.exit(1);
+}
+
 const localWebhook = 'http://localhost:3001/integrations/telegram/webhook';
 let offset = 0;
 
@@ -22,7 +36,7 @@ async function poll() {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'x-telegram-bot-api-secret-token': process.env.TELEGRAM_WEBHOOK_SECRET || 'studyos_telegram_webhook_secret_prod',
+                'x-telegram-bot-api-secret-token': webhookSecret,
               },
               body: JSON.stringify(update),
             });

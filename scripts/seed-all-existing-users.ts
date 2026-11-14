@@ -2,9 +2,10 @@ import { getDb, users, studyNotes, subjects } from "@open-sunsama/database";
 import { UniversalSyllabusService } from "../apps/api/src/services/academics/universal-syllabus.js";
 
 async function main() {
-  process.env.DATABASE_URL =
-    process.env.DATABASE_URL ||
-    "postgresql://postgres.sdydpcfttodngamwnjek:Sai238313%40%23%24@aws-0-eu-west-1.pooler.supabase.com:6543/postgres";
+  if (!process.env.DATABASE_URL) {
+    console.error("ERROR: DATABASE_URL environment variable is required.");
+    process.exit(1);
+  }
 
   const db = getDb();
   const allUsers = await db.select({ id: users.id, email: users.email }).from(users);
