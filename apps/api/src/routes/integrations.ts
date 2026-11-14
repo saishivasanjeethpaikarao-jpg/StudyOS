@@ -37,15 +37,21 @@ integrationsRouter.post("/telegram/webhook", async (c) => {
   const secretToken = c.req.header("x-telegram-bot-api-secret-token");
   const body = await c.req.json().catch(() => ({}));
 
-  try {
-    const result = await telegramService.handleWebhook(body, secretToken);
-    return c.json({ ok: true, result });
-  } catch (err) {
-    return c.json(
-      { ok: false, error: err instanceof Error ? err.message : "Webhook error" },
-      400
-    );
+  // Validate secret token immediately
+  const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET?.replace(/^["']|["']$/g, "").trim();
+  const providedSecret = secretToken?.replace(/^["']|["']$/g, "").trim();
+
+  if (expectedSecret && providedSecret !== expectedSecret) {
+    return c.json({ ok: false, error: "Invalid Telegram webhook secret token" }, 403);
   }
+
+  // Return 200 OK immediately to Telegram (< 50ms) to prevent Telegram's strict 5s webhook read timeout,
+  // while processing the message, AI queries, and delivery asynchronously in the background.
+  void telegramService.handleWebhook(body, secretToken).catch((err) => {
+    console.error("[Telegram Webhook] Error processing update:", err);
+  });
+
+  return c.json({ ok: true });
 });
 
 // ==========================================

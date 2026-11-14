@@ -34,7 +34,8 @@ const TELEGRAM_API = "https://api.telegram.org";
 
 export class TelegramIntegrationService {
   private getBotToken(): string {
-    return process.env.TELEGRAM_BOT_TOKEN || "";
+    const raw = process.env.TELEGRAM_BOT_TOKEN || "";
+    return raw.replace(/^["']|["']$/g, "").trim();
   }
 
   private getBotUsername(): string {
@@ -210,6 +211,15 @@ export class TelegramIntegrationService {
       const code = parts[1]?.trim();
 
       if (!code) {
+        const existingUser = await this.findUserByChatId(chatId);
+        if (existingUser) {
+          await this.sendMessageToChat(
+            chatId,
+            `👋 Welcome back to StudyOS, ${fromUsername}!\n\nYour account is linked and ready. Here are your commands:\n• /today - Today's schedule & focus sessions\n• /assignments - Upcoming deadlines\n• /task <title> - Add a task\n• /briefing - Daily briefing\n• /subjects - Course list\n• /focus [mins] - Log focus session\n• /help - Full command guide\n\nOr ask me any study question directly!`
+          );
+          return { handled: true, action: "welcome_back" };
+        }
+
         await this.sendMessageToChat(
           chatId,
           "👋 Welcome to StudyOS!\n\nTo link your account, open StudyOS Settings → Integrations → Connect Telegram and use your personalized link."
