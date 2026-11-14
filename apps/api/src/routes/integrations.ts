@@ -54,6 +54,27 @@ integrationsRouter.post("/telegram/webhook", async (c) => {
   return c.json({ ok: true });
 });
 
+integrationsRouter.get("/telegram/test-bot", async (c) => {
+  const token = process.env.TELEGRAM_BOT_TOKEN?.replace(/^["']|["']$/g, "").trim();
+  if (!token) {
+    return c.json({ ok: false, error: "TELEGRAM_BOT_TOKEN is empty or undefined on Render" });
+  }
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+    const data = await res.json();
+    return c.json({
+      ok: res.ok,
+      telegramApiStatus: res.status,
+      bot: data.result ? { id: data.result.id, username: data.result.username } : null,
+      error: data.description || null,
+      webhookSecretConfigured: !!process.env.TELEGRAM_WEBHOOK_SECRET
+    });
+  } catch (err) {
+    return c.json({ ok: false, error: err instanceof Error ? err.message : "Fetch error" }, 500);
+  }
+});
+
 // ==========================================
 // AGENT AUTHENTICATED ENDPOINTS (Can use Agent Token or User Session)
 // ==========================================

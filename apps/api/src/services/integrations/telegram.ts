@@ -205,6 +205,8 @@ export class TelegramIntegrationService {
     const text = (message.text || message.caption || "").trim();
     const fromUsername = message.from?.username || message.from?.first_name || "Student";
 
+    console.log(`[Telegram Webhook] Received update ${update?.update_id} from ${chatId} (${fromUsername}): "${text}"`);
+
     // Handle /start [code]
     if (text.startsWith("/start")) {
       const parts = text.split(" ");
@@ -1502,7 +1504,11 @@ export class TelegramIntegrationService {
 
   private async sendMessageToChat(chatId: string, rawText: string): Promise<boolean> {
     const token = this.getBotToken();
-    if (!token || !rawText?.trim()) return false;
+    if (!token) {
+      console.error("[Telegram] ERROR: Cannot send message because TELEGRAM_BOT_TOKEN is empty or undefined!");
+      return false;
+    }
+    if (!rawText?.trim()) return false;
 
     const formattedText = this.formatForTelegram(rawText);
     const chunks = this.splitMessage(formattedText);
