@@ -176,9 +176,9 @@ export default function DownloadPage() {
 
               <div className="space-y-2 pt-4">
                 <Button size="lg" className="w-full gap-2 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90" asChild>
-                  <a href={ANDROID_APK_DIRECT} download="StudyOS_1.1.0.apk">
+                  <a href={ANDROID_APK_URL} download="StudyOS_1.1.0.apk">
                     <Download className="h-4 w-4" />
-                    Download APK directly
+                    Download APK (v1.1.0)
                   </a>
                 </Button>
                 <button
@@ -190,14 +190,15 @@ export default function DownloadPage() {
                   <span>{copiedLink ? "APK Download Link Copied!" : "Copy APK Download Link"}</span>
                 </button>
                 <div className="flex items-center justify-between px-1 pt-1 text-xs text-muted-foreground">
-                  <span>Version {CURRENT_VERSION} (APK)</span>
+                  <span>Version {CURRENT_VERSION} (Universal APK)</span>
                   <a
-                    href={ANDROID_APK_URL}
+                    href={ANDROID_APK_DIRECT}
                     className="underline hover:text-foreground"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    download="StudyOS.apk"
                   >
-                    GitHub Release
+                    Direct Local Mirror
+                  </a>
+                </div>
                   </a>
                 </div>
               </div>

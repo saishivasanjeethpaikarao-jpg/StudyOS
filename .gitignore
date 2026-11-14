@@ -62,3 +62,7 @@ e2e/.logs/
 e2e/test-results/
 e2e/playwright-report/
 *.zip
+
+# Public binary downloads (>100MB distributed via GitHub Releases)
+apps/web/public/downloads/*.apk
+apps/web/public/downloads/*.exe
