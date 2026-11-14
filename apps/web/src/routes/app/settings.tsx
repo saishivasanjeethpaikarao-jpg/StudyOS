@@ -196,7 +196,11 @@ export default function SettingsPage() {
   // Mobile layout: List of sections that open sheets
   if (isMobile) {
     return (
-      <div className="h-[calc(100vh-2.75rem)] overflow-y-auto">
+      <div className="h-[calc(100vh-2.75rem)] overflow-y-auto pb-20">
+        <div className="px-4 py-3 border-b bg-card/40">
+          <h1 className="text-xl font-bold tracking-tight">Settings</h1>
+          <p className="text-xs text-muted-foreground">Manage your workspace, alarms, and account</p>
+        </div>
         <div className="divide-y divide-border/40">
           {TABS.map((tab) => {
             const Icon = tab.icon;
