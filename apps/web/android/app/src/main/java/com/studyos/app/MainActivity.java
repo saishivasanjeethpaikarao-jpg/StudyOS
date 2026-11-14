@@ -58,6 +58,32 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        if (bridge != null && bridge.getWebView() != null) {
+            bridge.getWebView().evaluateJavascript(
+                "(function() {\n" +
+                "  if (typeof window.__STUDYOS_HANDLE_BACK__ === 'function') {\n" +
+                "    return window.__STUDYOS_HANDLE_BACK__();\n" +
+                "  }\n" +
+                "  if (window.location.hash && window.location.hash !== '#/app' && window.location.hash !== '#' && window.location.hash !== '') {\n" +
+                "    window.history.back();\n" +
+                "    return true;\n" +
+                "  }\n" +
+                "  return false;\n" +
+                "})();",
+                value -> {
+                    if ("false".equals(value) || "null".equals(value)) {
+                        // At root page (#/app), smoothly minimize the app instead of closing process
+                        moveTaskToBack(true);
+                    }
+                }
+            );
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         injectBridgeEnvironment();

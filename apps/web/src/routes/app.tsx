@@ -125,6 +125,48 @@ function AppLayoutInner() {
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = React.useState(false);
 
+  // Hardware back button handler for Android / mobile shell
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    (window as any).__STUDYOS_HANDLE_BACK__ = () => {
+      // 1. Close AI Assistant Drawer if open
+      if (isAssistantOpen) {
+        closeAssistant();
+        return true;
+      }
+      // 2. Close Task details modal if open
+      if (selectedTask) {
+        setSelectedTask(null);
+        return true;
+      }
+      // 3. Close Add Task modal if open
+      if (isAddTaskModalOpen) {
+        setIsAddTaskModalOpen(false);
+        return true;
+      }
+      // 4. Close Command Palette / Search if open
+      if (isSearchOpen) {
+        closeSearch();
+        return true;
+      }
+      // 5. If user navigated to a subpage (e.g. Deadlines, FocusTube, Subjects, Settings, More), go back to previous screen
+      const hash = window.location.hash;
+      if (hash && hash !== "#/app" && hash !== "#/" && hash !== "#") {
+        window.history.back();
+        return true;
+      }
+      const path = window.location.pathname;
+      if (path && path !== "/app" && path !== "/") {
+        window.history.back();
+        return true;
+      }
+      return false; // At root Today board
+    };
+    return () => {
+      delete (window as any).__STUDYOS_HANDLE_BACK__;
+    };
+  }, [isAssistantOpen, closeAssistant, selectedTask, isAddTaskModalOpen, isSearchOpen, closeSearch]);
+
   // Warm the Tiptap chunk during browser idle time. The first time the user
   // hits Cmd+K → Add Task, or opens a task modal, the editor module is
   // already on disk and mounts without network roundtrip.

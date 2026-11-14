@@ -35,14 +35,19 @@ export default function LoginPage() {
 
   // Redirect if already authenticated
   React.useEffect(() => {
-    if (isAuthenticated) {
-      if (getToken()) {
-        goNext();
-      } else {
-        goNext();
-      }
+    if (isAuthenticated || getToken()) {
+      goNext();
     }
   }, [isAuthenticated, goNext]);
+
+  // If already authenticated or token present, avoid flashing login form
+  if (isAuthenticated || getToken()) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;

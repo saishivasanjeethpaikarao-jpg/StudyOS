@@ -36,6 +36,12 @@ const indexRoute = createRoute({
   path: "/",
   component: lazyRouteComponent(() => import("./routes/landing")),
   beforeLoad: () => {
+    // Check if user is already logged in
+    const hasToken =
+      typeof window !== "undefined" &&
+      (!!localStorage.getItem("open-sunsama-auth-token") ||
+       !!localStorage.getItem("open_sunsama_user"));
+
     // On desktop/mobile app (Tauri or Capacitor Android), skip landing page entirely
     const isNativeApp =
       typeof window !== "undefined" &&
@@ -44,11 +50,19 @@ const indexRoute = createRoute({
        "Capacitor" in window ||
        window.location.protocol === "capacitor:" ||
        window.location.protocol === "tauri:");
+
     if (isNativeApp) {
-      throw redirect({ to: "/login" });
+      if (hasToken) {
+        throw redirect({ to: "/app" });
+      } else {
+        throw redirect({ to: "/login" });
+      }
     }
 
     // On web browser, redirect authenticated users to app
+    if (hasToken) {
+      throw redirect({ to: "/app" });
+    }
   },
 });
 
