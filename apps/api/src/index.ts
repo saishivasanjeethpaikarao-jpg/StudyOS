@@ -66,6 +66,11 @@ app.use("*", logger());
 
 const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [
   "http://localhost:3000",
+  "http://localhost",
+  "https://localhost",
+  "capacitor://localhost",
+  "tauri://localhost",
+  "https://tauri.localhost",
 ];
 // OAuth discovery/token endpoints and the MCP endpoint are called by
 // third-party clients (including browser-based ones like MCP Inspector), so
@@ -86,7 +91,17 @@ app.use(
       if (PUBLIC_CORS_PATHS.some((p) => path === p || path.startsWith(p))) {
         return origin || "*";
       }
-      return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+      if (!origin) return allowedOrigins[0];
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.startsWith("http://localhost") ||
+        origin.startsWith("https://localhost") ||
+        origin.startsWith("capacitor://") ||
+        origin.startsWith("tauri://")
+      ) {
+        return origin;
+      }
+      return allowedOrigins[0];
     },
     allowHeaders: [
       "Content-Type",

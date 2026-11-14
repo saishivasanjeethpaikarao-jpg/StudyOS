@@ -9,6 +9,7 @@ import {
   lte,
   ne,
   isNull,
+  inArray,
   users,
   tasks,
   subtasks,
@@ -585,42 +586,136 @@ export class TelegramIntegrationService {
 
   private async buildTodaySummary(userId: string): Promise<string> {
     const db = getDb();
+    const [user] = await db
+      .select({ timezone: users.timezone })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const userTimezone = user?.timezone || "Asia/Kolkata";
     const now = new Date();
+    const todayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: userTimezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now);
+
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-    const sessions = await db
-      .select({
-        id: studySessions.id,
-        plannedMinutes: studySessions.plannedMinutes,
-        status: studySessions.status,
-        startAt: studySessions.startAt,
-        assignmentTitle: assignments.title,
-      })
-      .from(studySessions)
-      .innerJoin(assignments, eq(studySessions.assignmentId, assignments.id))
-      .where(
-        and(
-          eq(studySessions.userId, userId),
-          gte(studySessions.startAt, startOfDay)
+    const [todayTasks, todayBlocks, sessions] = await Promise.all([
+      db
+        .select({
+          id: tasks.id,
+          title: tasks.title,
+          priority: tasks.priority,
+          estimatedMins: tasks.estimatedMins,
+          completedAt: tasks.completedAt,
+        })
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.userId, userId),
+            eq(tasks.scheduledDate, todayStr)
+          )
         )
-      )
-      .limit(10);
+        .orderBy(tasks.position),
+      db
+        .select({
+          id: timeBlocks.id,
+          title: timeBlocks.title,
+          startTime: timeBlocks.startTime,
+          endTime: timeBlocks.endTime,
+          durationMins: timeBlocks.durationMins,
+        })
+        .from(timeBlocks)
+        .where(
+          and(
+            eq(timeBlocks.userId, userId),
+            eq(timeBlocks.date, todayStr)
+          )
+        )
+        .orderBy(timeBlocks.startTime),
+      db
+        .select({
+          id: studySessions.id,
+          plannedMinutes: studySessions.plannedMinutes,
+          status: studySessions.status,
+          startAt: studySessions.startAt,
+          assignmentTitle: assignments.title,
+        })
+        .from(studySessions)
+        .innerJoin(assignments, eq(studySessions.assignmentId, assignments.id))
+        .where(
+          and(
+            eq(studySessions.userId, userId),
+            gte(studySessions.startAt, startOfDay)
+          )
+        )
+        .limit(10)
+        .catch(() => []),
+    ]);
 
-    if (sessions.length === 0) {
-      return "📅 *Today's Schedule*\n\nNo study sessions scheduled for today. Great time to plan ahead or take a well-deserved break!";
+    if (todayTasks.length === 0 && todayBlocks.length === 0 && sessions.length === 0) {
+      return `📅 *Today's Schedule (${todayStr})*\n\nNo tasks or study sessions scheduled for today. Great time to plan ahead or take a well-deserved break!`;
     }
 
-    const lines = sessions.map((s) => {
-      const timeStr = new Date(s.startAt).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const icon = s.status === "completed" ? "✅" : "⏳";
-      return `${icon} \`${timeStr}\` — *${s.assignmentTitle}* (${s.plannedMinutes}m)`;
-    });
+    const sections: string[] = [`📅 *Your StudyOS Plan for Today (${todayStr})*`, ""];
 
-    return `📅 *Today's Study Schedule*\n\n${lines.join("\n")}\n\nStay focused and make steady progress!`;
+    if (todayTasks.length > 0) {
+      const taskIds = todayTasks.map((t) => t.id);
+      const allSubtasks = await db
+        .select({
+          taskId: subtasks.taskId,
+          title: subtasks.title,
+          completed: subtasks.completed,
+        })
+        .from(subtasks)
+        .where(inArray(subtasks.taskId, taskIds));
+
+      const subtaskMap = new Map<string, typeof allSubtasks>();
+      for (const st of allSubtasks) {
+        if (!subtaskMap.has(st.taskId)) subtaskMap.set(st.taskId, []);
+        subtaskMap.get(st.taskId)!.push(st);
+      }
+
+      sections.push(`📋 *Tasks on your board (${todayTasks.length}):*`);
+      for (const t of todayTasks) {
+        const icon = t.completedAt ? "✅" : "⏳";
+        const est = t.estimatedMins ? ` (${t.estimatedMins}m)` : "";
+        sections.push(`${icon} *${t.title}* [${t.priority}]${est}`);
+
+        const subs = subtaskMap.get(t.id) || [];
+        for (const s of subs) {
+          sections.push(`    ${s.completed ? "✓" : "○"} _${s.title}_`);
+        }
+      }
+      sections.push("");
+    }
+
+    if (todayBlocks.length > 0) {
+      sections.push(`⏰ *Scheduled Time Blocks:*`);
+      for (const b of todayBlocks) {
+        sections.push(`• \`${b.startTime} - ${b.endTime}\` — *${b.title}* (${b.durationMins}m)`);
+      }
+      sections.push("");
+    }
+
+    if (sessions.length > 0) {
+      sections.push(`📚 *Study Sessions:*`);
+      for (const s of sessions) {
+        const timeStr = new Date(s.startAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const icon = s.status === "completed" ? "✅" : "⏳";
+        sections.push(`${icon} \`${timeStr}\` — *${s.assignmentTitle}* (${s.plannedMinutes}m)`);
+      }
+      sections.push("");
+    }
+
+    sections.push("Stay focused and conquer your goals today! 🚀");
+    return sections.join("\n");
   }
 
   private async buildAssignmentsSummary(userId: string): Promise<string> {

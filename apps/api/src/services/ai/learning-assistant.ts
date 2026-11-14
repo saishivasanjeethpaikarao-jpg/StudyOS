@@ -3,10 +3,15 @@ import {
   assignments,
   eq,
   getDb,
+  inArray,
   isNull,
   resources,
   studyNotes,
   subjects,
+  subtasks,
+  tasks,
+  timeBlocks,
+  users,
 } from "@open-sunsama/database";
 import type {
   LearningAssistantCitation,
@@ -54,6 +59,102 @@ export class LearningAssistantService {
         .from(studyNotes)
         .where(and(eq(studyNotes.userId, userId), isNull(studyNotes.deletedAt)))
         .limit(8);
+
+      // Fetch student's timezone and current date
+      const [user] = await db
+        .select({ timezone: users.timezone })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      const userTimezone = user?.timezone || "Asia/Kolkata";
+      const now = new Date();
+      const todayStr = new Intl.DateTimeFormat("en-CA", {
+        timeZone: userTimezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(now);
+      const dayName = new Intl.DateTimeFormat("en-US", {
+        timeZone: userTimezone,
+        weekday: "long",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(now);
+
+      const todayTasks = await db
+        .select({
+          id: tasks.id,
+          title: tasks.title,
+          priority: tasks.priority,
+          estimatedMins: tasks.estimatedMins,
+          completedAt: tasks.completedAt,
+        })
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.userId, userId),
+            eq(tasks.scheduledDate, todayStr)
+          )
+        )
+        .orderBy(tasks.position);
+
+      const todayBlocks = await db
+        .select({
+          id: timeBlocks.id,
+          title: timeBlocks.title,
+          startTime: timeBlocks.startTime,
+          endTime: timeBlocks.endTime,
+          durationMins: timeBlocks.durationMins,
+        })
+        .from(timeBlocks)
+        .where(
+          and(
+            eq(timeBlocks.userId, userId),
+            eq(timeBlocks.date, todayStr)
+          )
+        )
+        .orderBy(timeBlocks.startTime);
+
+      let subtasksMap = new Map<string, Array<{ title: string; completed: boolean }>>();
+      if (todayTasks.length > 0) {
+        const taskIds = todayTasks.map((t) => t.id);
+        const subs = await db
+          .select({
+            taskId: subtasks.taskId,
+            title: subtasks.title,
+            completed: subtasks.completed,
+          })
+          .from(subtasks)
+          .where(inArray(subtasks.taskId, taskIds));
+        for (const s of subs) {
+          if (!subtasksMap.has(s.taskId)) subtasksMap.set(s.taskId, []);
+          subtasksMap.get(s.taskId)!.push(s);
+        }
+      }
+
+      contextHeader += `=== CURRENT DATE & TODAY'S SCHEDULE (${dayName} / ${todayStr}) ===\n`;
+      if (todayTasks.length > 0) {
+        contextHeader += `Tasks Scheduled on Today Board (${todayTasks.length} tasks):\n`;
+        for (const t of todayTasks) {
+          const subs = subtasksMap.get(t.id) || [];
+          const status = t.completedAt ? "COMPLETED" : "PENDING";
+          contextHeader += `  • [${status}] ${t.title} [Priority: ${t.priority}, Est: ${t.estimatedMins ?? 0}m]\n`;
+          for (const s of subs) {
+            contextHeader += `    - [${s.completed ? "DONE" : "TODO"}] ${s.title}\n`;
+          }
+        }
+      } else {
+        contextHeader += `Tasks Scheduled on Today Board: None scheduled on the Today board.\n`;
+      }
+      if (todayBlocks.length > 0) {
+        contextHeader += `Today's Calendar Time Blocks:\n`;
+        for (const b of todayBlocks) {
+          contextHeader += `  • ${b.startTime} - ${b.endTime}: ${b.title} (${b.durationMins}m)\n`;
+        }
+      }
+      contextHeader += `=================================================================\n\n`;
 
       if (activeSubjects.length > 0 || activeResources.length > 0 || activeAssignments.length > 0 || activeNotes.length > 0) {
         contextHeader += `=== CURRENT STUDENT WORKSPACE STATE ===\n`;
@@ -203,22 +304,32 @@ Core Pedagogical Standards & Formatting (ChatGPT Master Tutor Style):
    - Draw upon attached student notes and FocusTube courses when present. Never fabricate facts.`;
 
     let actionInstruction = "";
-    switch (req.action) {
-      case "explain":
-        actionInstruction = "Explain this concept in simple, accessible language with an intuitive real-world analogy and key points.";
-        break;
-      case "summarize":
-        actionInstruction = "Provide an executive summary of the attached study material, highlighting core arguments, formulas, and takeaways.";
-        break;
-      case "revision_notes":
-        actionInstruction = "Generate high-yield revision notes / cheatsheet with key definitions, formulas, and common exam pitfalls.";
-        break;
-      case "practice":
-        actionInstruction = "Create 3 quick practice questions (with step-by-step solution breakdowns) to test understanding of this topic.";
-        break;
-      default:
-        actionInstruction = "Answer the student's question accurately and helpfully.";
-        break;
+    const isTodayQuery = /^\s*(\/today|today'?s?\s*(plan|schedule|tasks?|work)|what('?s| is) (on )?(for )?today)\b/i.test(req.message.trim());
+
+    if (isTodayQuery) {
+      actionInstruction = `The student asked for /today or their study schedule for today.
+1. Present an encouraging, structured daily briefing based STRICTLY on their actual scheduled tasks and time blocks for today (from the CURRENT DATE & TODAY'S SCHEDULE section).
+2. For each task on their board today, summarize the key subtasks and give concise, practical execution tips.
+3. Suggest a clear time breakdown using their scheduled time blocks.
+4. Do NOT repeat old generic assignment guides or invent unrelated C CLI unit converter tutorials unless they are part of today's tasks.`;
+    } else {
+      switch (req.action) {
+        case "explain":
+          actionInstruction = "Explain this concept in simple, accessible language with an intuitive real-world analogy and key points.";
+          break;
+        case "summarize":
+          actionInstruction = "Provide an executive summary of the attached study material, highlighting core arguments, formulas, and takeaways.";
+          break;
+        case "revision_notes":
+          actionInstruction = "Generate high-yield revision notes / cheatsheet with key definitions, formulas, and common exam pitfalls.";
+          break;
+        case "practice":
+          actionInstruction = "Create 3 quick practice questions (with step-by-step solution breakdowns) to test understanding of this topic.";
+          break;
+        default:
+          actionInstruction = "Answer the student's question accurately and helpfully.";
+          break;
+      }
     }
 
     const promptParts: string[] = [];
