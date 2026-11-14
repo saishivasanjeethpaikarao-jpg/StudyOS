@@ -56,10 +56,17 @@ if (typeof window !== "undefined") {
 async function initializeDesktopDeepLink(): Promise<void> {
   if (!isBundledDesktopShell()) return;
   try {
-    const { getCurrent } = await import("@tauri-apps/plugin-deep-link");
+    const { getCurrent, onOpenUrl } = await import("@tauri-apps/plugin-deep-link");
     const urls = await getCurrent();
     const callback = urls?.find(isDesktopCallback);
     if (callback) await handleDesktopCallback(callback);
+
+    await onOpenUrl(async (incomingUrls) => {
+      const liveCallback = incomingUrls.find(isDesktopCallback);
+      if (liveCallback) {
+        await handleDesktopCallback(liveCallback);
+      }
+    });
   } catch {
     // The browser build and older desktop bundles do not expose deep-link APIs.
   }

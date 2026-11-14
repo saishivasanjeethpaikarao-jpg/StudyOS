@@ -3,6 +3,9 @@
  * Dispatches commands to Android Alarm Manager / Clock app when running inside the app container.
  */
 
+import { isDesktop, openExternal } from "./desktop";
+import { PRODUCTION_API_URL } from "./api";
+
 declare global {
   interface Window {
     __STUDYOS_NATIVE__?: boolean;
@@ -41,8 +44,13 @@ export function getGoogleAuthStartUrl(
   apiBaseUrl: string,
   nativeMobile = isNativeMobile()
 ): string {
-  const url = new URL("/auth/google/start", apiBaseUrl);
-  if (nativeMobile) {
+  const isDesktopEnv = isDesktop();
+  const effectiveBaseUrl = isDesktopEnv && apiBaseUrl.startsWith("http://localhost")
+    ? PRODUCTION_API_URL
+    : apiBaseUrl;
+
+  const url = new URL("/auth/google/start", effectiveBaseUrl);
+  if (nativeMobile || isDesktopEnv) {
     url.searchParams.set("mobile_redirect_uri", "studyos://auth/callback");
   }
   return url.toString();
@@ -53,6 +61,10 @@ export function startGoogleAuth(apiBaseUrl: string): void {
   if (typeof window === "undefined") return;
   if (window.StudyOSNative?.startGoogleAuth) {
     window.StudyOSNative.startGoogleAuth(url);
+    return;
+  }
+  if (isDesktop()) {
+    void openExternal(url);
     return;
   }
   window.location.assign(url);

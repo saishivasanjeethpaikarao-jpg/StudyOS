@@ -66,3 +66,4 @@ e2e/playwright-report/
 # Public binary downloads (>100MB distributed via GitHub Releases)
 apps/web/public/downloads/*.apk
 apps/web/public/downloads/*.exe
+recordings/

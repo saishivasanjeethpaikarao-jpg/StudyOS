@@ -199,8 +199,6 @@ export default function DownloadPage() {
                     Direct Local Mirror
                   </a>
                 </div>
-                  </a>
-                </div>
               </div>
             </div>
 
