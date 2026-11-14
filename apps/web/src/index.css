@@ -1407,3 +1407,15 @@ html.font-jetbrains body {
 .pb-under-fab {
   padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 88px);
 }
+
+/* Safe area top spacing for mobile devices with status bar, punch hole, or notch */
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), 14px);
+}
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
+}
+.top-safe {
+  top: max(env(safe-area-inset-top, 0px), 0px);
+}
+

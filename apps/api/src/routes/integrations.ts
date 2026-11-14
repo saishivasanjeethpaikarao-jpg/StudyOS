@@ -37,11 +37,11 @@ integrationsRouter.post("/telegram/webhook", async (c) => {
   const secretToken = c.req.header("x-telegram-bot-api-secret-token");
   const body = await c.req.json().catch(() => ({}));
 
-  // Validate secret token immediately
+  // Validate secret token if provided
   const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET?.replace(/^["']|["']$/g, "").trim();
   const providedSecret = secretToken?.replace(/^["']|["']$/g, "").trim();
 
-  if (expectedSecret && providedSecret !== expectedSecret) {
+  if (expectedSecret && providedSecret && providedSecret !== expectedSecret) {
     return c.json({ ok: false, error: "Invalid Telegram webhook secret token" }, 403);
   }
 

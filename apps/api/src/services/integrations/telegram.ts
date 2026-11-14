@@ -423,6 +423,49 @@ export class TelegramIntegrationService {
       return { handled: true, action: "proposals_summary" };
     }
 
+    if (text === "/autoalarms" || text.startsWith("/autoalarms ") || text.startsWith("/autoalarm")) {
+      const mode = text.split(" ")[1]?.toLowerCase()?.trim();
+      if (mode === "on" || mode === "enable" || mode === "1") {
+        await this.updateSettings(user.userId, {
+          notifyDailyBriefing: true,
+          notifyDueDates: true,
+          notifySessionReminders: true,
+        });
+        await this.sendMessageToChat(
+          chatId,
+          "🔔 *Auto-Alarms & Daily Reminders: ENABLED!*\n\nStudyOS will now automatically:\n• Send your daily morning study plan & assignments briefing\n• Dispatch deadline alerts before assignments are due\n• Remind you of scheduled study sessions\n• Sync native phone alarms in the mobile app"
+        );
+      } else if (mode === "off" || mode === "disable" || mode === "0") {
+        await this.updateSettings(user.userId, {
+          notifyDailyBriefing: false,
+          notifyDueDates: false,
+          notifySessionReminders: false,
+        });
+        await this.sendMessageToChat(
+          chatId,
+          "🔕 *Auto-Alarms & Daily Reminders: PAUSED*\n\nAutomatic Telegram reminders and daily briefings are paused. Use `/autoalarms on` to reactivate anytime."
+        );
+      } else {
+        const settings = await this.getSettings(user.userId);
+        await this.sendMessageToChat(
+          chatId,
+          `⏰ *StudyOS Auto-Alarms & Reminders*\n\n• Daily Briefing: *${settings.notifyDailyBriefing ? "ON" : "OFF"}*\n• Assignment Due Warnings: *${settings.notifyDueDates ? "ON" : "OFF"}*\n• Session Reminders: *${settings.notifySessionReminders ? "ON" : "OFF"}*\n\nTo change: send \`/autoalarms on\` or \`/autoalarms off\`.`
+        );
+      }
+      return { handled: true, action: "autoalarms_toggle" };
+    }
+
+    if (text.startsWith("/setalarm ") || (text.startsWith("/alarm ") && text.trim() !== "/alarm") || (text.startsWith("/remind ") && text.trim() !== "/remind")) {
+      const raw = text.replace(/^\/(setalarm|alarm|remind)\s+/, "").trim();
+      if (!raw) {
+        await this.sendMessageToChat(chatId, "⚠️ Usage: `/setalarm 17:30 Complete C Project` or `/remind tomorrow 9am Math Revision`");
+        return { handled: true, action: "alarm_empty" };
+      }
+      const response = await this.createAlarmReminder(user.userId, raw);
+      await this.sendMessageToChat(chatId, response);
+      return { handled: true, action: "alarm_created" };
+    }
+
     if (text === "/alarms" || text === "/alarm" || text === "/reminders" || text === "/remind") {
       const summary = await this.buildAlarmsSummary(user.userId);
       await this.sendMessageToChat(chatId, summary);
@@ -476,6 +519,39 @@ export class TelegramIntegrationService {
     if (text === "/help") {
       await this.sendMessageToChat(chatId, this.buildHelpMessage());
       return { handled: true, action: "help" };
+    }
+
+    // Check if message is an alarm or reminder intent
+    const isAlarmIntent = /^(set (?:an )?alarm|wake me up|remind me|auto ?alarm)/i.test(text.trim());
+    if (isAlarmIntent) {
+      if (/auto ?alarm (?:on|enable)/i.test(text)) {
+        await this.updateSettings(user.userId, {
+          notifyDailyBriefing: true,
+          notifyDueDates: true,
+          notifySessionReminders: true,
+        });
+        await this.sendMessageToChat(
+          chatId,
+          "🔔 *Auto-Alarms & Daily Reminders: ENABLED!*\n\nStudyOS will proactively remind you of your daily study schedule, focus sessions, and upcoming assignment deadlines."
+        );
+        return { handled: true, action: "autoalarms_intent" };
+      }
+      if (/auto ?alarm (?:off|disable)/i.test(text)) {
+        await this.updateSettings(user.userId, {
+          notifyDailyBriefing: false,
+          notifyDueDates: false,
+          notifySessionReminders: false,
+        });
+        await this.sendMessageToChat(
+          chatId,
+          "🔕 *Auto-Alarms & Daily Reminders: PAUSED*"
+        );
+        return { handled: true, action: "autoalarms_intent" };
+      }
+      const cleaned = text.replace(/^(set (?:an )?alarm(?: for)?|wake me up(?: at)?|remind me(?: to)?)\s+/i, "");
+      const response = await this.createAlarmReminder(user.userId, cleaned);
+      await this.sendMessageToChat(chatId, response);
+      return { handled: true, action: "alarm_intent" };
     }
 
     // Check if message is a natural language planning or scheduling request
@@ -796,9 +872,11 @@ export class TelegramIntegrationService {
     sections.push("💡 *What to do now:*");
     if (todayTasks.length > 0) {
       const pendingTask = todayTasks.find((t) => !t.completedAt) || todayTasks[0];
-      sections.push(`1️⃣ Tackle *${pendingTask.title}* (${pendingTask.estimatedMins || 45} mins).`);
+      if (pendingTask) {
+        sections.push(`1️⃣ Tackle *${pendingTask.title}* (${pendingTask.estimatedMins || 45} mins).`);
+      }
     }
-    if (activeAssignments.length > 0) {
+    if (activeAssignments.length > 0 && activeAssignments[0]) {
       sections.push(`2️⃣ Prepare for deadline: *${activeAssignments[0].title}*.`);
     }
     sections.push("3️⃣ In your StudyOS Android app, tap 🔔 *Alarm* on any task or deadline to trigger your phone's native Clock Alarm!");
@@ -942,6 +1020,82 @@ export class TelegramIntegrationService {
       "🎯 *Priority:* Normal (P2)",
       "",
       "You can view and reorder it on your StudyOS Today board anytime.",
+    ].join("\n");
+  }
+
+  private async createAlarmReminder(userId: string, input: string): Promise<string> {
+    const db = getDb();
+    const [user] = await db
+      .select({ timezone: users.timezone })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const userTimezone = user?.timezone || "Asia/Kolkata";
+    const now = new Date();
+    const todayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: userTimezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now);
+
+    let targetDate = todayStr;
+    if (/\btomorrow\b/i.test(input)) {
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      targetDate = new Intl.DateTimeFormat("en-CA", {
+        timeZone: userTimezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(tomorrow);
+    }
+
+    // Try to extract time like 17:00, 5:30pm, 5pm, 09:00
+    let scheduledTime: string = "18:00";
+    const timeMatch24 = input.match(/\b([01]?[0-9]|2[0-3]):([0-5][0-9])\b/);
+    const timeMatch12 = input.match(/\b(1[0-2]|0?[1-9])(?::([0-5][0-9]))?\s*(am|pm)\b/i);
+
+    if (timeMatch24 && timeMatch24[1] && timeMatch24[2]) {
+      const h = timeMatch24[1].padStart(2, "0");
+      const m = timeMatch24[2];
+      scheduledTime = `${h}:${m}`;
+    } else if (timeMatch12 && timeMatch12[1] && timeMatch12[3]) {
+      let h = parseInt(timeMatch12[1], 10);
+      const m = timeMatch12[2] ? timeMatch12[2] : "00";
+      const meridian = timeMatch12[3].toLowerCase();
+      if (meridian === "pm" && h < 12) h += 12;
+      if (meridian === "am" && h === 12) h = 0;
+      scheduledTime = `${String(h).padStart(2, "0")}:${m}`;
+    }
+
+    // Clean title
+    let title = input
+      .replace(/\b(tomorrow|today|at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?|\d{1,2}:\d{2})\b/gi, "")
+      .replace(/^\s*(for|to)\s+/i, "")
+      .trim();
+
+    if (!title || title.length < 2) {
+      title = "Study & Assignment Session";
+    }
+
+    await db.insert(tasks).values({
+      userId,
+      title: title.slice(0, 500),
+      scheduledDate: targetDate,
+      priority: "P1",
+      revision: 1,
+    });
+
+    return [
+      "⏰ *Study Alarm & Reminder Armed!*",
+      "",
+      `📌 *Task:* ${title}`,
+      `📅 *Date:* ${targetDate}`,
+      `🔔 *Alarm Time:* \`${scheduledTime}\``,
+      "🎯 *Priority:* High (P1)",
+      "",
+      "📱 *Mobile Sync:* When you open the StudyOS mobile app, your native phone alarm and heads-up alert will automatically synchronize for this session!",
     ].join("\n");
   }
 
@@ -1584,9 +1738,15 @@ export class TelegramIntegrationService {
       "",
       "📋 *Tasks & Deadlines*",
       "• /assignments - View upcoming assignment deadlines",
-      "• /alarms - View scheduled work & phone alarm settings",
       "• /task <title> - Quickly add a task (e.g. /task Revise Math Chapter 3)",
       "• /briefing - Daily workload briefing",
+      "",
+      "⏰ *Alarms & Daily Reminders*",
+      "• /autoalarms on - Enable daily morning briefings & auto study alerts",
+      "• /autoalarms off - Pause automatic daily briefings & alerts",
+      "• /autoalarms - Check current auto-alarm status",
+      "• /alarms - View scheduled work & phone alarm status",
+      "• /setalarm <time> <title> - Arm an alarm (e.g. /setalarm 18:00 C Study)",
       "",
       "⏱ *Study & Focus*",
       "• /focus [mins] - Log focus session (e.g. /focus 30)",

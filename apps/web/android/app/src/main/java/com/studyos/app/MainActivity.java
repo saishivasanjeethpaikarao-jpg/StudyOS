@@ -34,6 +34,17 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Ensure Android window decor accommodates system bars (status bar, camera notch, navigation bar)
+        try {
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                getWindow().setStatusBarColor(android.graphics.Color.parseColor("#090a0f"));
+                getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#090a0f"));
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not set decor fits system windows", e);
+        }
+
         requestNotificationPermission();
         createNotificationChannel();
 

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Bell, Clock, Smartphone, Sparkles } from "lucide-react";
 import {
   Button,
   Card,
@@ -18,6 +19,8 @@ import {
   requestNotificationPermission,
   getNotificationPermissionStatus,
 } from "@/hooks/useNotificationPreferences";
+import { getAutoAlarmsEnabled, setAutoAlarmsEnabled, LAST_SYNC_STORAGE_KEY } from "@/hooks/useAutoAlarmsSync";
+import { triggerNativeAlarm, scheduleNativeNotification, isNativePlatform } from "@/lib/native-bridge";
 
 /** Get task reminders status text */
 function getTaskReminderStatus(preferences: { taskRemindersEnabled: boolean; reminderTiming: number } | undefined) {
@@ -46,7 +49,41 @@ export function NotificationSettings() {
   const [taskReminderDialogOpen, setTaskReminderDialogOpen] = React.useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = React.useState(false);
   const [pushLoading, setPushLoading] = React.useState(false);
+  const [autoAlarms, setAutoAlarms] = React.useState<boolean>(() => getAutoAlarmsEnabled());
+  const isNative = React.useMemo(() => isNativePlatform(), []);
   const permissionStatus = React.useMemo(() => getNotificationPermissionStatus(), []);
+
+  const handleToggleAutoAlarms = (checked: boolean) => {
+    setAutoAlarms(checked);
+    setAutoAlarmsEnabled(checked);
+    if (checked) {
+      localStorage.removeItem(LAST_SYNC_STORAGE_KEY);
+      toast({
+        title: "Auto-Alarms Enabled",
+        description: "StudyOS will automatically schedule daily phone alarms and alerts for your study sessions and assignments.",
+      });
+    } else {
+      toast({
+        title: "Auto-Alarms Paused",
+        description: "Automatic phone alarm scheduling has been turned off.",
+      });
+    }
+  };
+
+  const handleTestAlarm = () => {
+    const testDate = new Date(Date.now() + 5000);
+    scheduleNativeNotification(
+      "⏰ StudyOS Test Alert",
+      "Native bridge and background notifications are operating perfectly!",
+      testDate,
+      "test-alarm"
+    );
+    triggerNativeAlarm(new Date(Date.now() + 60000), "StudyOS Test Alarm");
+    toast({
+      title: "Test Alarm Triggered",
+      description: "Notification queued and Android Clock alarm opened for 1 min from now.",
+    });
+  };
 
   const handleTaskReminderSave = async (taskRemindersEnabled: boolean, reminderTiming: number) => {
     await updatePreferences.mutateAsync({ taskRemindersEnabled, reminderTiming });
@@ -164,6 +201,60 @@ export function NotificationSettings() {
                   disabled={pushLoading || !permissionStatus.supported || permissionStatus.permission === "denied"}
                 />
               )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Auto-Set Phone Alarms & Reminders Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5 text-orange-500" />
+            <CardTitle>Phone Alarms & Daily Reminders</CardTitle>
+          </div>
+          <CardDescription>
+            Automatically wake up native Android Clock alarms and high-priority heads-up alerts for today's study blocks and assignment deadlines.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium">Auto-Set Daily Alarms & Alerts</p>
+                <p className="text-xs text-muted-foreground">
+                  Synchronize native phone alarms and background notifications automatically whenever you open StudyOS or new tasks are scheduled.
+                </p>
+                <p className="text-[10px] text-orange-600 dark:text-orange-400 font-medium mt-1">
+                  {autoAlarms ? "Active · Automatically protects your daily study flow" : "Paused · Manual alarm buttons only"}
+                </p>
+              </div>
+              <Switch
+                checked={autoAlarms}
+                onCheckedChange={handleToggleAutoAlarms}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium">Native Device Bridge</p>
+                <p className="text-xs text-muted-foreground">
+                  {isNative
+                    ? "Connected to Android Clock & Notification Manager"
+                    : "Running in web browser mode (alarms use browser notifications)"}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs shrink-0"
+                onClick={handleTestAlarm}
+              >
+                <Bell className="h-3.5 w-3.5 text-orange-500" />
+                Test Alarm Now
+              </Button>
             </div>
           </div>
         </CardContent>

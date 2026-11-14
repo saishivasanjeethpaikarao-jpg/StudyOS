@@ -33,6 +33,8 @@ export function isNativeMobile(): boolean {
   );
 }
 
+export const isNativePlatform = isNativeMobile;
+
 export function getGoogleAuthStartUrl(
   apiBaseUrl: string,
   nativeMobile = isNativeMobile()

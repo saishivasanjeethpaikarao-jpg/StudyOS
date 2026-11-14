@@ -5,7 +5,9 @@ import type { Task } from "@open-sunsama/types";
 import { useAuth } from "@/hooks/useAuth";
 import { getToken } from "@/lib/api";
 import { Header } from "@/components/layout/header";
+import { MobileTopBar } from "@/components/layout/mobile-top-bar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { useAutoAlarmsSync } from "@/hooks/useAutoAlarmsSync";
 import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
 import { Skeleton } from "@/components/ui";
 import {
@@ -114,6 +116,9 @@ function AppLayoutInner() {
   // Initialize WebSocket for realtime updates
   useWebSocket();
 
+  // Automatically sync phone alarms and native alerts for study sessions & deadlines
+  useAutoAlarmsSync();
+
   const { isOpen: isAssistantOpen, openAssistant, closeAssistant } = useAiAssistant();
   const { showShortcutsModal, setShowShortcutsModal } = useShortcutsModal();
   const { isSearchOpen, closeSearch } = useSearch();
@@ -165,6 +170,7 @@ function AppLayoutInner() {
       <div className="flex min-h-screen flex-col">
         <AppUpdateBanner />
         <Header />
+        <MobileTopBar />
         <main className="flex-1 pb-16 lg:pb-0">
           <Outlet />
         </main>
