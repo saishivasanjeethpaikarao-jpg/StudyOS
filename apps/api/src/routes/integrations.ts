@@ -55,19 +55,41 @@ integrationsRouter.post("/telegram/webhook", async (c) => {
 });
 
 integrationsRouter.get("/telegram/test-bot", async (c) => {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.replace(/^["']|["']$/g, "").trim();
+  const raw = process.env.TELEGRAM_BOT_TOKEN || "";
+  const match = raw.match(/(\d{8,12}:[A-Za-z0-9_-]{30,})/);
+  let token = match ? match[1] : "";
   if (!token) {
-    return c.json({ ok: false, error: "TELEGRAM_BOT_TOKEN is empty or undefined on Render" });
+    token = raw.trim()
+      .replace(/^["']|["']$/g, "")
+      .replace(/^TELEGRAM_BOT_TOKEN\s*=\s*/i, "")
+      .replace(/^https?:\/\/api\.telegram\.org\/bot/i, "")
+      .replace(/^bot(\d{8,12}:)/i, "$1")
+      .trim();
+  }
+
+  if (!token) {
+    return c.json({
+      ok: false,
+      error: "TELEGRAM_BOT_TOKEN is empty or undefined on Render",
+      rawLength: raw.length,
+      hasNewlines: raw.includes("\n") || raw.includes("\r"),
+    });
   }
 
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/getMe`);
-    const data = await res.json();
+    const data = (await res.json()) as Record<string, any>;
     return c.json({
       ok: res.ok,
       telegramApiStatus: res.status,
       bot: data.result ? { id: data.result.id, username: data.result.username } : null,
       error: data.description || null,
+      rawInfo: {
+        rawLength: raw.length,
+        extractedLength: token.length,
+        tokenPrefix: token.substring(0, 4) + "...",
+        hasNewlines: raw.includes("\n") || raw.includes("\r"),
+      },
       webhookSecretConfigured: !!process.env.TELEGRAM_WEBHOOK_SECRET
     });
   } catch (err) {

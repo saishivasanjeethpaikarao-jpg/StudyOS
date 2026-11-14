@@ -35,7 +35,16 @@ const TELEGRAM_API = "https://api.telegram.org";
 export class TelegramIntegrationService {
   private getBotToken(): string {
     const raw = process.env.TELEGRAM_BOT_TOKEN || "";
-    return raw.replace(/^["']|["']$/g, "").trim();
+    const match = raw.match(/(\d{8,12}:[A-Za-z0-9_-]{30,})/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    let token = raw.trim();
+    token = token.replace(/^["']|["']$/g, "").trim();
+    token = token.replace(/^TELEGRAM_BOT_TOKEN\s*=\s*/i, "").trim();
+    token = token.replace(/^https?:\/\/api\.telegram\.org\/bot/i, "").trim();
+    token = token.replace(/^bot(\d{8,12}:)/i, "$1").trim();
+    return token;
   }
 
   private getBotUsername(): string {
@@ -190,8 +199,9 @@ export class TelegramIntegrationService {
     update: Record<string, any>,
     secretToken?: string
   ): Promise<{ handled: boolean; action?: string }> {
-    const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    const expectedSecret = (process.env.TELEGRAM_WEBHOOK_SECRET || "").replace(/^["']|["']$/g, "").trim();
     if (expectedSecret && secretToken !== expectedSecret) {
+      console.warn(`[Telegram Webhook] Secret mismatch: expected length ${expectedSecret.length}, received "${secretToken ? 'configured' : 'none'}"`);
       throw new Error("Invalid Telegram webhook secret token");
     }
 
