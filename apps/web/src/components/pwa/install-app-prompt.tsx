@@ -3,7 +3,8 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { currentInstallPlatform, isRunningInstalled } from "@/lib/pwa";
 import { InstallAppSheet } from "./install-app-sheet";
 
-const STORAGE_KEY = "open-sunsama-install-tip";
+const STORAGE_KEY = "studyos-install-tip";
+const LEGACY_STORAGE_KEY = "open-sunsama-install-tip";
 const SHOW_AFTER_MS = 8000;
 /** How long the user must have been hands-off before it opens. */
 const IDLE_MS = 4000;
@@ -19,7 +20,11 @@ interface TipState {
 
 function readState(): TipState {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") as TipState;
+    return JSON.parse(
+      localStorage.getItem(STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_STORAGE_KEY) ??
+      "{}"
+    ) as TipState;
   } catch {
     return {};
   }
@@ -86,10 +91,9 @@ export function InstallAppPrompt() {
 function recordShown() {
   const { dismissals = 0 } = readState();
   try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ dismissedAt: Date.now(), dismissals: dismissals + 1 })
-    );
+    const raw = JSON.stringify({ dismissedAt: Date.now(), dismissals: dismissals + 1 });
+    localStorage.setItem(STORAGE_KEY, raw);
+    localStorage.setItem(LEGACY_STORAGE_KEY, raw);
   } catch {
     // Private mode: it simply offers again next visit.
   }

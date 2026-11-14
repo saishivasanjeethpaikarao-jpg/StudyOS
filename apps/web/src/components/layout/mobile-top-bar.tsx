@@ -4,6 +4,8 @@ import { Bell, Search, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAiAssistant } from "@/hooks/useAiAssistant";
 import { useSearch } from "@/hooks/useSearch";
+import { useTasks } from "@/hooks/useTasks";
+import type { Task } from "@open-sunsama/types";
 import { triggerNativeAlarm, scheduleNativeNotification } from "@/lib/native-bridge";
 import { toast } from "@/hooks/use-toast";
 import { Button, Avatar, AvatarFallback, AvatarImage } from "@/components/ui";
@@ -13,6 +15,15 @@ export function MobileTopBar() {
   const { user } = useAuth();
   const { openAssistant } = useAiAssistant();
   const { openSearch } = useSearch();
+
+  const todayStr = React.useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const { data: todayTasks = [] } = useTasks({ scheduledDate: todayStr });
+
+  const pendingTask = React.useMemo(() => {
+    return Array.isArray(todayTasks)
+      ? (todayTasks as Task[]).find((t) => !t.completedAt)
+      : undefined;
+  }, [todayTasks]);
 
   const userInitials = React.useMemo(() => {
     if (!user?.name) return user?.email?.charAt(0).toUpperCase() ?? "U";
@@ -25,21 +36,24 @@ export function MobileTopBar() {
   }, [user]);
 
   const handleQuickAlarm = () => {
-    // Quick schedule native alarm & notification for the current study block
+    // Quick schedule native alarm & notification with specific study topic note
     const now = new Date();
     const alarmTime = new Date(now.getTime() + 30 * 60 * 1000);
     const timeStr = alarmTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const studySubjectNote = pendingTask
+      ? `Study: ${pendingTask.title}`
+      : "Study: Academic Focus Block";
     
     scheduleNativeNotification(
-      "⏰ StudyOS Study Alert",
-      "Stay focused! Your study block is underway.",
+      `⏰ ${studySubjectNote}`,
+      `Stay focused! Study session for "${pendingTask?.title ?? "academic goals"}" is underway.`,
       alarmTime,
       "mobile-top-alarm"
     );
-    triggerNativeAlarm(alarmTime, "StudyOS Focus Block");
+    triggerNativeAlarm(alarmTime, studySubjectNote);
     toast({
-      title: "Focus Alarm Scheduled",
-      description: `Alarm & notification set for ${timeStr}. Keep crushing your study goals!`,
+      title: "Study Alarm Scheduled",
+      description: `Alarm set for ${timeStr} with note: "${studySubjectNote}"`,
     });
   };
 

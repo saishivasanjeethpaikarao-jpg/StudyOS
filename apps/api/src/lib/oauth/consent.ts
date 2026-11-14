@@ -8,7 +8,8 @@ import jwt from "jsonwebtoken";
 import { CONSENT_REQUEST_TTL_SECONDS } from "./config.js";
 
 const SECRET = process.env.JWT_SECRET || "studyos-dev-secret-change-in-production";
-const AUDIENCE = "open-sunsama:oauth-consent";
+const PRIMARY_AUDIENCE = "studyos:oauth-consent";
+const ACCEPTED_AUDIENCES = ["studyos:oauth-consent", "open-sunsama:oauth-consent"];
 
 export interface ConsentRequest {
   clientId: string;
@@ -21,14 +22,14 @@ export interface ConsentRequest {
 
 export function signConsentRequest(request: ConsentRequest): string {
   return jwt.sign({ req: request }, SECRET, {
-    audience: AUDIENCE,
+    audience: PRIMARY_AUDIENCE,
     expiresIn: CONSENT_REQUEST_TTL_SECONDS,
   });
 }
 
 export function verifyConsentRequest(token: string): ConsentRequest | null {
   try {
-    const decoded = jwt.verify(token, SECRET, { audience: AUDIENCE }) as { req?: ConsentRequest };
+    const decoded = jwt.verify(token, SECRET, { audience: ACCEPTED_AUDIENCES }) as { req?: ConsentRequest };
     return decoded.req ?? null;
   } catch {
     return null;

@@ -31,14 +31,15 @@ import { BoardIcon } from "@/components/ideas/board-icon";
 import { IdeasBoardView } from "@/components/ideas/ideas-board-view";
 import { AddIdeaModal } from "@/components/ideas/add-idea-modal";
 
-const ACTIVE_BOARD_KEY = "open-sunsama-ideas-active-board";
+const ACTIVE_BOARD_KEY = "studyos-ideas-active-board";
+const LEGACY_ACTIVE_BOARD_KEY = "open-sunsama-ideas-active-board";
 
 export default function IdeasPage() {
   const { data: boards, isLoading } = useIdeaBoards();
   const [activeBoardId, setActiveBoardId] = React.useState<string | null>(() =>
     typeof window === "undefined"
       ? null
-      : localStorage.getItem(ACTIVE_BOARD_KEY)
+      : localStorage.getItem(ACTIVE_BOARD_KEY) || localStorage.getItem(LEGACY_ACTIVE_BOARD_KEY)
   );
   const [cardQuery, setCardQuery] = React.useState("");
 
@@ -99,6 +100,7 @@ export default function IdeasPage() {
   const selectBoard = React.useCallback((id: string) => {
     setActiveBoardId(id);
     localStorage.setItem(ACTIVE_BOARD_KEY, id);
+    localStorage.setItem(LEGACY_ACTIVE_BOARD_KEY, id);
     setMobileSheetOpen(false);
   }, []);
 

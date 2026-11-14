@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import type { UserPreferences, User } from "@open-sunsama/types";
 import { sessionFetch, API_BASE_URL } from "@/lib/api";
 
-const AUTH_USER_KEY = "open_sunsama_user";
+const AUTH_USER_KEY = "studyos_user";
+const LEGACY_AUTH_USER_KEY = "open_sunsama_user";
 
 /**
  * Hook to save user preferences to the database
@@ -45,7 +46,9 @@ export function useSavePreferences() {
         // Directly update the cache with the new user data (no refetch needed)
         queryClient.setQueryData(["auth", "me"], updatedUser);
         // Also update localStorage to prevent stale fallback
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(updatedUser));
+        const raw = JSON.stringify(updatedUser);
+        localStorage.setItem(AUTH_USER_KEY, raw);
+        localStorage.setItem(LEGACY_AUTH_USER_KEY, raw);
       }
     },
     onError: (error) => {

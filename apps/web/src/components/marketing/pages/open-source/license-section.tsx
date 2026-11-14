@@ -39,7 +39,7 @@ export function LicenseSection({ section }: { section: CustomSection }) {
               </a>
             </Button>
             <Button variant="ghost" className="h-10 rounded-lg px-4 text-[13.5px]" asChild>
-              <a href={`mailto:${openSource.licenseContact}?subject=Open%20Sunsama%20company%20license`}>
+              <a href={`mailto:${openSource.licenseContact}?subject=StudyOS%20company%20license`}>
                 <Mail className="h-4 w-4" />
                 Ask about a company license
               </a>
@@ -52,7 +52,7 @@ export function LicenseSection({ section }: { section: CustomSection }) {
             <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-muted/40 px-4 py-2.5 dark:border-white/[0.06]">
               <span className="flex min-w-0 items-center gap-2 font-jetbrains text-[12px] text-muted-foreground">
                 <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span className="truncate">open-sunsama / LICENSE</span>
+                <span className="truncate">studyos / LICENSE</span>
               </span>
               <span className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                 Non-commercial
@@ -93,7 +93,7 @@ export function LicenseSection({ section }: { section: CustomSection }) {
             </div>
 
             <figcaption className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-4 py-3 text-[12.5px] text-muted-foreground dark:border-white/[0.06] md:px-6">
-              <span>Summary of the inherited Open Sunsama Non-Commercial License.</span>
+              <span>Summary of the StudyOS Non-Commercial License.</span>
               <a
                 href={`mailto:${openSource.licenseContact}`}
                 className="inline-flex items-center gap-1 rounded-sm font-medium text-foreground/80 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

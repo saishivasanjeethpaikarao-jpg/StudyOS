@@ -3,7 +3,8 @@
  * Extracted from mcp-settings.tsx for reuse in command palette
  */
 
-const MCP_KEY_STORAGE_KEY = "opensunsama_mcp_key";
+const PRIMARY_MCP_KEY_STORAGE = "studyos_mcp_key";
+const LEGACY_MCP_KEY_STORAGE = "opensunsama_mcp_key";
 
 export type McpClient = "cursor" | "claude" | "vscode" | "windsurf";
 
@@ -19,21 +20,25 @@ export function generateMcpConfig(
     command: "npx",
     args: ["-y", "@open-sunsama/mcp"],
     env: {
+      STUDYOS_API_KEY: apiKey,
       OPENSUNSAMA_API_KEY: apiKey,
-      ...(apiUrl !== "https://studyos-api-wy5w.onrender.com" && { OPENSUNSAMA_API_URL: apiUrl }),
+      ...(apiUrl !== "https://studyos-api-wy5w.onrender.com" && {
+        STUDYOS_API_URL: apiUrl,
+        OPENSUNSAMA_API_URL: apiUrl,
+      }),
     },
   };
 
   // VS Code uses different format (array of servers)
   if (client === "vscode") {
     return JSON.stringify({
-      mcpServers: [{ name: "open-sunsama", ...baseConfig }],
+      mcpServers: [{ name: "studyos", ...baseConfig }],
     }, null, 2);
   }
 
   // Cursor, Claude, Windsurf use object format
   return JSON.stringify({
-    mcpServers: { "open-sunsama": baseConfig },
+    mcpServers: { studyos: baseConfig },
   }, null, 2);
 }
 
@@ -42,14 +47,15 @@ export function generateMcpConfig(
  */
 export function getMcpApiKey(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(MCP_KEY_STORAGE_KEY);
+  return localStorage.getItem(PRIMARY_MCP_KEY_STORAGE) || localStorage.getItem(LEGACY_MCP_KEY_STORAGE);
 }
 
 /**
  * Store an MCP API key in localStorage
  */
 export function setMcpApiKey(key: string): void {
-  localStorage.setItem(MCP_KEY_STORAGE_KEY, key);
+  localStorage.setItem(PRIMARY_MCP_KEY_STORAGE, key);
+  localStorage.setItem(LEGACY_MCP_KEY_STORAGE, key);
 }
 
 /**

@@ -39,7 +39,11 @@ const indexRoute = createRoute({
     // Check if user is already logged in
     const hasToken =
       typeof window !== "undefined" &&
-      (!!localStorage.getItem("open-sunsama-auth-token") ||
+      (!!localStorage.getItem("studyos-auth-token") ||
+       !!localStorage.getItem("studyos_token") ||
+       !!localStorage.getItem("studyos_user") ||
+       !!localStorage.getItem("open-sunsama-auth-token") ||
+       !!localStorage.getItem("open_sunsama_token") ||
        !!localStorage.getItem("open_sunsama_user"));
 
     // On desktop/mobile app (Tauri or Capacitor Android), skip landing page entirely

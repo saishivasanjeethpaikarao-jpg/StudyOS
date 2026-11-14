@@ -70,11 +70,20 @@ const customFetch: typeof globalThis.fetch = async (input, init = {}) => {
 };
 export const sessionFetch = customFetch;
 
-const TOKEN_KEY = "open_sunsama_token";
+const TOKEN_KEY = "studyos_token";
+const LEGACY_TOKEN_KEY = "open_sunsama_token";
+const STUDYOS_AUTH_TOKEN_KEY = "studyos-auth-token";
+const LEGACY_AUTH_TOKEN_KEY = "open-sunsama-auth-token";
 
 export function getToken(): string | undefined {
   if (typeof window === "undefined") return undefined;
-  return localStorage.getItem(TOKEN_KEY) || undefined;
+  return (
+    localStorage.getItem(TOKEN_KEY) ||
+    localStorage.getItem(STUDYOS_AUTH_TOKEN_KEY) ||
+    localStorage.getItem(LEGACY_TOKEN_KEY) ||
+    localStorage.getItem(LEGACY_AUTH_TOKEN_KEY) ||
+    undefined
+  );
 }
 
 const attemptTokenRefresh = async (): Promise<string | null> => {
@@ -118,9 +127,15 @@ export function setAuthToken(token: string | null): void {
   if (typeof window === "undefined") return;
   if (token) {
     localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(STUDYOS_AUTH_TOKEN_KEY, token);
+    localStorage.setItem(LEGACY_TOKEN_KEY, token);
+    localStorage.setItem(LEGACY_AUTH_TOKEN_KEY, token);
     notifyNativeTokenChanged(token);
   } else {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(STUDYOS_AUTH_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
   }
 }
 export function refreshAuthToken(): Promise<string | null> {
@@ -136,6 +151,9 @@ export function clearApiClient(): void {
   csrfToken = null;
   if (typeof window !== "undefined") {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(STUDYOS_AUTH_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
   }
   client = createOpenSunsamaClient(config);
   api = createApi(config);

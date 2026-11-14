@@ -1,7 +1,8 @@
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import type { Persister } from "@tanstack/react-query-persist-client";
 
-const STORAGE_KEY = "open_sunsama_rq_cache_v1";
+const STORAGE_KEY = "studyos_rq_cache_v1";
+const LEGACY_STORAGE_KEY = "open_sunsama_rq_cache_v1";
 
 const QUERY_KEYS_NEVER_PERSIST = new Set<string>([
   "auth",
@@ -59,6 +60,7 @@ export function clearPersistedCache(): void {
   if (!storage) return;
   try {
     storage.removeItem(STORAGE_KEY);
+    storage.removeItem(LEGACY_STORAGE_KEY);
   } catch {
     // ignore
   }

@@ -31,7 +31,8 @@ const MCP_URL = `${API_URL.replace(/\/$/, "")}/mcp`;
 const IS_HOSTED = API_URL.replace(/\/$/, "") === "https://studyos-api-wy5w.onrender.com";
 
 const MCP_KEY_NAME = "MCP Integration";
-const MCP_KEY_STORAGE_KEY = "opensunsama_mcp_key";
+const MCP_KEY_STORAGE_KEY = "studyos_mcp_key";
+const LEGACY_MCP_KEY_STORAGE_KEY = "opensunsama_mcp_key";
 const MCP_KEY_SCOPES: ApiKeyScope[] = [
   "tasks:read",
   "tasks:write",
@@ -170,11 +171,11 @@ const CLIENT_TABS: { id: ClientTab; label: string }[] = [
   { id: "other", label: "Other" },
 ];
 
-const CURSOR_INSTALL_URL = `cursor://anysphere.cursor-deeplink/mcp/install?name=open-sunsama&config=${btoa(
+const CURSOR_INSTALL_URL = `cursor://anysphere.cursor-deeplink/mcp/install?name=studyos&config=${btoa(
   JSON.stringify({ url: MCP_URL })
 )}`;
 const VSCODE_INSTALL_URL = `vscode:mcp/install?${encodeURIComponent(
-  JSON.stringify({ name: "open-sunsama", type: "http", url: MCP_URL })
+  JSON.stringify({ name: "studyos", type: "http", url: MCP_URL })
 )}`;
 
 function ConnectorInstructions({ client, copied, onCopy }: {
@@ -239,14 +240,14 @@ function ConnectorInstructions({ client, copied, onCopy }: {
         <div className="space-y-3">
           <p className="text-sm">Run this in your terminal:</p>
           <CodeBlock
-            code={`claude mcp add --transport http open-sunsama ${MCP_URL}`}
+            code={`claude mcp add --transport http studyos ${MCP_URL}`}
             field="claude-code"
             copied={copied}
             onCopy={onCopy}
           />
           <p className="text-sm text-muted-foreground">
             Then run <code className="rounded bg-muted px-1 py-0.5 text-xs">/mcp</code> inside Claude Code,
-            pick <span className="font-medium text-foreground">open-sunsama</span>, and choose Authenticate.
+            pick <span className="font-medium text-foreground">studyos</span>, and choose Authenticate.
           </p>
         </div>
       );
@@ -261,11 +262,11 @@ function ConnectorInstructions({ client, copied, onCopy }: {
           </Button>
           <p className="text-sm text-muted-foreground">
             Or add this to <code className="rounded bg-muted px-1 py-0.5 text-xs">~/.cursor/mcp.json</code>,
-            then click <span className="font-medium text-foreground">Connect</span> next to open-sunsama in
+            then click <span className="font-medium text-foreground">Connect</span> next to studyos in
             Cursor Settings → MCP:
           </p>
           <CodeBlock
-            code={JSON.stringify({ mcpServers: { "open-sunsama": { url: MCP_URL } } }, null, 2)}
+            code={JSON.stringify({ mcpServers: { "studyos": { url: MCP_URL } } }, null, 2)}
             json
             field="cursor"
             copied={copied}
@@ -287,7 +288,7 @@ function ConnectorInstructions({ client, copied, onCopy }: {
             VS Code opens the sign-in page when the server first starts:
           </p>
           <CodeBlock
-            code={JSON.stringify({ servers: { "open-sunsama": { type: "http", url: MCP_URL } } }, null, 2)}
+            code={JSON.stringify({ servers: { "studyos": { type: "http", url: MCP_URL } } }, null, 2)}
             json
             field="vscode"
             copied={copied}
@@ -305,7 +306,7 @@ function ConnectorInstructions({ client, copied, onCopy }: {
           <p className="text-muted-foreground">
             Windsurf: add{" "}
             <code className="rounded bg-muted px-1 py-0.5 text-xs">
-              {`"open-sunsama": { "serverUrl": "${MCP_URL}" }`}
+              {`"studyos": { "serverUrl": "${MCP_URL}" }`}
             </code>{" "}
             under <code className="rounded bg-muted px-1 py-0.5 text-xs">mcpServers</code> in{" "}
             <code className="rounded bg-muted px-1 py-0.5 text-xs">~/.codeium/windsurf/mcp_config.json</code>.

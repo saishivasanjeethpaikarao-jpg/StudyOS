@@ -3,7 +3,8 @@ import type { User } from "@open-sunsama/types";
 import { toast } from "@/hooks/use-toast";
 import { sessionFetch, API_BASE_URL } from "@/lib/api";
 
-const AUTH_USER_KEY = "open_sunsama_user";
+const AUTH_USER_KEY = "studyos_user";
+const LEGACY_AUTH_USER_KEY = "open_sunsama_user";
 
 interface UploadAvatarResponse {
   success: boolean;
@@ -86,7 +87,9 @@ export function useUploadAvatar() {
         if (!oldUser) return oldUser;
         const updatedUser = { ...oldUser, avatarUrl: data.data.url };
         // Also update localStorage
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(updatedUser));
+        const raw = JSON.stringify(updatedUser);
+        localStorage.setItem(AUTH_USER_KEY, raw);
+        localStorage.setItem(LEGACY_AUTH_USER_KEY, raw);
         return updatedUser;
       });
 

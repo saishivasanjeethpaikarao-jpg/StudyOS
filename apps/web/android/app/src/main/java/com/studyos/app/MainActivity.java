@@ -177,8 +177,12 @@ public class MainActivity extends BridgeActivity {
 
             if (savedToken != null && !savedToken.isEmpty()) {
                 js.append("try {\n");
-                js.append("  if (!localStorage.getItem('open-sunsama-auth-token')) {\n");
-                js.append("    localStorage.setItem('open-sunsama-auth-token', '").append(savedToken).append("');\n");
+                js.append("  var token = '").append(savedToken).append("';\n");
+                js.append("  if (!localStorage.getItem('studyos-auth-token')) {\n");
+                js.append("    localStorage.setItem('studyos-auth-token', token);\n");
+                js.append("    localStorage.setItem('studyos_token', token);\n");
+                js.append("    localStorage.setItem('open-sunsama-auth-token', token);\n");
+                js.append("    localStorage.setItem('open_sunsama_token', token);\n");
                 js.append("  }\n");
                 js.append("} catch (e) {}\n");
             }
@@ -235,10 +239,15 @@ public class MainActivity extends BridgeActivity {
                 int hour = zdt.getHour();
                 int minute = zdt.getMinute();
 
+                String alarmNote = (label != null && !label.trim().isEmpty()) ? label.trim() : "Study: Academic Focus Session";
+
                 Intent intent = new Intent(AlarmClock.ACTION_SET_ALARM);
                 intent.putExtra(AlarmClock.EXTRA_HOUR, hour);
                 intent.putExtra(AlarmClock.EXTRA_MINUTES, minute);
-                intent.putExtra(AlarmClock.EXTRA_MESSAGE, label != null && !label.isEmpty() ? label : "StudyOS Focus Session");
+                intent.putExtra(AlarmClock.EXTRA_MESSAGE, alarmNote);
+                intent.putExtra("android.intent.extra.alarm.MESSAGE", alarmNote);
+                intent.putExtra(Intent.EXTRA_TITLE, alarmNote);
+                intent.putExtra(Intent.EXTRA_TEXT, alarmNote);
                 intent.putExtra(AlarmClock.EXTRA_SKIP_UI, false);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 

@@ -57,11 +57,14 @@ import {
  * set so the choice can flow across devices via the canonical
  * preferences sync path.
  */
-const VIEW_MODE_STORAGE_KEY = "open_sunsama_calendar_view_mode";
+const PRIMARY_VIEW_MODE_STORAGE_KEY = "studyos_calendar_view_mode";
+const LEGACY_VIEW_MODE_STORAGE_KEY = "open_sunsama_calendar_view_mode";
 
 function getStoredViewMode(): CalendarViewMode | null {
   if (typeof window === "undefined") return null;
-  const v = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+  const v =
+    window.localStorage.getItem(PRIMARY_VIEW_MODE_STORAGE_KEY) ||
+    window.localStorage.getItem(LEGACY_VIEW_MODE_STORAGE_KEY);
   if (v === "day" || v === "3-day" || v === "week" || v === "month") return v;
   return null;
 }
@@ -69,7 +72,8 @@ function getStoredViewMode(): CalendarViewMode | null {
 function storeViewMode(mode: CalendarViewMode): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    window.localStorage.setItem(PRIMARY_VIEW_MODE_STORAGE_KEY, mode);
+    window.localStorage.setItem(LEGACY_VIEW_MODE_STORAGE_KEY, mode);
   } catch {
     // ignore quota errors
   }

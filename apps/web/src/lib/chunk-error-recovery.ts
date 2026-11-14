@@ -15,7 +15,7 @@
  * Reference: https://vite.dev/guide/build.html#load-error-handling
  */
 
-const RELOAD_FLAG = "open_sunsama_chunk_reload_v1";
+const RELOAD_FLAG = "studyos_chunk_reload_v1";
 
 function shouldAttemptReload(): boolean {
   if (typeof window === "undefined") return false;

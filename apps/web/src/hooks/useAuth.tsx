@@ -6,7 +6,8 @@ import { clearPersistedCache } from "@/lib/query-persister";
 import { identifyUser, trackGoal } from "@/lib/analytics";
 import { notifyNativeLogout } from "@/lib/native-bridge";
 
-const AUTH_USER_KEY = "open_sunsama_user";
+const AUTH_USER_KEY = "studyos_user";
+const LEGACY_AUTH_USER_KEY = "open_sunsama_user";
 interface AuthState { user: User | null; token: string | null; isAuthenticated: boolean; isLoading: boolean; }
 interface AuthContextValue extends AuthState {
   login: (credentials: LoginInput) => Promise<void>;
@@ -18,14 +19,26 @@ const AuthContext = React.createContext<AuthContextValue | null>(null);
 
 function getStoredUser(): User | null {
   if (typeof window === "undefined") return null;
-  try { const raw = localStorage.getItem(AUTH_USER_KEY); return raw ? JSON.parse(raw) as User : null; } catch { return null; }
+  try {
+    const raw = localStorage.getItem(AUTH_USER_KEY) || localStorage.getItem(LEGACY_AUTH_USER_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
 }
 function storeUser(user: User) {
-  try { localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user)); } catch { /* profile cache is optional */ }
+  try {
+    const raw = JSON.stringify(user);
+    localStorage.setItem(AUTH_USER_KEY, raw);
+    localStorage.setItem(LEGACY_AUTH_USER_KEY, raw);
+  } catch {
+    /* profile cache is optional */
+  }
 }
 function clearAuthData() {
   const hadToken = !!getToken();
   localStorage.removeItem(AUTH_USER_KEY);
+  localStorage.removeItem(LEGACY_AUTH_USER_KEY);
   setAuthToken(null);
   if (hadToken) notifyNativeLogout();
   clearCsrfToken();

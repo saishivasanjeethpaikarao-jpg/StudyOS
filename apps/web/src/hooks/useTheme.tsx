@@ -11,7 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSavePreferences } from "@/hooks/useUserPreferences";
 import { subscribeToPreferencesUpdates } from "@/lib/websocket";
 
-const STORAGE_KEY = "open_sunsama_preferences";
+const STORAGE_KEY = "studyos_preferences";
+const LEGACY_STORAGE_KEY = "open_sunsama_preferences";
 
 interface ThemeContextValue {
   // Current values
@@ -38,7 +39,7 @@ function getStoredPreferences(): UserPreferences {
   if (typeof window === "undefined") return DEFAULT_PREFERENCES;
   
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       return {
@@ -59,7 +60,9 @@ function getStoredPreferences(): UserPreferences {
 // Save preferences to localStorage
 function savePreferences(prefs: UserPreferences) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  const raw = JSON.stringify(prefs);
+  localStorage.setItem(STORAGE_KEY, raw);
+  localStorage.setItem(LEGACY_STORAGE_KEY, raw);
 }
 
 // Resolve system theme preference

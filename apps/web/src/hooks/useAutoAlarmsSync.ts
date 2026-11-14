@@ -81,7 +81,7 @@ export function useAutoAlarmsSync() {
       );
     });
 
-    // 3. Set the nearest phone clock alarm for today's highest-priority item
+    // 3. Set the nearest phone clock alarm for today's highest-priority study item or deadline
     const sortedAssignments = [...upcomingAssignments].sort(
       (a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime()
     );
@@ -90,9 +90,16 @@ export function useAutoAlarmsSync() {
     if (firstUpcoming && isToday(new Date(firstUpcoming.dueAt))) {
       const due = new Date(firstUpcoming.dueAt);
       if (due.getTime() > now) {
-        // Set alarm for 30 minutes before due date
+        // Set alarm for 30 minutes before due date with deadline note
         const alarmDate = new Date(Math.max(now + 60000, due.getTime() - 30 * 60 * 1000));
-        triggerNativeAlarm(alarmDate, `StudyOS: ${firstUpcoming.title}`);
+        triggerNativeAlarm(alarmDate, `Due: ${firstUpcoming.title}`);
+      }
+    } else if (activeTasks.length > 0) {
+      // Schedule study alarm for today's next active topic
+      const nextTask = activeTasks[0];
+      if (nextTask) {
+        const alarmDate = new Date(now + 30 * 60 * 1000);
+        triggerNativeAlarm(alarmDate, `Study: ${nextTask.title}`);
       }
     }
 

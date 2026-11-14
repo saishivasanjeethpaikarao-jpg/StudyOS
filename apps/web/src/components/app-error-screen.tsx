@@ -17,11 +17,18 @@ import { checkForUpdate, downloadAndInstallUpdate } from "@/lib/updater";
  * the thing that broke.
  */
 
-const RECOVERY_FLAG = "open_sunsama_error_recovery_at";
-const PENDING_RESET_FLAG = "open_sunsama_pending_cache_reset";
+const RECOVERY_FLAG = "studyos_error_recovery_at";
+const PENDING_RESET_FLAG = "studyos_pending_cache_reset";
 const RECOVERY_WINDOW_MS = 60_000;
-const CACHE_KEY_PREFIX = "open_sunsama_rq_cache";
-const SESSION_KEYS = ["open_sunsama_token", "open_sunsama_user"];
+const CACHE_KEY_PREFIXES = ["studyos_rq_cache", "open_sunsama_rq_cache"];
+const SESSION_KEYS = [
+  "studyos_token",
+  "studyos-auth-token",
+  "studyos_user",
+  "open_sunsama_token",
+  "open-sunsama-auth-token",
+  "open_sunsama_user",
+];
 const ISSUES_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/issues/new";
 
 function removeLocalKeys(match: (key: string) => boolean) {
@@ -39,11 +46,12 @@ function removeLocalKeys(match: (key: string) => boolean) {
 
 /** Clears cached server data. Keeps the session, so the user stays signed in. */
 export function resetLocalData() {
-  removeLocalKeys((key) => key.startsWith(CACHE_KEY_PREFIX));
+  removeLocalKeys((key) => CACHE_KEY_PREFIXES.some((prefix) => key.startsWith(prefix)));
   // A throttled persist can still write the old cache back before the reload
   // lands, so clear it again on the next start, before it's restored.
   try {
     sessionStorage.setItem(PENDING_RESET_FLAG, "1");
+    sessionStorage.setItem("open_sunsama_pending_cache_reset", "1");
   } catch {
     // ignore
   }
@@ -52,12 +60,18 @@ export function resetLocalData() {
 /** Call before the query cache is restored (main.tsx). */
 export function applyPendingCacheReset() {
   try {
-    if (sessionStorage.getItem(PENDING_RESET_FLAG) !== "1") return;
+    if (
+      sessionStorage.getItem(PENDING_RESET_FLAG) !== "1" &&
+      sessionStorage.getItem("open_sunsama_pending_cache_reset") !== "1"
+    ) {
+      return;
+    }
     sessionStorage.removeItem(PENDING_RESET_FLAG);
+    sessionStorage.removeItem("open_sunsama_pending_cache_reset");
   } catch {
     return;
   }
-  removeLocalKeys((key) => key.startsWith(CACHE_KEY_PREFIX));
+  removeLocalKeys((key) => CACHE_KEY_PREFIXES.some((prefix) => key.startsWith(prefix)));
 }
 
 function recoveredRecently(): boolean {

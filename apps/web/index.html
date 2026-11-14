@@ -166,7 +166,7 @@
     <script>
       (function() {
         try {
-          var prefs = JSON.parse(localStorage.getItem('open_sunsama_preferences') || '{}');
+          var prefs = JSON.parse(localStorage.getItem('studyos_preferences') || localStorage.getItem('open_sunsama_preferences') || '{}');
           var mode = prefs.themeMode || 'system';
           var colorTheme = prefs.colorTheme || 'default';
           var fontFamily = prefs.fontFamily || 'geist';
