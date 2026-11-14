@@ -54,6 +54,41 @@ public class MainActivity extends BridgeActivity {
             webView.addJavascriptInterface(new StudyOSNativeBridge(), "StudyOSNative");
         }
 
+        // Modern AndroidX OnBackPressedDispatcher to intercept hardware back button / edge swipe
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (bridge != null && bridge.getWebView() != null) {
+                    final WebView webView = bridge.getWebView();
+                    webView.evaluateJavascript(
+                        "(function() {\n" +
+                        "  try {\n" +
+                        "    if (typeof window.__STUDYOS_HANDLE_BACK__ === 'function') {\n" +
+                        "      var handled = window.__STUDYOS_HANDLE_BACK__();\n" +
+                        "      return handled ? 'HANDLED' : 'ROOT';\n" +
+                        "    }\n" +
+                        "  } catch (e) {}\n" +
+                        "  return 'UNHANDLED';\n" +
+                        "})();",
+                        result -> {
+                            String clean = result != null ? result.replace("\"", "").trim() : "";
+                            if ("HANDLED".equals(clean)) {
+                                return;
+                            }
+                            if (webView.canGoBack()) {
+                                webView.goBack();
+                                return;
+                            }
+                            // At root screen, smoothly minimize without exiting
+                            moveTaskToBack(true);
+                        }
+                    );
+                    return;
+                }
+                moveTaskToBack(true);
+            }
+        });
+
         handleIntent(getIntent());
     }
 
