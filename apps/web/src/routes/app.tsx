@@ -37,6 +37,9 @@ import {
 } from "@/components/kanban/task-modal.lazy";
 import { AppUpdateBanner } from "@/components/app-update-banner.lazy";
 import { prefetchRichTextEditor } from "@/components/ui/rich-text-editor.lazy";
+import { AiAssistantProvider, useAiAssistant } from "@/hooks/useAiAssistant";
+import { AiLearningAssistantDrawer } from "@/components/academics/ai-learning-assistant-drawer";
+import { Sparkles } from "lucide-react";
 
 /**
  * Main app layout - requires authentication
@@ -93,7 +96,9 @@ export default function AppLayout() {
       <ShortcutsProvider>
         <SearchProvider>
           <UndoRedoProvider>
-            <AppLayoutInner />
+            <AiAssistantProvider>
+              <AppLayoutInner />
+            </AiAssistantProvider>
           </UndoRedoProvider>
         </SearchProvider>
       </ShortcutsProvider>
@@ -109,6 +114,7 @@ function AppLayoutInner() {
   // Initialize WebSocket for realtime updates
   useWebSocket();
 
+  const { isOpen: isAssistantOpen, openAssistant, closeAssistant } = useAiAssistant();
   const { showShortcutsModal, setShowShortcutsModal } = useShortcutsModal();
   const { isSearchOpen, closeSearch } = useSearch();
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
@@ -208,6 +214,24 @@ function AppLayoutInner() {
         onOpenChange={(open) => {
           if (!open) setSelectedTask(null);
         }}
+      />
+
+      {/* Floating AI Tutor Button for Mobile Devices */}
+      <button
+        type="button"
+        onClick={openAssistant}
+        className="fixed left-4 z-40 flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform active:scale-95 lg:hidden text-xs font-semibold"
+        style={{ bottom: "calc(72px + env(safe-area-inset-bottom, 0px))" }}
+        aria-label="Open AI Learning Assistant"
+      >
+        <Sparkles className="h-4 w-4 text-amber-300" />
+        <span>AI Tutor</span>
+      </button>
+
+      {/* Global AI Learning Assistant Drawer (Accessible on mobile and desktop) */}
+      <AiLearningAssistantDrawer
+        open={isAssistantOpen}
+        onOpenChange={(open) => (open ? openAssistant() : closeAssistant())}
       />
     </>
   );

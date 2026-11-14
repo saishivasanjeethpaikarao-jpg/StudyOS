@@ -16,10 +16,18 @@ import {
   Search,
   Smartphone,
   Lightbulb,
+  Play,
+  FileText,
+  BookOpen,
+  CheckSquare,
+  GraduationCap,
+  ClipboardList,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearch } from "@/hooks/useSearch";
+import { useAiAssistant } from "@/hooks/useAiAssistant";
 import { isRunningInstalled } from "@/lib/pwa";
 import { InstallAppSheet } from "@/components/pwa/install-app-sheet";
 
@@ -27,6 +35,7 @@ interface MenuItem {
   id: string;
   icon: React.ElementType;
   label: string;
+  badge?: string;
   href?: string;
   onClick?: () => void;
   destructive?: boolean;
@@ -54,26 +63,42 @@ function MenuItemComponent({ item }: MenuItemComponentProps) {
         <Icon
           className={cn(
             "h-5 w-5",
-            item.destructive ? "text-destructive" : "text-muted-foreground"
+            item.destructive
+              ? "text-destructive"
+              : item.id === "focustube"
+              ? "text-red-500"
+              : item.id === "assistant"
+              ? "text-amber-500"
+              : "text-muted-foreground"
           )}
         />
         <span
-          className={cn("text-[15px]", item.destructive && "text-destructive")}
+          className={cn(
+            "text-[15px] font-medium",
+            item.destructive && "text-destructive"
+          )}
         >
           {item.label}
         </span>
       </div>
-      {!item.destructive && (
-        <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-      )}
+      <div className="flex items-center gap-2">
+        {item.badge && (
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            {item.badge}
+          </span>
+        )}
+        {!item.destructive && (
+          <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+        )}
+      </div>
     </>
   );
 
   const className = cn(
-    "flex w-full items-center justify-between px-4 py-3",
-    "min-h-[48px]", // Touch-friendly minimum height
+    "flex w-full items-center justify-between px-4 py-3.5",
+    "min-h-[50px]",
     "transition-colors",
-    "active:bg-accent/50", // Touch feedback
+    "active:bg-accent/50",
     "hover:bg-accent/30"
   );
 
@@ -99,45 +124,37 @@ interface MenuSectionComponentProps {
 
 function MenuSectionComponent({ section, isLast }: MenuSectionComponentProps) {
   return (
-    <div className="mb-2">
-      {/* Section header (omitted for untitled groups) */}
+    <div className="mb-4">
       {section.title && (
         <div className="px-4 py-2">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {section.title}
           </h3>
         </div>
       )}
 
-      {/* Section items */}
-      <div className="bg-card rounded-lg mx-2 overflow-hidden">
+      <div className="bg-card rounded-xl mx-3 overflow-hidden border border-border/50 shadow-sm">
         {section.items.map((item, index) => (
           <React.Fragment key={item.id}>
             <MenuItemComponent item={item} />
             {index < section.items.length - 1 && (
-              <div className="mx-4 border-b border-border/50" />
+              <div className="mx-4 border-b border-border/40" />
             )}
           </React.Fragment>
         ))}
       </div>
 
-      {/* Dashed separator between sections */}
       {!isLast && (
-        <div className="mx-4 mt-4 border-t border-dashed border-border/40" />
+        <div className="mx-6 mt-4 border-t border-dashed border-border/40" />
       )}
     </div>
   );
 }
 
-/**
- * Mobile More menu component
- * Displays grouped navigation items with section headers
- * Only includes features that actually exist in the app
- */
 export function MobileMoreMenu({ onLogout }: MobileMoreMenuProps) {
   const { logout } = useAuth();
-  // Phones have no ⌘K, so the palette needs a visible entry point.
   const { openSearch } = useSearch();
+  const { openAssistant } = useAiAssistant();
   const [installOpen, setInstallOpen] = React.useState(false);
   const showInstall = React.useMemo(() => !isRunningInstalled(), []);
 
@@ -146,29 +163,100 @@ export function MobileMoreMenu({ onLogout }: MobileMoreMenuProps) {
     onLogout?.();
   }, [logout, onLogout]);
 
-  // Each entry deep-links straight to its content (the settings page opens the
-  // matching sheet directly on mobile — no intermediate settings list).
   const menuSections: MenuSection[] = React.useMemo(
     () => [
       {
-        title: "Work",
+        title: "AI Study Assistant",
         items: [
+          {
+            id: "assistant",
+            icon: Sparkles,
+            label: "Ask AI Learning Assistant",
+            badge: "Grounded",
+            onClick: openAssistant,
+          },
+        ],
+      },
+      {
+        title: "Academics & Study Suite",
+        items: [
+          {
+            id: "focustube",
+            icon: Play,
+            label: "FocusTube",
+            badge: "Videos",
+            href: "/app/focustube",
+          },
+          {
+            id: "notes",
+            icon: FileText,
+            label: "Lecture Notes",
+            href: "/app/notes",
+          },
+          {
+            id: "resources",
+            icon: BookOpen,
+            label: "Course Resources & Files",
+            href: "/app/resources",
+          },
+          {
+            id: "quizzes",
+            icon: CheckSquare,
+            label: "Knowledge Checks & Quizzes",
+            href: "/app/quizzes",
+          },
+          {
+            id: "assignments",
+            icon: ClipboardList,
+            label: "Assignments & Deadlines",
+            href: "/app/assignments",
+          },
+          {
+            id: "subjects",
+            icon: GraduationCap,
+            label: "Subjects & Syllabi",
+            href: "/app/subjects",
+          },
+        ],
+      },
+      {
+        title: "Time, Tasks & Native Alarms",
+        items: [
+          {
+            id: "reminders",
+            icon: Bell,
+            label: "Reminders & Clock Alarms",
+            badge: "Native",
+            href: "/app/reminders",
+          },
+          {
+            id: "calendar",
+            icon: CalendarDays,
+            label: "Weekly Planner & Calendar",
+            href: "/app/calendar",
+          },
           {
             id: "tasks-list",
             icon: ListTodo,
-            label: "All tasks",
+            label: "All Tasks & Board",
             href: "/app/tasks",
+          },
+          {
+            id: "routines",
+            icon: Repeat,
+            label: "Daily Routines",
+            href: "/app/routines",
           },
           {
             id: "ideas",
             icon: Lightbulb,
-            label: "Ideas",
+            label: "Quick Ideas",
             href: "/app/ideas",
           },
           {
             id: "search",
             icon: Search,
-            label: "Search tasks, ideas, events",
+            label: "Global Search",
             onClick: openSearch,
           },
           {
@@ -199,54 +287,46 @@ export function MobileMoreMenu({ onLogout }: MobileMoreMenuProps) {
             href: "/app/settings?tab=profile",
           },
           {
-            id: "security",
-            icon: Lock,
-            label: "Security",
-            href: "/app/settings?tab=security",
+            id: "notifications",
+            icon: Bell,
+            label: "Notification Settings",
+            href: "/app/settings?tab=notifications",
           },
           {
             id: "appearance",
             icon: Palette,
-            label: "Appearance",
+            label: "Appearance & Themes",
             href: "/app/settings?tab=appearance",
           },
           {
             id: "tasks",
             icon: ListTodo,
-            label: "Task defaults",
+            label: "Task Defaults",
             href: "/app/settings?tab=tasks",
-          },
-          {
-            id: "routines",
-            icon: Repeat,
-            label: "Routines",
-            href: "/app/settings?tab=routines",
           },
           {
             id: "calendars",
             icon: CalendarDays,
-            label: "Calendars",
+            label: "Connected Calendars",
             href: "/app/settings?tab=calendars",
           },
           {
-            id: "notifications",
-            icon: Bell,
-            label: "Notifications",
-            href: "/app/settings?tab=notifications",
-          },
-          {
-            // Settings tab id is "api" (not "api-keys") — an invalid tab silently
-            // falls back to the Profile tab.
-            id: "api",
-            icon: Key,
-            label: "API Keys",
-            href: "/app/settings?tab=api",
+            id: "security",
+            icon: Lock,
+            label: "Security & Passwords",
+            href: "/app/settings?tab=security",
           },
           {
             id: "mcp",
             icon: Terminal,
-            label: "MCP",
+            label: "MCP & Telegram Agent",
             href: "/app/settings?tab=mcp",
+          },
+          {
+            id: "api",
+            icon: Key,
+            label: "API Keys",
+            href: "/app/settings?tab=api",
           },
         ],
       },
@@ -263,35 +343,32 @@ export function MobileMoreMenu({ onLogout }: MobileMoreMenuProps) {
         ],
       },
     ],
-    [handleLogout, openSearch, showInstall]
+    [handleLogout, openSearch, openAssistant, showInstall]
   );
 
   return (
-    // Definite height so the list scrolls internally and the "More" header
-    // stays fixed (the app shell is `min-h-screen`, so a percentage height
-    // can't resolve — see mobile-calendar-view for the same fix).
-    <div className="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-background">
-      {/* Header */}
-      <div className="flex-shrink-0 px-4 py-4 border-b border-border/40">
-        <h1 className="text-xl font-semibold">More</h1>
+    <div
+      className="min-h-full pb-20 pt-4"
+      style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}
+    >
+      <div className="px-4 pb-4">
+        <h1 className="text-2xl font-bold tracking-tight">More Features</h1>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Academics, FocusTube, Native Alarms & Settings
+        </p>
       </div>
 
-      {/* Scrollable content */}
-      <div
-        className="flex-1 overflow-y-auto py-4"
-        style={{
-          paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))",
-        }}
-      >
-        {menuSections.map((section, index) => (
-          <MenuSectionComponent
-            key={section.title}
-            section={section}
-            isLast={index === menuSections.length - 1}
-          />
-        ))}
-      </div>
-      <InstallAppSheet open={installOpen} onOpenChange={setInstallOpen} />
+      {menuSections.map((section, index) => (
+        <MenuSectionComponent
+          key={section.title || index}
+          section={section}
+          isLast={index === menuSections.length - 1}
+        />
+      ))}
+
+      {showInstall && (
+        <InstallAppSheet open={installOpen} onOpenChange={setInstallOpen} />
+      )}
     </div>
   );
 }

@@ -1,21 +1,16 @@
 import * as React from "react";
 import {
   BookOpen,
-  Calendar,
   ClipboardList,
   Home,
   MoreHorizontal,
+  Play,
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
-  href:
-    | "/app"
-    | "/app/assignments"
-    | "/app/subjects"
-    | "/app/calendar"
-    | "/app/more";
+  href: string;
   icon: React.ReactNode;
   label: string;
   matchExact?: boolean;
@@ -29,19 +24,19 @@ const navItems: NavItem[] = [
     matchExact: true,
   },
   {
+    href: "/app/focustube",
+    icon: <Play className="h-5 w-5 text-red-500 fill-red-500/20" />,
+    label: "FocusTube",
+  },
+  {
     href: "/app/assignments",
     icon: <ClipboardList className="h-5 w-5" />,
-    label: "Assignments",
+    label: "Deadlines",
   },
   {
     href: "/app/subjects",
     icon: <BookOpen className="h-5 w-5" />,
     label: "Subjects",
-  },
-  {
-    href: "/app/calendar",
-    icon: <Calendar className="h-5 w-5" />,
-    label: "Calendar",
   },
   {
     href: "/app/more",
@@ -53,7 +48,7 @@ const navItems: NavItem[] = [
 /**
  * Mobile-only bottom navigation bar
  * Shows on screens < lg breakpoint (1024px)
- * Touch-friendly with 64px minimum touch targets
+ * Touch-friendly with 60px minimum touch targets
  */
 export function MobileBottomNav() {
   const routerState = useRouterState();
@@ -68,7 +63,7 @@ export function MobileBottomNav() {
       )}
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="flex items-center justify-around px-2">
+      <div className="flex items-center justify-around px-1">
         {navItems.map((item) => {
           const isActive = item.matchExact
             ? currentPath === item.href
@@ -79,25 +74,25 @@ export function MobileBottomNav() {
               key={item.href}
               to={item.href}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2",
-                "min-h-[60px]",
+                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-1.5",
+                "min-h-[58px]",
                 "transition-colors",
-                "active:opacity-70", // Touch feedback
+                "active:opacity-70",
                 isActive
-                  ? "text-foreground"
+                  ? "text-foreground font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               )}
               aria-current={isActive ? "page" : undefined}
             >
               <div
                 className={cn(
-                  "flex items-center justify-center rounded-full px-3 py-1.5 transition-colors",
+                  "flex items-center justify-center rounded-full px-2.5 py-1 transition-colors",
                   isActive && "bg-muted"
                 )}
               >
                 {item.icon}
               </div>
-              <span className="max-w-full truncate text-xs font-medium">
+              <span className="max-w-full truncate text-[11px]">
                 {item.label}
               </span>
             </Link>

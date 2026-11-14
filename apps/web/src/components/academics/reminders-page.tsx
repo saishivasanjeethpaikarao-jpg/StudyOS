@@ -17,6 +17,7 @@ import { showNotification } from "@/lib/desktop";
 import {
   cancelNativeReminderNotification,
   isNativeMobile,
+  openNativeClock,
   scheduleNativeNotification,
   triggerNativeAlarm,
 } from "@/lib/native-bridge";
@@ -154,10 +155,44 @@ export function RemindersPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleTestNotification}>
-            <Send className="mr-2 h-4 w-4" /> Test Notification
-          </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {isNativeMobile() ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const now = new Date(Date.now() + 5000);
+                  scheduleNativeNotification(
+                    "StudyOS Notification Test",
+                    "Native Android notifications and alarm bridge are working!",
+                    now,
+                    "test_native_notification"
+                  );
+                  toast({
+                    title: "Test notification sent",
+                    description: "Check your Android notification shade in 5 seconds.",
+                  });
+                }}
+              >
+                <Bell className="mr-2 h-4 w-4" /> Test Mobile Alert
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  openNativeClock();
+                  toast({ title: "Opening Clock App" });
+                }}
+              >
+                <Clock className="mr-2 h-4 w-4" /> Open Clock
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleTestNotification}>
+              <Send className="mr-2 h-4 w-4" /> Test Notification
+            </Button>
+          )}
 
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>

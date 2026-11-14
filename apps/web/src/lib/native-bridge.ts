@@ -25,7 +25,12 @@ declare global {
 
 export function isNativeMobile(): boolean {
   if (typeof window === "undefined") return false;
-  return !!(window.__STUDYOS_NATIVE__ || window.ReactNativeWebView);
+  return !!(
+    window.StudyOSNative ||
+    window.__STUDYOS_NATIVE__ ||
+    window.ReactNativeWebView ||
+    ((window as any).Capacitor?.isNativePlatform?.())
+  );
 }
 
 export function getGoogleAuthStartUrl(

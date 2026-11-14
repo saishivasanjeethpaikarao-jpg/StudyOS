@@ -1,4 +1,8 @@
 import crypto from "node:crypto";
+import dns from "node:dns";
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch {}
 import {
   getDb,
   eq,
@@ -1668,18 +1672,36 @@ export class TelegramIntegrationService {
         }
       } catch (err) {
         console.error("[Telegram] sendMessage network error:", err);
-        // 3. One retry with plain text on network interruption
+        // 3. Fallback with Node native https.request and family: 4 (IPv4)
         try {
           const plainChunk = this.cleanForPlainText(chunk);
-          const retryRes = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: plainChunk,
-            }),
+          const https = await import("node:https");
+          const payload = JSON.stringify({
+            chat_id: chatId,
+            text: plainChunk,
           });
-          sent = retryRes.ok;
+          sent = await new Promise<boolean>((resolve) => {
+            const req = https.request(
+              `https://api.telegram.org/bot${token}/sendMessage`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Content-Length": Buffer.byteLength(payload),
+                },
+                family: 4,
+              },
+              (res) => {
+                resolve(res.statusCode === 200);
+              }
+            );
+            req.on("error", (e) => {
+              console.error("[Telegram] https fallback error:", e);
+              resolve(false);
+            });
+            req.write(payload);
+            req.end();
+          });
         } catch {
           sent = false;
         }

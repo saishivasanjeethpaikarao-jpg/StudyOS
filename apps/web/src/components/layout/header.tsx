@@ -28,7 +28,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { isDesktop } from "@/lib/desktop";
 import { prefetchCommandPalette } from "@/components/command-palette/command-palette.lazy";
 import { DesktopUpdateMenuItem } from "@/components/desktop-update-menu-item";
-import { AiLearningAssistantDrawer } from "@/components/academics/ai-learning-assistant-drawer";
+import { useAiAssistant } from "@/hooks/useAiAssistant";
 import { cn, getAvatarUrl } from "@/lib/utils";
 import {
   Button,
@@ -53,7 +53,7 @@ export function Header({ className }: HeaderProps) {
   const { openSearch } = useSearch();
   const { themeMode, setThemeMode } = useTheme();
   const isDesktopApp = React.useMemo(() => isDesktop(), []);
-  const [isAssistantOpen, setIsAssistantOpen] = React.useState(false);
+  const { openAssistant } = useAiAssistant();
 
   const userInitials = React.useMemo(() => {
     if (!user?.name) return user?.email?.charAt(0).toUpperCase() ?? "U";
@@ -231,7 +231,7 @@ export function Header({ className }: HeaderProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsAssistantOpen(true)}
+            onClick={openAssistant}
             className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
             title="AI Learning Assistant"
           >
@@ -319,11 +319,6 @@ export function Header({ className }: HeaderProps) {
           </DropdownMenu>
         </div>
       </div>
-
-      <AiLearningAssistantDrawer
-        open={isAssistantOpen}
-        onOpenChange={setIsAssistantOpen}
-      />
     </header>
   );
 }

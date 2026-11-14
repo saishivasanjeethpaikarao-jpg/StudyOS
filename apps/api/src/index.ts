@@ -6,6 +6,10 @@
  */
 
 import "dotenv/config";
+import dns from "node:dns";
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch {}
 import { createServer, type Server as HttpServer } from "http";
 import { Hono } from "hono";
 import { cors } from "hono/cors";

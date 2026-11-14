@@ -97,8 +97,12 @@ integrationsRouter.get("/telegram/test-bot", async (c) => {
       },
       webhookSecretConfigured: !!process.env.TELEGRAM_WEBHOOK_SECRET
     });
-  } catch (err) {
-    return c.json({ ok: false, error: err instanceof Error ? err.message : "Fetch error" }, 500);
+  } catch (err: any) {
+    return c.json({
+      ok: false,
+      error: err instanceof Error ? err.message : "Fetch error",
+      cause: err?.cause?.message || err?.cause?.code || String(err?.cause || "")
+    }, 500);
   }
 });
 
