@@ -3,27 +3,15 @@
  * CIMD client IDs, resource/scope normalization, PKCE, and the consent JWT.
  * The full flow is covered end to end by mcp/tests/oauth-e2e.ts.
  */
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import { createHash } from "node:crypto";
-import type * as ClientsModule from "./clients.js";
-import type * as ConfigModule from "./config.js";
-import type * as CryptoModule from "./crypto.js";
-import type * as ConsentModule from "./consent.js";
+import * as clients from "./clients.js";
+import * as config from "./config.js";
+import * as crypto from "./crypto.js";
+import * as consent from "./consent.js";
 
 process.env.API_URL = "https://api.example.com/";
 process.env.JWT_SECRET = "test-secret-key-for-oauth-tests-min-32-chars";
-
-let clients: typeof ClientsModule;
-let config: typeof ConfigModule;
-let crypto: typeof CryptoModule;
-let consent: typeof ConsentModule;
-
-beforeAll(async () => {
-  clients = await import("./clients.js");
-  config = await import("./config.js");
-  crypto = await import("./crypto.js");
-  consent = await import("./consent.js");
-}, 30000);
 
 describe("isAllowedRedirectUri", () => {
   it.each([

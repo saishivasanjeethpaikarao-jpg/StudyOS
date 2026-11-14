@@ -22,9 +22,9 @@ import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 const CURRENT_VERSION = "v1.0.20";
 const GITHUB_REPO_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS";
 const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases/tag/v1.0.20`;
-const WINDOWS_EXE_URL = "/downloads/StudyOS_1.0.20_x64-setup.exe";
+const WINDOWS_EXE_URL = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS_Setup.exe`;
 const WINDOWS_EXE_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.0.20/StudyOS_1.0.20_x64-setup.exe";
-const ANDROID_APK_URL = "https://studyos-web-8ruc.onrender.com/downloads/StudyOS_1.0.20.apk";
+const ANDROID_APK_URL = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS.apk`;
 const ANDROID_APK_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.0.20/StudyOS_1.0.20.apk";
 
 export default function DownloadPage() {

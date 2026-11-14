@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 import { getSafeRedirect } from "@/lib/auth-redirect";
 import { API_BASE_URL, getToken } from "@/lib/api";
+import { startGoogleAuth } from "@/lib/native-bridge";
 
 interface LoginForm {
   email: string;
@@ -71,11 +72,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login(data);
-      if (getToken()) {
-        goNext();
-      } else {
-        goNext();
-      }
+      if (!getToken()) throw new Error("Sign-in completed without an authentication token.");
+      goNext();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -95,10 +93,12 @@ export default function LoginPage() {
         description="Continue with Google or sign in with your email and password"
       />
 
-      <Button type="button" variant="outline" className="w-full h-10" onClick={() => {
-        const apiUrl = API_BASE_URL;
-        window.location.assign(`${apiUrl}/auth/google/start`);
-      }}>
+      <Button
+        type="button"
+        variant="outline"
+        className="h-12 w-full text-sm"
+        onClick={() => startGoogleAuth(API_BASE_URL)}
+      >
         <span aria-hidden="true" className="mr-2 font-bold text-base">G</span>
         Continue with Google
       </Button>
@@ -112,6 +112,7 @@ export default function LoginPage() {
           <Input
             id="email"
             type="email"
+            className="h-12 px-4 text-base"
             placeholder="name@example.com"
             autoCapitalize="none"
             autoComplete="email"
@@ -135,7 +136,7 @@ export default function LoginPage() {
             <Label htmlFor="password">Password</Label>
             <Link
               to="/forgot-password"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex min-h-11 items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               Forgot password?
             </Link>
@@ -143,6 +144,7 @@ export default function LoginPage() {
           <Input
             id="password"
             type="password"
+            className="h-12 px-4 text-base"
             placeholder="Enter your password"
             autoComplete="current-password"
             disabled={isLoading}
@@ -159,7 +161,7 @@ export default function LoginPage() {
           )}
         </div>
 
-        <Button type="submit" disabled={isLoading} className="w-full mt-2 h-9 text-[13px]">
+        <Button type="submit" disabled={isLoading} className="mt-2 h-12 w-full text-sm">
           {isLoading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
           Sign in
         </Button>
@@ -170,7 +172,7 @@ export default function LoginPage() {
         <Link
           to="/register"
           search={redirect ? { redirect } : undefined}
-          className="text-foreground hover:underline underline-offset-4"
+          className="inline-flex min-h-11 items-center text-foreground underline-offset-4 hover:underline"
         >
           Sign up
         </Link>

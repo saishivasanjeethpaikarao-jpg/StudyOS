@@ -1,5 +1,6 @@
 import { createApi, createOpenSunsamaClient, type OpenSunsamaClient } from "@open-sunsama/api-client";
 import { isDesktop } from "./desktop";
+import { notifyNativeTokenChanged } from "./native-bridge";
 
 export const PRODUCTION_API_URL = "https://studyos-api-wy5w.onrender.com";
 export const API_BASE_URL =
@@ -12,7 +13,13 @@ const desktopFetch: typeof globalThis.fetch = async (input, init) => {
   const { fetch } = await import("@tauri-apps/plugin-http");
   return fetch(input, init);
 };
-const transportFetch = isDesktop() ? desktopFetch : globalThis.fetch.bind(globalThis);
+const transportFetch: typeof globalThis.fetch = (input, init) => {
+  // Resolve Tauri at call time. The desktop webview injects internals after
+  // the first script evaluation, so a module-load check would keep using
+  // window.fetch against localhost and fail with ERR_CONNECTION_REFUSED.
+  if (isDesktop()) return desktopFetch(input, init);
+  return globalThis.fetch(input, init);
+};
 let csrfToken: string | null = null;
 let csrfPromise: Promise<string | null> | null = null;
 const unsafe = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -111,6 +118,7 @@ export function setAuthToken(token: string | null): void {
   if (typeof window === "undefined") return;
   if (token) {
     localStorage.setItem(TOKEN_KEY, token);
+    notifyNativeTokenChanged(token);
   } else {
     localStorage.removeItem(TOKEN_KEY);
   }

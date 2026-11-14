@@ -36,11 +36,15 @@ const indexRoute = createRoute({
   path: "/",
   component: lazyRouteComponent(() => import("./routes/landing")),
   beforeLoad: () => {
-    // On desktop/mobile app (Tauri), skip landing page entirely
-    // Both desktop and mobile Tauri apps have __TAURI_INTERNALS__
-    const isTauriApp =
-      typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-    if (isTauriApp) {
+    // On desktop/mobile app (Tauri or Capacitor Android), skip landing page entirely
+    const isNativeApp =
+      typeof window !== "undefined" &&
+      ("__TAURI_INTERNALS__" in window ||
+       "__STUDYOS_NATIVE__" in window ||
+       "Capacitor" in window ||
+       window.location.protocol === "capacitor:" ||
+       window.location.protocol === "tauri:");
+    if (isNativeApp) {
       throw redirect({ to: "/login" });
     }
 

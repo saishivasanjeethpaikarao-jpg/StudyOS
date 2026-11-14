@@ -14,6 +14,12 @@ import { format, formatDistanceToNow, isPast } from "date-fns";
 import type { StudyReminder } from "@open-sunsama/types";
 import { getApi } from "@/lib/api";
 import { showNotification } from "@/lib/desktop";
+import {
+  cancelNativeReminderNotification,
+  isNativeMobile,
+  scheduleNativeNotification,
+  triggerNativeAlarm,
+} from "@/lib/native-bridge";
 import { learningKeys } from "@/lib/query-keys";
 import { useSubjects } from "@/hooks/useSubjects";
 import { toast } from "@/hooks/use-toast";
@@ -65,7 +71,8 @@ export function RemindersPage() {
     mutationFn: async (reminder: StudyReminder) => {
       await getApi().reminders.dismiss(reminder.id, reminder.revision);
     },
-    onSuccess: () => {
+    onSuccess: (_result, reminder) => {
+      cancelNativeReminderNotification(reminder.id);
       void client.invalidateQueries({ queryKey: learningKeys.reminders });
       toast({ title: "Reminder dismissed" });
     },
@@ -83,12 +90,22 @@ export function RemindersPage() {
     if (!title.trim() || !remindDate) return;
     setIsSubmitting(true);
     try {
-      const dateIso = new Date(remindDate).toISOString();
-      await getApi().reminders.create({
+      const remindAt = new Date(remindDate);
+      if (Number.isNaN(remindAt.getTime()) || remindAt.getTime() <= Date.now()) {
+        throw new Error("Choose a reminder time in the future.");
+      }
+      const dateIso = remindAt.toISOString();
+      const created = await getApi().reminders.create({
         title: title.trim(),
         remindAt: dateIso,
         subjectId: targetSubjectId || null,
       });
+      scheduleNativeNotification(
+        title.trim(),
+        "Your StudyOS reminder is due.",
+        dateIso,
+        created.id
+      );
       await client.invalidateQueries({ queryKey: learningKeys.reminders });
       toast({ title: "Reminder scheduled" });
       setIsAddOpen(false);
@@ -291,11 +308,27 @@ export function RemindersPage() {
                     )}
                   </CardContent>
 
-                  <div className="flex items-center justify-end border-t px-4 py-2 bg-muted/20">
+                  <div className="flex items-center justify-end gap-2 border-t px-4 py-2 bg-muted/20">
+                    {isNativeMobile() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-10"
+                        onClick={() =>
+                          triggerNativeAlarm(
+                            reminder.remindAt,
+                            reminder.title
+                          )
+                        }
+                      >
+                        <Clock className="mr-1 h-3.5 w-3.5" />
+                        Set phone alarm
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                      className="h-10 text-xs text-muted-foreground hover:text-foreground"
                       onClick={() => dismissMutation.mutate(reminder)}
                     >
                       <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-green-500" /> Dismiss

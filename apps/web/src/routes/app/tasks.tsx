@@ -150,7 +150,13 @@ function TasksListPageDesktop() {
   // Flatten all pages into a single array of tasks
   const tasks = React.useMemo(() => {
     if (!data?.pages) return [];
-    return data.pages.flatMap((page) => page.data);
+    return Array.from(
+      new Map(
+        data.pages
+          .flatMap((page) => page.data)
+          .map((task) => [task.id, task])
+      ).values()
+    );
   }, [data?.pages]);
 
   // Group tasks by date

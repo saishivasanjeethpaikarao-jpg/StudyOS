@@ -88,20 +88,16 @@ const aabs = findFilesRecursive(aabOutputsDir, (name) => name.endsWith(".aab"));
 console.log("Candidate AAB files:", aabs);
 
 if (aabs.length === 0) {
-  console.log("ℹ No separate AAB file found in bundle outputs; replicating package bundle for distribution.");
-  const aabTargetName = isProdSigned ? `StudyOS_${version}.aab` : `StudyOS_${version}_qa-debug.aab`;
-  const targetAabPath = join(androidDistDir, aabTargetName);
-  copyFileSync(primaryApk.path, targetAabPath);
-  console.log(`✓ Staged bundle archive from primary package: ${targetAabPath}`);
-} else {
-  aabs.sort((a, b) => (b.path.includes("release") ? 1 : 0) - (a.path.includes("release") ? 1 : 0));
-  const primaryAab = aabs[0];
-  const aabTargetName = isProdSigned ? `StudyOS_${version}.aab` : `StudyOS_${version}_qa-debug.aab`;
-  const targetAabPath = join(androidDistDir, aabTargetName);
-  copyFileSync(primaryAab.path, targetAabPath);
-  console.log(`✓ Staged Android AAB:`);
-  console.log(`  Source: ${primaryAab.path}`);
-  console.log(`  Dest:   ${targetAabPath} (${(primaryAab.size / (1024 * 1024)).toFixed(2)} MB)`);
+  console.error("✗ No Android App Bundle found. Refusing to publish an APK renamed as an AAB.");
+  process.exit(1);
 }
+aabs.sort((a, b) => (b.path.includes("release") ? 1 : 0) - (a.path.includes("release") ? 1 : 0));
+const primaryAab = aabs[0];
+const aabTargetName = isProdSigned ? `StudyOS_${version}.aab` : `StudyOS_${version}_qa-debug.aab`;
+const targetAabPath = join(androidDistDir, aabTargetName);
+copyFileSync(primaryAab.path, targetAabPath);
+console.log(`✓ Staged Android AAB:`);
+console.log(`  Source: ${primaryAab.path}`);
+console.log(`  Dest:   ${targetAabPath} (${(primaryAab.size / (1024 * 1024)).toFixed(2)} MB)`);
 
 console.log("✓ Android staging complete.");

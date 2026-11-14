@@ -23,7 +23,15 @@ export function useStudySessions(
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: studySessionKeys.list(filters),
-    queryFn: () => getApi().studySessions.list(filters),
+    queryFn: async () => {
+      const response = await getApi().studySessions.list(filters);
+      return {
+        ...response,
+        data: Array.from(
+          new Map(response.data.map((session) => [session.id, session])).values()
+        ),
+      };
+    },
     enabled: enabled && isAuthenticated,
   });
 }

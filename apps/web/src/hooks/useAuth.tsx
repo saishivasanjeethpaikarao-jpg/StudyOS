@@ -4,6 +4,7 @@ import type { User, LoginInput, CreateUserInput, AuthResponse, UpdateUserInput }
 import { getApi, clearApiClient, clearCsrfToken, getToken, setAuthToken, refreshAuthToken } from "@/lib/api";
 import { clearPersistedCache } from "@/lib/query-persister";
 import { identifyUser, trackGoal } from "@/lib/analytics";
+import { notifyNativeLogout } from "@/lib/native-bridge";
 
 const AUTH_USER_KEY = "open_sunsama_user";
 interface AuthState { user: User | null; token: string | null; isAuthenticated: boolean; isLoading: boolean; }
@@ -23,11 +24,27 @@ function storeUser(user: User) {
   try { localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user)); } catch { /* profile cache is optional */ }
 }
 function clearAuthData() {
+  const hadToken = !!getToken();
   localStorage.removeItem(AUTH_USER_KEY);
   setAuthToken(null);
+  if (hadToken) notifyNativeLogout();
   clearCsrfToken();
   clearApiClient();
   clearPersistedCache();
+}
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== "object") return undefined;
+  const value = error as { status?: unknown; response?: { status?: unknown } };
+  if (typeof value.status === "number") return value.status;
+  return typeof value.response?.status === "number" ? value.response.status : undefined;
+}
+
+function isAuthenticationError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : "";
+  return getErrorStatus(error) === 401 ||
+    message.includes("Authentication required") ||
+    message.includes("Unauthorized");
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -67,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: user } = useQuery({
     queryKey: ["auth", "me"],
     queryFn: async () => {
+      const requestToken = getToken();
       try {
         const me = await getApi().auth.getMe();
         setHasSession(true);
@@ -74,10 +92,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         storeUser(me);
         return me;
       } catch (error) {
-        const status = (error as { status?: number; response?: { status?: number } } | null)?.status ??
-                       (error as { response?: { status?: number } } | null)?.response?.status;
-        const msg = error instanceof Error ? error.message : "";
-        if (status === 401 || msg.includes("Authentication required") || msg.includes("Unauthorized")) {
+        if (isAuthenticationError(error)) {
+          const preserveChangedSession = () => {
+            const latestToken = getToken();
+            const latestUser = latestToken ? getStoredUser() : null;
+            setCachedUser(latestUser);
+            setHasSession(!!latestToken);
+            return latestUser;
+          };
+
+          // A request started before sign-in can finish after the login mutation
+          // stores a new token. Its 401 belongs to the old, unauthenticated state.
+          if (getToken() !== requestToken) return preserveChangedSession();
+
           // Attempt token refresh before clearing the session —
           // prevents redirect loop when background refetch races against a fresh login
           const currentToken = getToken();
@@ -91,14 +118,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   setCachedUser(me);
                   storeUser(me);
                   return me;
-                } catch {
-                  // Fall through
+                } catch (refreshError) {
+                  if (getToken() !== refreshedToken) return preserveChangedSession();
+                  if (!isAuthenticationError(refreshError)) {
+                    setHasSession(!!cachedUser && !!getToken());
+                    return cachedUser;
+                  }
                 }
               }
             } catch {
-              // Refresh failed
+              if (getToken() !== requestToken) return preserveChangedSession();
+              setHasSession(!!cachedUser && !!getToken());
+              return cachedUser;
             }
           }
+
+          if (getToken() !== requestToken) return preserveChangedSession();
           clearAuthData();
           setCachedUser(null);
           setHasSession(false);

@@ -14,7 +14,7 @@ interface AuthLayoutProps {
  */
 export function AuthLayout({ children, className }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 relative">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-y-auto bg-background px-4 py-8">
       {/* Subtle background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/[0.03] blur-[100px] rounded-full" />

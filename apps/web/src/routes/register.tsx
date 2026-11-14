@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 import { getSafeRedirect } from "@/lib/auth-redirect";
 import { API_BASE_URL } from "@/lib/api";
+import { startGoogleAuth } from "@/lib/native-bridge";
 
 interface RegisterForm {
   name: string;
@@ -99,11 +100,8 @@ export default function RegisterPage() {
       <Button
         type="button"
         variant="outline"
-        className="w-full h-10"
-        onClick={() => {
-          const apiUrl = API_BASE_URL;
-          window.location.assign(`${apiUrl}/auth/google/start`);
-        }}
+        className="h-12 w-full text-sm"
+        onClick={() => startGoogleAuth(API_BASE_URL)}
       >
         <span aria-hidden="true" className="mr-2 font-bold text-base">G</span>
         Sign up with Google
@@ -118,6 +116,7 @@ export default function RegisterPage() {
           <Input
             id="name"
             type="text"
+            className="h-12 px-4 text-base"
             placeholder="Your name"
             autoComplete="name"
             disabled={isLoading}
@@ -139,6 +138,7 @@ export default function RegisterPage() {
           <Input
             id="email"
             type="email"
+            className="h-12 px-4 text-base"
             placeholder="name@example.com"
             autoCapitalize="none"
             autoComplete="email"
@@ -162,6 +162,7 @@ export default function RegisterPage() {
           <Input
             id="password"
             type="password"
+            className="h-12 px-4 text-base"
             placeholder="Create a password"
             autoComplete="new-password"
             disabled={isLoading}
@@ -183,6 +184,7 @@ export default function RegisterPage() {
           <Input
             id="confirmPassword"
             type="password"
+            className="h-12 px-4 text-base"
             placeholder="Confirm your password"
             autoComplete="new-password"
             disabled={isLoading}
@@ -199,7 +201,7 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <Button type="submit" disabled={isLoading} className="w-full mt-2 h-9 text-[13px]">
+        <Button type="submit" disabled={isLoading} className="mt-2 h-12 w-full text-sm">
           {isLoading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
           Create account
         </Button>
@@ -210,7 +212,7 @@ export default function RegisterPage() {
         <Link
           to="/login"
           search={redirect ? { redirect } : undefined}
-          className="text-foreground hover:underline underline-offset-4"
+          className="inline-flex min-h-11 items-center text-foreground underline-offset-4 hover:underline"
         >
           Sign in
         </Link>

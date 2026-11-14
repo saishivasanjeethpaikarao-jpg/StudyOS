@@ -29,6 +29,7 @@ import {
   formatSessionLocalInput,
   parseSessionLocalInput,
 } from "@/lib/study-session-time";
+import { isNativeMobile, triggerNativeAlarm } from "@/lib/native-bridge";
 
 function sessionTime(session: StudySession) {
   return new Intl.DateTimeFormat(undefined, {
@@ -283,18 +284,36 @@ export function StudySessionsPanel({
                 triggerLabel="Materials & focus"
               />
               {session.status === "planned" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-10"
-                  onClick={() => {
-                    setCompleting(session);
-                    setActual(String(session.plannedMinutes));
-                    setError(null);
-                  }}
-                >
-                  <Check /> Complete
-                </Button>
+                <>
+                  {isNativeMobile() && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-10"
+                      onClick={() =>
+                        triggerNativeAlarm(
+                          session.startAt,
+                          `Study session · ${sessionTime(session)}`,
+                          session.timezone
+                        )
+                      }
+                    >
+                      <CalendarClock /> Set phone alarm
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-10"
+                    onClick={() => {
+                      setCompleting(session);
+                      setActual(String(session.plannedMinutes));
+                      setError(null);
+                    }}
+                  >
+                    <Check /> Complete
+                  </Button>
+                </>
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

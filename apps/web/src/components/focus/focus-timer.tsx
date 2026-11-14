@@ -1,11 +1,12 @@
 import * as React from "react";
-import { Play, Square } from "lucide-react";
+import { Clock, Play, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   TimeDropdown,
   type TimeDropdownRef,
 } from "@/components/ui/time-dropdown";
 import { useTimer } from "@/hooks/useTimer";
+import { isNativeMobile, triggerNativeTimer } from "@/lib/native-bridge";
 
 /**
  * Format seconds into H:MM:SS or M:SS format
@@ -191,6 +192,18 @@ export function FocusTimer({
             </>
           )}
         </button>
+        {isNativeMobile() && plannedMins !== null && plannedMins > 0 && (
+          <button
+            type="button"
+            onClick={() =>
+              triggerNativeTimer(plannedMins, "StudyOS focus session")
+            }
+            className="flex h-8 items-center gap-1.5 rounded-md border border-primary/30 px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+          >
+            <Clock className="h-3.5 w-3.5" />
+            Phone timer
+          </button>
+        )}
       </div>
     );
   }
@@ -263,6 +276,18 @@ export function FocusTimer({
           </>
         )}
       </button>
+      {isNativeMobile() && plannedMins !== null && plannedMins > 0 && (
+        <button
+          type="button"
+          onClick={() =>
+            triggerNativeTimer(plannedMins, "StudyOS focus session")
+          }
+          className="flex items-center gap-2 rounded-lg border border-primary/30 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+        >
+          <Clock className="h-4 w-4" />
+          Start phone timer
+        </button>
+      )}
     </div>
   );
 }

@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --pool=forks --poolOptions.forks.singleFork=true",
     "test:watch": "vitest",
     "clean": "rm -rf dist node_modules .turbo"
   },

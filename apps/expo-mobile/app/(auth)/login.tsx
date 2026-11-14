@@ -60,7 +60,7 @@ export default function LoginScreen() {
           <View style={styles.form}>
             <TouchableOpacity
               style={styles.googleButton}
-              onPress={() => void ExpoLinking.openURL(`${API_URL}/auth/google/start?mobile_redirect_uri=${encodeURIComponent(ExpoLinking.createURL('auth/callback'))}`)}
+              onPress={() => void ExpoLinking.openURL(`${API_URL}/auth/google/start?mobile_redirect_uri=${encodeURIComponent('studyos://auth/callback')}`)}
               disabled={isLoading}
             >
               <Text style={styles.googleButtonText}>Continue with Google</Text>

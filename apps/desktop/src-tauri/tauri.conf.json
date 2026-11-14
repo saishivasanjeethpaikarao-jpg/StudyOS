@@ -81,6 +81,11 @@
       "endpoints": [
         "https://studyos-api-wy5w.onrender.com/releases/update/{{target}}/{{current_version}}"
       ]
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["studyos", "opensunsama"]
+      }
     }
   }
 }

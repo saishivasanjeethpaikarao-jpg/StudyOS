@@ -151,7 +151,13 @@ export function FocusTubePage() {
 
   // Filter YouTube resources
   const youtubeResources = React.useMemo(() => {
-    return allResources.filter((r) => r.type === "youtube");
+    return Array.from(
+      new Map(
+        allResources
+          .filter((resource) => resource.type === "youtube")
+          .map((resource) => [resource.id, resource])
+      ).values()
+    );
   }, [allResources]);
 
   const filteredResources = React.useMemo(() => {

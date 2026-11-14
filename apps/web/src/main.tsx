@@ -16,6 +16,7 @@ import { useTimezoneSync } from "@/hooks/useTimezoneSync";
 import { persister, shouldPersistQueryFn } from "@/lib/query-persister";
 import { installChunkErrorRecovery } from "@/lib/chunk-error-recovery";
 import { captureInstallPrompt } from "@/lib/pwa";
+import { getApi, setAuthToken } from "@/lib/api";
 import {
   AppErrorScreen,
   RootErrorBoundary,
@@ -24,6 +25,45 @@ import {
 import { routeTree } from "./routeTree.gen.tsx";
 
 import "./index.css";
+
+function isDesktopCallback(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return (url.protocol === "studyos:" || url.protocol === "opensunsama:") &&
+      url.hostname === "auth" && url.pathname === "/callback";
+  } catch {
+    return false;
+  }
+}
+
+async function handleDesktopCallback(value: string): Promise<void> {
+  if (!isDesktopCallback(value)) return;
+  const code = new URL(value).searchParams.get("code");
+  if (!code || code.length < 20 || code.length > 256) return;
+  try {
+    const result = await getApi().auth.exchangeMobileHandoff(code);
+    setAuthToken(result.token);
+    window.location.hash = "#/app";
+  } catch {
+    window.location.hash = "#/login?google=failed";
+  }
+}
+
+if (typeof window !== "undefined") {
+  (window as unknown as { handleMobileAuthCallback?: (value: string) => Promise<void> }).handleMobileAuthCallback = handleDesktopCallback;
+}
+
+async function initializeDesktopDeepLink(): Promise<void> {
+  if (!isBundledDesktopShell()) return;
+  try {
+    const { getCurrent } = await import("@tauri-apps/plugin-deep-link");
+    const urls = await getCurrent();
+    const callback = urls?.find(isDesktopCallback);
+    if (callback) await handleDesktopCallback(callback);
+  } catch {
+    // The browser build and older desktop bundles do not expose deep-link APIs.
+  }
+}
 
 // Recover from stale-deploy chunk loads (vite:preloadError) before any
 // component tree mounts so a failed `React.lazy(...)` triggers exactly one
@@ -48,8 +88,14 @@ function TimezoneSync({ children }: { children: React.ReactNode }) {
 // `defaultPreloadStaleTime` controls how long preloaded data is reused before
 // the router considers it stale. Bumping this off 0 means hovering a link
 // doesn't trigger a redundant fetch on every hover.
-const isTauriApp = typeof window !== "undefined" && ("__TAURI_INTERNALS__" in window || "__TAURI__" in window);
-const desktopHistory = typeof window !== "undefined" && isTauriApp ? createHashHistory() : undefined;
+function isBundledDesktopShell(): boolean {
+  if (typeof window === "undefined") return false;
+  const win = window as Window & { __TAURI_INTERNALS__?: unknown; __TAURI__?: unknown };
+  if ("__TAURI_INTERNALS__" in win || "__TAURI__" in win || "Capacitor" in win) return true;
+  const { protocol, hostname } = window.location;
+  return protocol === "tauri:" || protocol === "asset:" || protocol === "capacitor:" || hostname === "tauri.localhost";
+}
+const desktopHistory = isBundledDesktopShell() ? createHashHistory() : undefined;
 
 const router = createRouter({
   routeTree,
@@ -189,3 +235,5 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+void initializeDesktopDeepLink();

@@ -80,7 +80,7 @@ export function MobileBottomNav() {
               to={item.href}
               className={cn(
                 "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2",
-                "min-h-[56px]", // Touch-friendly size (> 44px)
+                "min-h-[60px]",
                 "transition-colors",
                 "active:opacity-70", // Touch feedback
                 isActive
@@ -97,7 +97,7 @@ export function MobileBottomNav() {
               >
                 {item.icon}
               </div>
-              <span className="max-w-full truncate text-[10px] font-medium sm:text-xs">
+              <span className="max-w-full truncate text-xs font-medium">
                 {item.label}
               </span>
             </Link>

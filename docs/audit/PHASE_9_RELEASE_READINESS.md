@@ -1,98 +1,45 @@
-# StudyOS — Phase 9 Production Release Readiness Report
-**Audit Date:** 2026-11-05  
-**Target Repository:** `D:\StudyOS-Project\studyos`  
-**Git Branch:** `studyos-development`  
-**Baseline HEAD Commit:** `d0719ec1f60372c0b9dc29e139f29337de5f4366`  
-**Roadmap Scope:** STRICTLY Phases 0–9 (Phase 9: Production Release)  
-**Monthly Operating Cost Target:** ₹0/month (Self-Hosted / Free Tiers)  
-**Overall Readiness Score:** **98 / 100 — APPROVED FOR RELEASE CANDIDATE BUILD**
+# StudyOS Phase 9 Production Release Readiness
 
----
+**Audit date:** 2026-11-07  
+**Repository:** `D:\StudyOS-Project\studyos`  
+**Branch / HEAD:** `studyos-development` / `68cb745` (`v1.0.20`)  
+**Binding scope:** Phases 0–9 only; no Phase 10 is created.
 
-## 1. Executive Summary & Verdict
+## Verdict: NO-GO for production release
 
-A comprehensive engineering audit and verification of the StudyOS cross-platform ecosystem was conducted following the remediation of all identified blockers.
+The web test surface is healthy enough for continued work, but the current repository is not release-ready across Web, Android, and Windows. The primary blockers are: Expo typecheck failure; API OAuth hook timeout with 112 skipped DB-backed tests; missing demonstrated Tauri deep-link callback handling for Windows system-browser login; unverified Android runtime behavior; and no local release APK/EXE artifact available for installation testing.
 
-- **Drizzle Database Schema:** Clean and aligned across all 14 migrations (`0000_initial_schema.sql` through `0013_integrations_agent.sql`). Exactly 56 tables verified with zero schema drift.
-- **Backend API Test Suite:** **256 of 256 tests passing** (100% pass rate). All 112 previously skipped database-backed PostgreSQL tests verified against an isolated local PostgreSQL 17 test database (`studyos_synth_test`).
-- **Frontend Web & PWA Test Suite:** **30 of 30 tests passing** across 7 test suites. Offline mutation queue, conflict handling, service worker, and kanban interactions verified.
-- **Monorepo Static Analysis:** `turbo run typecheck` passed across all 10 packages (`@open-sunsama/api`, `@open-sunsama/web`, `@open-sunsama/desktop`, `@open-sunsama/mobile`, `@open-sunsama/expo-mobile`, `@open-sunsama/database`, `@open-sunsama/types`, `@open-sunsama/utils`, `@open-sunsama/api-client`, `@open-sunsama/mcp`).
-- **Security & Sandboxing:** Tauri `open_url` protocol whitelist enforced (`http://`, `https://`, `mailto:`). In-memory sliding-window rate limiting active on auth routes. Strict CSP maintained.
-- **Cost Verification:** Operating expenditure confirmed at **₹0/month**. No paid third-party infrastructure or credit-card dependencies exist.
+## Evidence summary
 
-**RELEASE DECISION:** **GO FOR PRODUCTION RELEASE BUILDS (PHASE 9)**
+| Gate | Result | Evidence |
+|---|---|---|
+| Git safety | BLOCKED for blind edits | Working tree contains extensive user modifications and untracked mobile bridge files. |
+| Web tests | PASS | `bun run test --filter=@open-sunsama/web`: 8 files, 31 tests passed. |
+| API tests | FAIL / SKIPPED | `bun run test --filter=@open-sunsama/api`: OAuth hook timed out; 144 passed, 112 skipped. |
+| Full typecheck | FAIL | Expo cannot resolve `expo-notifications`; implicit-any errors follow. |
+| Desktop typecheck | PASS | Tauri frontend TypeScript check completed successfully. |
+| Mobile legacy typecheck | PASS | `apps/mobile` completed successfully, but it is not the Expo release path. |
+| Android build/install | NOT RUN | No release outputs found under Expo Android output paths. |
+| Windows build/install/login | NOT RUN | No packaged runtime test was executed. |
+| Live integrations | NOT VERIFIED | No authenticated provider/device/webhook tests in this audit. |
 
----
+## Release blockers
 
-## 2. Blocker Remediation Audit Summary
+1. Restore a reproducible Expo dependency state and make `expo-mobile` typecheck pass.
+2. Repair the API OAuth test hook and execute the DB-backed suite against a disposable synthetic PostgreSQL database; zero unexplained skips for release gates.
+3. Implement/register Tauri Windows deep-link callback handling and test cold/warm browser OAuth flows.
+4. Harden Android WebView trusted origins, remove forced mixed content, validate bridge payloads, and align Clock confirmation/result semantics.
+5. Produce signed/unsigned QA Android and Windows artifacts through the documented workflow, install them, and run platform acceptance tests.
+6. Reconcile stale readiness documents and the roadmap’s Phase 10 label with the binding Phase 0–9 release policy.
 
-| Blocker ID | Domain | Root Problem | Resolution Applied | Verification Result |
-|---|---|---|---|---|
-| **BUG-01** | Database | Missing snapshots `0012` & `0013` | Reconstructed `0012_snapshot.json` and `0013_snapshot.json` | `drizzle-kit generate` → 0 drift; 14 migrations applied |
-| **BUG-02** | Test Harness | `oauth.test.ts` hook timeout | Increased `beforeAll` timeout to 30000ms | 23/23 tests pass in 4.87s |
-| **BUG-03** | CI/CD | Skipped DB tests in CI | Added PostgreSQL 17 service container to CI & release workflows | Full suite runs against Postgres in CI |
-| **BUG-04** | Offline Sync | HTTP 409 conflict deadlock | Added queue conflict detection, purge methods & UI discard button | `offline-sync-queue.test.ts` passed |
-| **BUG-05** | API Security | Unprotected auth routes | Implemented sliding-window rate limiter (10 req/min per IP) | `rate-limit.test.ts` passed (429 + Retry-After) |
-| **BUG-08** | Desktop Security| Unvalidated Tauri `open_url` | Enforced strict scheme whitelist (`http`, `https`, `mailto`) | Unsafe OS command execution blocked |
+## What can proceed safely
 
----
+The existing web UI should remain the reference. The Expo WebView shell should be repaired, not replaced. The backend PKCE/OIDC model should be retained. No billing, paid service, destructive database operation, commit, push, deployment, or release publication is authorized by this audit.
 
-## 3. Test & Verification Evidence Summary
+## Phase mapping
 
-### A. Database Verification
-- **Test Database:** PostgreSQL 17 (`studyos_synth_test` on port 5431).
-- **Migration Execution:** `bunx drizzle-kit migrate` applied all 14 migrations without error.
-- **Table Count:** 56 tables confirmed via `information_schema.tables`.
+Discovery and report work belongs to Phase 0. Shared auth/sync correctness belongs to Phases 2 and 4. Android shell/bridge/notifications/alarms belongs to Phase 3. Existing integrations map to Phases 5–8. Final regression and release approval belong to Phase 9 under the supplied mission. The source roadmap’s “Phase 10 — Release” is a document defect, not a new scope item.
 
-### B. API Test Execution
-- **Command:** `cd apps/api; bunx vitest run --testTimeout=15000`
-- **Result:**
-  - Test Files: **25 passed (25)**
-  - Tests: **256 passed (256)**
-  - Skipped: **0**
-  - Failed: **0**
+## Exit criteria
 
-### C. Web & PWA Test Execution
-- **Command:** `cd apps/web; bun run test`
-- **Result:**
-  - Test Files: **7 passed (7)**
-  - Tests: **30 passed (30)**
-  - Skipped: **0**
-  - Failed: **0**
-
-### D. Static Type Checking
-- **Command:** `bun run typecheck` (Turbo)
-- **Result:**
-  - Tasks: **10 successful, 10 total** (FULL TURBO)
-  - Zero TypeScript compiler errors across all applications and packages.
-
----
-
-## 4. Platform Readiness Assessment
-
-| Platform | Target Package | Status | Readiness Notes |
-|---|---|---|---|
-| **Windows Desktop** | `apps/desktop` | **READY** | Tauri v2.0; CSP hardened; secure `open_url` command verified |
-| **Web / PWA** | `apps/web` | **READY** | Service worker registered; offline IndexedDB sync queue hardened |
-| **Android Mobile** | `apps/expo-mobile` | **READY** | React Native Expo 52; PKCE Google auth handoff; local notifications |
-
----
-
-## 5. Cost & Infrastructure Review (Monthly Budget: ₹0)
-
-All components strictly comply with the ₹0/month budget:
-- Database: Self-hosted PostgreSQL or Supabase Free Tier.
-- Storage: Cloudflare R2 (10 GB free) or local disk.
-- Compute / Web: Self-hosted Docker or Cloudflare Pages/Workers.
-- AI: Free LLM inference tiers (Groq, Cerebras, Gemini Flash free, or local Ollama).
-- Notifications: Telegram Bot API (unlimited free) + VAPID Web Push.
-
----
-
-## 6. Next Steps for Production Build Execution
-
-1. **Commit & Tag:** Once reviewed, create an atomic commit for the blocker remediations on `studyos-development`.
-2. **Release Candidate Build:** Execute `bun run build` across all packages.
-3. **Desktop Installer Packaging:** Run `bun run build:desktop` to produce Windows `.msi` and `.exe` installers.
-4. **Android APK Build:** Run `bun run build:mobile:android` or EAS build for Android release package.
-5. **Deployment:** Push to staging or production self-hosted infrastructure.
+Phase 9 may be marked release-ready only when all three platform artifacts are built from the same version, installed and manually exercised; Web/Android/Windows use the same backend/account; Google login and session restoration pass on Web and both native shells; Android notifications/Clock/deep links are observed on a real supported device; API DB-backed tests are either passing or explicitly justified; and CI/release invariant checks pass without suppressing failures.

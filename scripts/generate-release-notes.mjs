@@ -33,6 +33,9 @@ if (existsSync(signingStatusFile)) {
 }
 
 const isAndroidProdSigned = signingStatus?.isProductionSigned === true;
+const workflowRunUrl = process.env.GITHUB_RUN_ID
+  ? `${process.env.GITHUB_SERVER_URL || "https://github.com"}/${process.env.GITHUB_REPOSITORY || "saishivasanjeethpaikarao-jpg/StudyOS"}/actions/runs/${process.env.GITHUB_RUN_ID}`
+  : null;
 
 const formatMb = (bytes) => (bytes / (1024 * 1024)).toFixed(2) + " MB";
 
@@ -96,12 +99,9 @@ ${assetRows.join("\n")}
 
 ---
 
-### Quality Assurance & Automated Verification
-- **Ecosystem Typecheck:** Clean exit (0 errors across API, Web, Desktop, and Expo-Mobile).
-- **Automated Unit Tests:** 331 tests passing across 31 test suites (100% pass rate).
-- **Synchronization Invariants:** 4-tier revision resolution cascade verified against concurrent 409 conflict quarantine.
-- **Security & Privacy:** Supabase PostgreSQL PostgREST exposure locked down with RLS default deny; zero unauthenticated table access.
-- **Cost Policy:** Strict ₹0/month GitHub-hosted runner free tier limits adhered to (zero paid compute).
+### Build and verification
+The release workflow is the source of truth for build and verification results:
+${workflowRunUrl ? `[\`View workflow run\`](${workflowRunUrl}).` : "Check the GitHub Actions run for this release for the exact build and verification results."}
 
 ---
 
