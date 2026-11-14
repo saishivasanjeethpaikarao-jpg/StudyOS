@@ -60,22 +60,28 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onBackPressed() {
         if (bridge != null && bridge.getWebView() != null) {
-            bridge.getWebView().evaluateJavascript(
+            final WebView webView = bridge.getWebView();
+            webView.evaluateJavascript(
                 "(function() {\n" +
-                "  if (typeof window.__STUDYOS_HANDLE_BACK__ === 'function') {\n" +
-                "    return window.__STUDYOS_HANDLE_BACK__();\n" +
-                "  }\n" +
-                "  if (window.location.hash && window.location.hash !== '#/app' && window.location.hash !== '#' && window.location.hash !== '') {\n" +
-                "    window.history.back();\n" +
-                "    return true;\n" +
-                "  }\n" +
-                "  return false;\n" +
+                "  try {\n" +
+                "    if (typeof window.__STUDYOS_HANDLE_BACK__ === 'function') {\n" +
+                "      var handled = window.__STUDYOS_HANDLE_BACK__();\n" +
+                "      return handled ? 'HANDLED' : 'ROOT';\n" +
+                "    }\n" +
+                "  } catch (e) {}\n" +
+                "  return 'UNHANDLED';\n" +
                 "})();",
-                value -> {
-                    if ("false".equals(value) || "null".equals(value)) {
-                        // At root page (#/app), smoothly minimize the app instead of closing process
-                        moveTaskToBack(true);
+                result -> {
+                    String clean = result != null ? result.replace("\"", "").trim() : "";
+                    if ("HANDLED".equals(clean)) {
+                        return;
                     }
+                    if (webView.canGoBack()) {
+                        webView.goBack();
+                        return;
+                    }
+                    // At root screen with no history, minimize smoothly
+                    moveTaskToBack(true);
                 }
             );
             return;

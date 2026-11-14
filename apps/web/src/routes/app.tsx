@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Outlet, useNavigate } from "@tanstack/react-router";
+import { Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { format } from "date-fns";
 import type { Task } from "@open-sunsama/types";
 import { useAuth } from "@/hooks/useAuth";
@@ -124,6 +124,9 @@ function AppLayoutInner() {
   const { isSearchOpen, closeSearch } = useSearch();
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = React.useState(false);
+  const routerState = useRouterState();
+  const router = useRouter();
+  const currentPath = routerState.location.pathname;
 
   // Hardware back button handler for Android / mobile shell
   React.useEffect(() => {
@@ -149,15 +152,9 @@ function AppLayoutInner() {
         closeSearch();
         return true;
       }
-      // 5. If user navigated to a subpage (e.g. Deadlines, FocusTube, Subjects, Settings, More), go back to previous screen
-      const hash = window.location.hash;
-      if (hash && hash !== "#/app" && hash !== "#/" && hash !== "#") {
-        window.history.back();
-        return true;
-      }
-      const path = window.location.pathname;
-      if (path && path !== "/app" && path !== "/") {
-        window.history.back();
+      // 5. If user is on any subpage, navigate back in router history
+      if (currentPath !== "/app" && currentPath !== "/") {
+        router.history.back();
         return true;
       }
       return false; // At root Today board
@@ -165,7 +162,7 @@ function AppLayoutInner() {
     return () => {
       delete (window as any).__STUDYOS_HANDLE_BACK__;
     };
-  }, [isAssistantOpen, closeAssistant, selectedTask, isAddTaskModalOpen, isSearchOpen, closeSearch]);
+  }, [isAssistantOpen, closeAssistant, selectedTask, isAddTaskModalOpen, isSearchOpen, closeSearch, currentPath, router]);
 
   // Warm the Tiptap chunk during browser idle time. The first time the user
   // hits Cmd+K → Add Task, or opens a task modal, the editor module is
