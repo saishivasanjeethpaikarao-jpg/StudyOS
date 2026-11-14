@@ -49,35 +49,55 @@ StudyOS brings your entire academic lifecycle together into a single, cohesive w
 ## ✨ Key Features
 
 - **🗓️ Daily Planning Board:** Multi-day student kanban view with automatic rollover of unfinished work, priority indicators, and subtask progress.
+- **⏰ Native Phone Clock Alarms with Study Notes:** Directly programs your phone's native Clock app with the exact study topic or assignment deadline note (`AlarmClock.EXTRA_MESSAGE`), ensuring you remember exactly what to study.
+- **📺 FocusTube Ad-Free Study Player:** Distraction-free educational YouTube video player with timestamped study notes and course curriculum integration.
+- **🤖 Telegram AI Tutor & Daily Auto-Alarms:** Two-way Telegram bot integration that sends morning study briefs, tracks assignments, and triggers alarms automatically.
 - **📚 Subjects & Terms Architecture:** Organize coursework by academic semester, associate professors and color themes, and view upcoming workload by course.
 - **⏳ Spaced Review & Exam Countdowns:** Automatically calculate review intervals leading up to midterms and finals, ensuring you never cram the night before.
 - **⏱️ Focus Mode & Pomodoro Timer:** Full-screen focus mode with audio cues, actual vs. estimated time tracking, and streak counters.
 - **📝 Contextual Study Notes & Materials:** Attach lecture PDFs, syllabus links, and rich-text notes (via Tiptap) directly to assignments.
 - **🤖 Multi-Provider AI Study Planner:** Built-in AI router supporting Google Gemini, OpenAI, Anthropic Claude, DeepSeek, and local Ollama via encrypted API key storage.
+- **🔄 Silent In-App Auto-Updates:** Built-in update detection on both Windows desktop and Android mobile—one tap to download and apply the latest release.
 - **🔄 Offline-First Sync Engine:** 4-tier revision resolution cascade with persistent 409 conflict quarantine—your offline work is never silently overwritten.
 - **🔌 Model Context Protocol (MCP) Server:** 17 specialized academic tools enabling Claude, ChatGPT, Cursor, and Hermes Agent to assist with study planning.
 - **⌨️ Keyboard-First Efficiency:** Global `⌘K` / `Ctrl+K` command palette to navigate courses, schedule tasks, and trigger focus timers instantly.
 
 ---
 
-## 📸 Screenshots
+## 🎥 Interactive Demo & Screenshots
+
+<div align="center">
+  <img src="docs/images/readme/demo.gif" alt="StudyOS Interactive Walkthrough Demo" width="90%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);" />
+  <p><sub>StudyOS in action: scheduling coursework, launching focus timers, and managing academic priorities.</sub></p>
+</div>
+
+<br />
 
 <table>
 <tr>
-<td width="50%" valign="top">
+<td width="35%" align="center" valign="top">
+
+### 📱 Live Android App
+Native clock alarms with subject notes, FocusTube tab, Deadlines, Subjects, and floating AI Tutor.
+
+<img src="docs/images/readme/mobile-app-live.png" alt="StudyOS Live Android Application" width="100%" style="border-radius: 10px;" />
+
+</td>
+<td width="65%" valign="top">
 
 ### 📅 Calendar & Time-Blocking
 Drag assignments and study blocks directly onto your schedule. Color-coded blocks link back to coursework so estimates meet reality.
 
-<img src="docs/images/readme/calendar-week.png" alt="Week calendar with color-coded study blocks" width="100%" />
-
-</td>
-<td width="50%" valign="top">
+<img src="docs/images/readme/calendar-week.png" alt="Week calendar with color-coded study blocks" width="100%" style="border-radius: 10px;" />
 
 ### 📝 Assignment Details & Subtasks
 Break down complex projects into subtasks, log notes, configure priority tiers, set target estimates, and launch focus timers.
 
-<img src="docs/images/readme/task-detail.png" alt="Task detail modal with subtasks and focus timer" width="100%" />
+<img src="docs/images/readme/task-detail.png" alt="Task detail modal with subtasks and focus timer" width="100%" style="border-radius: 10px;" />
+
+</td>
+</tr>
+</table>
 
 </td>
 </tr>
@@ -126,7 +146,7 @@ Jump to any subject, assignment, or setting in a single keystroke. Search across
 <table>
 <tr>
 <td width="30%" align="center" valign="top">
-<img src="docs/images/readme/mobile-tasks.png" alt="StudyOS on Android mobile" width="100%" />
+<img src="docs/images/readme/mobile-app-live.png" alt="StudyOS on Android mobile" width="100%" style="border-radius: 8px;" />
 </td>
 <td width="70%" valign="top">
 
@@ -134,13 +154,16 @@ Jump to any subject, assignment, or setting in a single keystroke. Search across
 - **Native Tauri v2 Shell:** Lightweight, memory-efficient Windows desktop app built with Rust.
 - **System Tray & Quick-Add:** Minimize to system tray with background daemon support and global hotkey quick-add.
 - **Encrypted Local Storage:** Fast local SQLite and IndexedDB caching for offline study sessions.
+- **Silent In-App Updates:** Integrated updater downloads and verifies latest releases via SHA-256 automatically.
 - **Packaging:** Packaged via standard Windows NSIS installer (`StudyOS_{version}_x64-setup.exe`).
 
 ### 📱 Android Mobile
-- **React Native 0.81 & Expo 54:** Fluid touch interactions, gesture handling, and responsive dark theme.
-- **Offline Sync & Cache:** Full offline support with AsyncStorage caching and background mutation queue.
-- **System Reminders:** Native device alarms and notification scheduling for assignment due dates.
-- **Packaging:** Installable Universal APK (`StudyOS_{version}.apk`) and Google Play App Bundle (`StudyOS_{version}.aab`).
+- **Native Android Bridge & Capacitor:** Deep device integration for native alarms, notifications, and hardware controls.
+- **Clock Alarms with Subject Notes:** Dispatches `AlarmClock.ACTION_SET_ALARM` with the exact study topic note (`AlarmClock.EXTRA_MESSAGE`), e.g., `Due: Week 1 Project` or `Study: Physics Mechanics`.
+- **Auto-Alarm & Notification Sync:** Intelligently schedules alarms 30 minutes before assignment deadlines and for today's active study blocks.
+- **FocusTube & Study Workspace:** Distraction-free video study environment with linked rich-text notes.
+- **Silent In-App Updates:** Direct update detection with one-tap APK installation.
+- **Packaging:** Installable Universal APK (`StudyOS.apk` / `StudyOS_{version}.apk`).
 
 ### 🌐 Web Application
 - **Modern Web Architecture:** Responsive single-page application built with React 19, Vite, and Tailwind CSS.
@@ -149,6 +172,15 @@ Jump to any subject, assignment, or setting in a single keystroke. Search across
 </td>
 </tr>
 </table>
+
+### 📥 Direct Downloads & App Packages
+
+| Platform | Format | Direct Download |
+| :--- | :--- | :--- |
+| **Android Mobile** | Universal APK (v1.1.0) | [Download StudyOS.apk](https://studyos-web-8ruc.onrender.com/downloads/StudyOS.apk) |
+| **Windows Desktop** | 64-bit NSIS Setup (.exe) | [Download StudyOS_Setup.exe](https://studyos-web-8ruc.onrender.com/downloads/StudyOS_Setup.exe) |
+| **Web App** | Hosted Cloud Instance | [Open StudyOS Web App](https://studyos-web-8ruc.onrender.com) |
+| **All Releases** | Source & Assets | [GitHub Releases](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases) |
 
 ---
 

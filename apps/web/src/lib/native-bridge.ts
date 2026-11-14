@@ -18,6 +18,8 @@ declare global {
       cancelReminderNotification?: (reminderId: string) => void;
       setToken?: (token: string) => void;
       startGoogleAuth?: (url: string) => void;
+      getAppVersionName?: () => string;
+      installApkUpdate?: (apkUrl?: string) => void;
       logout?: () => void;
     };
   }

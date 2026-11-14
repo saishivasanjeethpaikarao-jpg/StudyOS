@@ -61,3 +61,4 @@ apps/mobile/src-tauri/gen
 e2e/.logs/
 e2e/test-results/
 e2e/playwright-report/
+*.zip

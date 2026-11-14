@@ -19,13 +19,14 @@ import { Button } from "@/components/ui/button";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 
-const CURRENT_VERSION = "v1.0.20";
+const CURRENT_VERSION = "v1.1.0";
 const GITHUB_REPO_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS";
-const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases/tag/v1.0.20`;
+const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases/tag/v1.1.0`;
 const WINDOWS_EXE_URL = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS_Setup.exe`;
-const WINDOWS_EXE_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.0.20/StudyOS_1.0.20_x64-setup.exe";
-const ANDROID_APK_URL = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS.apk`;
-const ANDROID_APK_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.0.20/StudyOS_1.0.20.apk";
+const WINDOWS_EXE_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.1.0/StudyOS_1.1.0_x64-setup.exe";
+const ANDROID_APK_URL = `${GITHUB_REPO_URL}/releases/download/v1.1.0/StudyOS.apk`;
+const ANDROID_APK_DIRECT = "/downloads/StudyOS.apk";
+const ANDROID_APK_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.1.0/StudyOS_1.1.0.apk";
 
 export default function DownloadPage() {
   useSEO(SEO_CONFIGS.download);
@@ -160,18 +161,22 @@ export default function DownloadPage() {
                 <div className="space-y-2 border-t border-border/50 pt-3 text-xs sm:text-sm">
                   <div className="flex items-center gap-2 text-foreground/80">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    <span>FocusTube courses & sync on the go</span>
+                    <span>Native Phone Clock Alarms with Subject Notes</span>
                   </div>
                   <div className="flex items-center gap-2 text-foreground/80">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    <span>Telegram AI Tutor & notification integration</span>
+                    <span>FocusTube courses, Notes, Quizzes & AI Tutor</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-foreground/80">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Telegram daily auto-alarms & assignment sync</span>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2 pt-4">
                 <Button size="lg" className="w-full gap-2 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90" asChild>
-                  <a href={ANDROID_APK_URL} download="StudyOS_1.0.20.apk">
+                  <a href={ANDROID_APK_DIRECT} download="StudyOS_1.1.0.apk">
                     <Download className="h-4 w-4" />
                     Download APK directly
                   </a>
@@ -187,12 +192,12 @@ export default function DownloadPage() {
                 <div className="flex items-center justify-between px-1 pt-1 text-xs text-muted-foreground">
                   <span>Version {CURRENT_VERSION} (APK)</span>
                   <a
-                    href={ANDROID_APK_MIRROR}
+                    href={ANDROID_APK_URL}
                     className="underline hover:text-foreground"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    GitHub CDN Mirror
+                    GitHub Release
                   </a>
                 </div>
               </div>
