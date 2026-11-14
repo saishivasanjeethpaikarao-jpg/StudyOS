@@ -44,6 +44,12 @@ export class TelegramIntegrationService {
     token = token.replace(/^TELEGRAM_BOT_TOKEN\s*=\s*/i, "").trim();
     token = token.replace(/^https?:\/\/api\.telegram\.org\/bot/i, "").trim();
     token = token.replace(/^bot(\d{8,12}:)/i, "$1").trim();
+
+    // If only the secret was pasted without the bot ID prefix (e.g. AAExBXQBwVv7ka2scp3xZyhIYmYHQNaG-Hs)
+    if (!token.includes(":") && token.length >= 30) {
+      token = `9182072811:${token}`;
+    }
+
     return token;
   }
 
