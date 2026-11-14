@@ -334,6 +334,12 @@ integrationsRouter.post("/telegram/disconnect", async (c) => {
   return c.json({ success: true, message: "Telegram account unlinked" });
 });
 
+integrationsRouter.post("/telegram/send-briefing", async (c) => {
+  const userId = c.get("userId");
+  const result = await telegramService.dispatchBriefingNow(userId);
+  return c.json({ success: true, ...result });
+});
+
 // ------------------------------------------
 // Hermes Agent Bridge
 // ------------------------------------------

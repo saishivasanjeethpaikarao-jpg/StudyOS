@@ -423,6 +423,12 @@ export class TelegramIntegrationService {
       return { handled: true, action: "proposals_summary" };
     }
 
+    if (text === "/alarms" || text === "/alarm" || text === "/reminders" || text === "/remind") {
+      const summary = await this.buildAlarmsSummary(user.userId);
+      await this.sendMessageToChat(chatId, summary);
+      return { handled: true, action: "alarms_summary" };
+    }
+
     if (text.startsWith("/accept ") || text.startsWith("/confirm ")) {
       const proposalId = text.split(" ")[1]?.trim();
       if (!proposalId) {
@@ -535,6 +541,19 @@ export class TelegramIntegrationService {
       });
     }
     return sent;
+  }
+
+  /**
+   * Proactively dispatch today's workload and assignment briefing to the student's Telegram.
+   */
+  async dispatchBriefingNow(userId: string): Promise<{ sent: boolean; message?: string }> {
+    const settings = await this.getSettings(userId);
+    if (!settings.isEnabled || !settings.chatId) {
+      return { sent: false, message: "Telegram is not linked or enabled for this user." };
+    }
+    const summary = await this.buildTodaySummary(userId);
+    const sent = await this.sendMessageToChat(settings.chatId, summary);
+    return { sent, message: sent ? "Briefing sent to Telegram." : "Failed to deliver Telegram message." };
   }
 
   isQuietHours(
@@ -658,7 +677,27 @@ export class TelegramIntegrationService {
         )
         .limit(10)
         .catch(() => []),
+      db
+        .select({
+          id: assignments.id,
+          title: assignments.title,
+          dueAt: assignments.dueAt,
+          status: assignments.status,
+          priority: assignments.priority,
+        })
+        .from(assignments)
+        .where(
+          and(
+            eq(assignments.userId, userId),
+            inArray(assignments.status, ["not_started", "in_progress"])
+          )
+        )
+        .orderBy(assignments.dueAt)
+        .limit(5)
+        .catch(() => []),
     ]);
+
+    const upcomingAssignments = (sessions as any)[1] || [];
 
     if (todayTasks.length === 0 && todayBlocks.length === 0 && sessions.length === 0) {
       return `📅 *Today's Schedule (${todayStr})*\n\nNo tasks or study sessions scheduled for today. Great time to plan ahead or take a well-deserved break!`;
@@ -683,7 +722,7 @@ export class TelegramIntegrationService {
         subtaskMap.get(st.taskId)!.push(st);
       }
 
-      sections.push(`📋 *Tasks on your board (${todayTasks.length}):*`);
+      sections.push(`📋 *Today's Work & Tasks (${todayTasks.length}):*`);
       for (const t of todayTasks) {
         const icon = t.completedAt ? "✅" : "⏳";
         const est = t.estimatedMins ? ` (${t.estimatedMins}m)` : "";
@@ -718,7 +757,53 @@ export class TelegramIntegrationService {
       sections.push("");
     }
 
-    sections.push("Stay focused and conquer your goals today! 🚀");
+    // Query active upcoming assignments
+    const activeAssignments = await db
+      .select({
+        id: assignments.id,
+        title: assignments.title,
+        dueAt: assignments.dueAt,
+        status: assignments.status,
+        priority: assignments.priority,
+      })
+      .from(assignments)
+      .where(
+        and(
+          eq(assignments.userId, userId),
+          inArray(assignments.status, ["not_started", "in_progress"])
+        )
+      )
+      .orderBy(assignments.dueAt)
+      .limit(4)
+      .catch(() => []);
+
+    if (activeAssignments.length > 0) {
+      sections.push(`🚨 *Upcoming Deadlines:*`);
+      for (const a of activeAssignments) {
+        const d = new Date(a.dueAt).toLocaleDateString([], {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const overdue = new Date(a.dueAt).getTime() < Date.now();
+        const tag = overdue ? "⚠️ OVERDUE" : "📌";
+        sections.push(`${tag} *${a.title}* — Due: \`${d}\``);
+      }
+      sections.push("");
+    }
+
+    sections.push("💡 *What to do now:*");
+    if (todayTasks.length > 0) {
+      const pendingTask = todayTasks.find((t) => !t.completedAt) || todayTasks[0];
+      sections.push(`1️⃣ Tackle *${pendingTask.title}* (${pendingTask.estimatedMins || 45} mins).`);
+    }
+    if (activeAssignments.length > 0) {
+      sections.push(`2️⃣ Prepare for deadline: *${activeAssignments[0].title}*.`);
+    }
+    sections.push("3️⃣ In your StudyOS Android app, tap 🔔 *Alarm* on any task or deadline to trigger your phone's native Clock Alarm!");
+    sections.push("");
+    sections.push("Stay focused and conquer your day! 🚀");
     return sections.join("\n");
   }
 
@@ -726,12 +811,20 @@ export class TelegramIntegrationService {
     const db = getDb();
     const items = await db
       .select({
+        id: assignments.id,
         title: assignments.title,
         dueAt: assignments.dueAt,
         status: assignments.status,
+        priority: assignments.priority,
       })
       .from(assignments)
-      .where(and(eq(assignments.userId, userId), eq(assignments.status, "in_progress")))
+      .where(
+        and(
+          eq(assignments.userId, userId),
+          inArray(assignments.status, ["not_started", "in_progress"])
+        )
+      )
+      .orderBy(assignments.dueAt)
       .limit(10);
 
     if (items.length === 0) {
@@ -742,11 +835,93 @@ export class TelegramIntegrationService {
       const dateStr = new Date(a.dueAt).toLocaleDateString([], {
         month: "short",
         day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
-      return `• *${a.title}* — Due: \`${dateStr}\``;
+      const overdue = new Date(a.dueAt).getTime() < Date.now();
+      const statusLabel = a.status === "in_progress" ? "In Progress" : "Not Started";
+      const icon = overdue ? "⚠️ OVERDUE" : "📌";
+      return `${icon} *${a.title}*\n   Due: \`${dateStr}\` · Status: ${statusLabel} · Priority: ${a.priority}`;
     });
 
-    return `📝 *Active Assignments*\n\n${lines.join("\n")}`;
+    return [
+      `📝 *Active Assignments (${items.length}):*`,
+      "",
+      ...lines,
+      "",
+      "💡 *Tip:* Open the StudyOS app and tap *Set Alarm* on any assignment to auto-configure phone clock alarms!",
+    ].join("\n");
+  }
+
+  private async buildAlarmsSummary(userId: string): Promise<string> {
+    const db = getDb();
+    const [user] = await db
+      .select({ timezone: users.timezone })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const userTimezone = user?.timezone || "Asia/Kolkata";
+    const now = new Date();
+    const todayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: userTimezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now);
+
+    const [todayTasks, activeAssignments] = await Promise.all([
+      db
+        .select({ id: tasks.id, title: tasks.title, estimatedMins: tasks.estimatedMins, completedAt: tasks.completedAt })
+        .from(tasks)
+        .where(and(eq(tasks.userId, userId), eq(tasks.scheduledDate, todayStr)))
+        .orderBy(tasks.position),
+      db
+        .select({ id: assignments.id, title: assignments.title, dueAt: assignments.dueAt, status: assignments.status })
+        .from(assignments)
+        .where(and(eq(assignments.userId, userId), inArray(assignments.status, ["not_started", "in_progress"])))
+        .orderBy(assignments.dueAt)
+        .limit(5),
+    ]);
+
+    const lines: string[] = [
+      "🔔 *StudyOS Alarms & Scheduled Work Summary*",
+      "",
+      `📅 *Date:* ${todayStr}`,
+      "",
+    ];
+
+    if (todayTasks.length > 0) {
+      lines.push(`📋 *Today's Scheduled Tasks (${todayTasks.length}):*`);
+      for (const t of todayTasks) {
+        const status = t.completedAt ? "✅ Completed" : `⏳ Pending (${t.estimatedMins || 30}m)`;
+        lines.push(`• *${t.title}* — ${status}`);
+      }
+      lines.push("");
+    }
+
+    if (activeAssignments.length > 0) {
+      lines.push(`⚠️ *Pending Deadlines to Alarm (${activeAssignments.length}):*`);
+      for (const a of activeAssignments) {
+        const d = new Date(a.dueAt).toLocaleDateString([], {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        lines.push(`• *${a.title}* — Due: \`${d}\``);
+      }
+      lines.push("");
+    }
+
+    lines.push("📱 *Native Mobile Alarm & App Notifications:*");
+    lines.push("1. In the StudyOS mobile app, open **Today** or **Deadlines**.");
+    lines.push("2. Tap the 🔔 **Set Alarm** / **Auto-Set Alarms** button.");
+    lines.push("3. StudyOS triggers your Android Clock Alarm app (`ACTION_SET_ALARM`) and schedules high-priority system notifications!");
+    lines.push("");
+    lines.push("Never miss a study session or assignment again! 🎯");
+
+    return lines.join("\n");
   }
 
   private async createQuickTask(userId: string, title: string): Promise<string> {
@@ -782,7 +957,7 @@ export class TelegramIntegrationService {
         .where(and(eq(tasks.userId, userId), eq(tasks.scheduledDate, todayStr), isNull(tasks.completedAt))),
       db.select({ id: assignments.id, title: assignments.title, dueAt: assignments.dueAt })
         .from(assignments)
-        .where(and(eq(assignments.userId, userId), eq(assignments.status, "in_progress")))
+        .where(and(eq(assignments.userId, userId), inArray(assignments.status, ["not_started", "in_progress"])))
         .limit(5),
       db.select({ id: studySessions.id, plannedMinutes: studySessions.plannedMinutes })
         .from(studySessions)
@@ -1409,6 +1584,7 @@ export class TelegramIntegrationService {
       "",
       "📋 *Tasks & Deadlines*",
       "• /assignments - View upcoming assignment deadlines",
+      "• /alarms - View scheduled work & phone alarm settings",
       "• /task <title> - Quickly add a task (e.g. /task Revise Math Chapter 3)",
       "• /briefing - Daily workload briefing",
       "",

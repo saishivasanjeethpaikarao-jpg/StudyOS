@@ -1,8 +1,11 @@
 import { addDays, endOfDay, isBefore, isToday } from "date-fns";
-import { AlertTriangle, ArrowRight, CalendarCheck2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bell, CalendarCheck2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useAssignments } from "@/hooks";
 import { Button, Skeleton } from "@/components/ui";
+import { triggerNativeAlarm, scheduleNativeNotification } from "@/lib/native-bridge";
+import { toast } from "@/hooks/use-toast";
+import { formatAssignmentDue } from "./academic-utils";
 
 export function AcademicDueSummary() {
   const now = new Date();
@@ -28,6 +31,39 @@ export function AcademicDueSummary() {
   ).length;
   const comingUp = active.length - overdue - today;
 
+  const handleAutoAlarms = () => {
+    const upcoming = active.filter(
+      (a) => new Date(a.dueAt).getTime() > Date.now()
+    );
+    if (upcoming.length === 0) {
+      toast({
+        title: "No upcoming deadlines to alarm",
+        description: "All assignments are either past due or completed.",
+      });
+      return;
+    }
+    upcoming.forEach((a) => {
+      const due = new Date(a.dueAt);
+      const notifyTime = new Date(Math.max(Date.now() + 5000, due.getTime() - 60 * 60 * 1000));
+      scheduleNativeNotification(
+        `Upcoming: ${a.title}`,
+        `Due at ${formatAssignmentDue(a.dueAt)}. Don't forget to submit!`,
+        notifyTime,
+        a.id
+      );
+    });
+    const sorted = [...upcoming].sort(
+      (a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime()
+    );
+    if (sorted[0]) {
+      triggerNativeAlarm(new Date(sorted[0].dueAt), `StudyOS Due: ${sorted[0].title}`);
+    }
+    toast({
+      title: "Alarms & Alerts Synced",
+      description: `Scheduled phone reminders for ${upcoming.length} upcoming assignment(s). Clock alarm set for nearest deadline!`,
+    });
+  };
+
   return (
     <section
       className="mx-3 mt-3 flex shrink-0 items-center gap-3 rounded-xl border bg-card px-3 py-2.5 shadow-sm lg:mx-4"
@@ -50,6 +86,17 @@ export function AcademicDueSummary() {
           aria-label="Overdue assignments"
         />
       )}
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-10 shrink-0 gap-1.5 px-2.5 sm:px-3 text-xs"
+        onClick={handleAutoAlarms}
+        title="Set phone alarms & notifications for upcoming assignments"
+      >
+        <Bell className="h-3.5 w-3.5 text-primary" />
+        <span className="hidden sm:inline">Set Alarms</span>
+        <span className="sm:hidden">Alarm</span>
+      </Button>
       <Button
         asChild
         variant="ghost"

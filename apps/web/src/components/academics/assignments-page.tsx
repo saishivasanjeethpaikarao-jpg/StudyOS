@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  Bell,
   CalendarClock,
   ChevronDown,
   CheckCircle2,
@@ -44,6 +45,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui";
+import { triggerNativeAlarm, scheduleNativeNotification } from "@/lib/native-bridge";
+import { toast } from "@/hooks/use-toast";
 import { AssignmentDialog, DeleteAssignmentDialog } from "./assignment-dialog";
 import { StudySessionsPanel } from "./study-sessions-panel";
 import { LearningWorkspace } from "./learning-workspace";
@@ -106,6 +109,39 @@ export function AssignmentsPage() {
   const updateStatus = (assignment: Assignment, status: AssignmentStatus) =>
     updateAssignment.mutate({ id: assignment.id, input: { status } });
 
+  const handleAutoSetAllAlarms = () => {
+    const upcoming = assignments.filter(
+      (a) => !["completed", "cancelled"].includes(a.status) && new Date(a.dueAt).getTime() > Date.now()
+    );
+    if (upcoming.length === 0) {
+      toast({
+        title: "No upcoming deadlines to alarm",
+        description: "All assignments are completed or none have future due dates.",
+      });
+      return;
+    }
+    upcoming.forEach((a) => {
+      const due = new Date(a.dueAt);
+      const notifyTime = new Date(Math.max(Date.now() + 5000, due.getTime() - 60 * 60 * 1000));
+      scheduleNativeNotification(
+        `Assignment Due Soon: ${a.title}`,
+        `Deadline: ${formatAssignmentDue(a.dueAt)}. Don't forget to submit!`,
+        notifyTime,
+        a.id
+      );
+    });
+    const sorted = [...upcoming].sort(
+      (a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime()
+    );
+    if (sorted[0]) {
+      triggerNativeAlarm(new Date(sorted[0].dueAt), `StudyOS Due: ${sorted[0].title}`);
+    }
+    toast({
+      title: `Scheduled ${upcoming.length} Assignment Alarms & Alerts`,
+      description: `Phone notifications queued for all deadlines, and clock alarm set for nearest deadline (${sorted[0]?.title ?? "Upcoming"})!`,
+    });
+  };
+
   return (
     <main className="h-full overflow-y-auto bg-muted/20 pb-24 lg:pb-8">
       <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
@@ -121,17 +157,29 @@ export function AssignmentsPage() {
               Keep deadlines visible, then plan focused study time around them.
             </p>
           </div>
-          <Button
-            className="h-11 shrink-0"
-            onClick={() => {
-              setEditingAssignment(undefined);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus />
-            <span className="hidden sm:inline">Add assignment</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              className="h-11 gap-1.5"
+              onClick={handleAutoSetAllAlarms}
+              title="Set phone alarms and notifications for all upcoming deadlines"
+            >
+              <Bell className="h-4 w-4 text-primary" />
+              <span className="hidden sm:inline">Auto-Set Alarms</span>
+              <span className="sm:hidden">Alarms</span>
+            </Button>
+            <Button
+              className="h-11 shrink-0"
+              onClick={() => {
+                setEditingAssignment(undefined);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus />
+              <span className="hidden sm:inline">Add assignment</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          </div>
         </div>
 
         <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -294,6 +342,23 @@ export function AssignmentCard({
           ? { label: "Reopen", status: "not_started" as const, icon: RotateCcw }
           : null;
 
+  const handleSetAlarm = () => {
+    const dueDate = new Date(assignment.dueAt);
+    const alarmTime = dueDate.getTime() > Date.now() ? dueDate : new Date(Date.now() + 60 * 60 * 1000);
+    triggerNativeAlarm(alarmTime, `StudyOS: ${assignment.title}`);
+    const notifyTime = new Date(Math.max(Date.now() + 5000, alarmTime.getTime() - 30 * 60 * 1000));
+    scheduleNativeNotification(
+      `Assignment Deadline: ${assignment.title}`,
+      `Due: ${formatAssignmentDue(assignment.dueAt)}. Tap to open your notes & study plan.`,
+      notifyTime,
+      assignment.id
+    );
+    toast({
+      title: "Phone Alarm & Alert Set",
+      description: `Alarm scheduled for ${formatAssignmentDue(assignment.dueAt)}.`,
+    });
+  };
+
   return (
     <Card className="shadow-sm">
       <CardContent className="p-4 sm:p-5">
@@ -359,6 +424,9 @@ export function AssignmentCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleSetAlarm}>
+                <Bell className="mr-2 h-4 w-4" /> Set Phone Alarm
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit
               </DropdownMenuItem>
@@ -369,6 +437,14 @@ export function AssignmentCard({
           </DropdownMenu>
         </div>
         <div className="mt-4 flex flex-wrap justify-end gap-2">
+          <Button
+            variant="outline"
+            className="h-11"
+            onClick={handleSetAlarm}
+            title="Set phone alarm & notification for this assignment deadline"
+          >
+            <Bell className="mr-1.5 h-4 w-4 text-primary" /> Set Alarm
+          </Button>
           <LearningWorkspace
             target={{ assignmentId: assignment.id }}
             label={assignment.title}

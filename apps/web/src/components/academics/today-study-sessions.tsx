@@ -1,6 +1,6 @@
 import * as React from "react";
 import { format } from "date-fns";
-import { BookOpenCheck } from "lucide-react";
+import { Bell, BookOpenCheck } from "lucide-react";
 import { useStudySessions } from "@/hooks/useStudySessions";
 import { Button, Skeleton } from "@/components/ui";
 import {
@@ -8,6 +8,8 @@ import {
   sessionViewerTimeDetails,
   todaySessionRange,
 } from "@/lib/study-session-time";
+import { triggerNativeAlarm, scheduleNativeNotification } from "@/lib/native-bridge";
+import { toast } from "@/hooks/use-toast";
 
 /** A compact Today view over the same canonical sessions projected to Calendar. */
 export function TodayStudySessions({
@@ -34,6 +36,28 @@ export function TodayStudySessions({
   );
   const viewerTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+  const handleAlarmAllSessions = () => {
+    sessions.forEach((s) => {
+      const startTime = new Date(s.startAt);
+      if (startTime.getTime() > Date.now()) {
+        scheduleNativeNotification(
+          `Study Session Starting: ${s.plannedMinutes}m`,
+          `Time to begin your scheduled study block. Tap to open FocusTube or notes.`,
+          new Date(Math.max(Date.now() + 5000, startTime.getTime() - 10 * 60 * 1000)),
+          s.id
+        );
+      }
+    });
+    const upcoming = sessions.filter((s) => new Date(s.startAt).getTime() > Date.now());
+    if (upcoming[0]) {
+      triggerNativeAlarm(new Date(upcoming[0].startAt), `Study Session (${upcoming[0].plannedMinutes}m)`);
+    }
+    toast({
+      title: "Study Session Alarms Synced",
+      description: `Phone notifications queued for ${sessions.length} study block(s) today.`,
+    });
+  };
+
   return (
     <section
       aria-label="Study sessions today"
@@ -44,6 +68,16 @@ export function TodayStudySessions({
         aria-hidden="true"
       />
       <span className="shrink-0 text-xs font-medium">Study today</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 px-2 text-xs text-primary gap-1 shrink-0"
+        onClick={handleAlarmAllSessions}
+        title="Set phone alarms and notifications for all study sessions today"
+      >
+        <Bell className="h-3 w-3" />
+        Alarm
+      </Button>
       <div className="flex min-w-0 gap-2">
         {sessions.map((session) => (
           <Button

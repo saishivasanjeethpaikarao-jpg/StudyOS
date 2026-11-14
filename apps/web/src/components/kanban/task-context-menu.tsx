@@ -14,6 +14,7 @@ import {
   Archive,
   Repeat,
   Flag,
+  Bell,
 } from "lucide-react";
 import type { Task, CreateTaskSeriesInput, TaskPriority } from "@open-sunsama/types";
 import {
@@ -41,6 +42,7 @@ import { useSubtasks } from "@/hooks/useSubtasks";
 import { useCreateTaskSeries } from "@/hooks/useTaskSeries";
 import { formatShortcut, SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 import { toast } from "@/hooks/use-toast";
+import { triggerNativeAlarm, scheduleNativeNotification } from "@/lib/native-bridge";
 import { RepeatConfigDialog } from "./repeat-config-popover";
 import { cn } from "@/lib/utils";
 
@@ -249,6 +251,34 @@ export function TaskContextMenu({
     });
   };
 
+  const handleSetAlarm = () => {
+    let targetTime = new Date();
+    if (task.scheduledDate) {
+      const parts = task.scheduledDate.split("-");
+      if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+        targetTime = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 9, 0, 0);
+      }
+    } else {
+      targetTime = new Date(Date.now() + (task.estimatedMins || 30) * 60 * 1000);
+    }
+    if (targetTime.getTime() <= Date.now()) {
+      targetTime = new Date(Date.now() + Math.max(15, task.estimatedMins || 30) * 60 * 1000);
+    }
+
+    triggerNativeAlarm(targetTime, `Task: ${task.title}`);
+    scheduleNativeNotification(
+      `Task Reminder: ${task.title}`,
+      `Scheduled focus time: ${task.estimatedMins ? task.estimatedMins + "m" : "Active task"}. Tap to begin.`,
+      new Date(Math.max(Date.now() + 5000, targetTime.getTime() - 15 * 60 * 1000)),
+      task.id
+    );
+
+    toast({
+      title: "Phone Alarm & Alert Set",
+      description: `Alarm and notification scheduled for "${task.title}".`,
+    });
+  };
+
   return (
     <>
       <ContextMenu>
@@ -271,6 +301,12 @@ export function TaskContextMenu({
               {SHORTCUTS.addToCalendar &&
                 formatShortcut(SHORTCUTS.addToCalendar)}
             </ContextMenuShortcut>
+          </ContextMenuItem>
+
+          {/* Set phone alarm */}
+          <ContextMenuItem onClick={handleSetAlarm}>
+            <Bell className="mr-2 h-4 w-4 text-primary" />
+            Set Phone Alarm & Alert
           </ContextMenuItem>
 
           <ContextMenuSeparator />
