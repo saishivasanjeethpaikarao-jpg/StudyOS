@@ -1,13 +1,27 @@
 // Copies the web build into apps/desktop/dist without the marketing-site images.
 // The blog hero PNGs alone are ~570 MB; bundling them made every installer ~600 MB
 // and pushed the Linux build past 5 hours.
-import { cpSync, rmSync, statSync, readdirSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { cpSync, rmSync, statSync, readdirSync, existsSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const desktopDir = join(dirname(fileURLToPath(import.meta.url)), "..");
-const src = join(desktopDir, "../web/dist");
+const webDir = join(desktopDir, "../web");
+const src = join(webDir, "dist");
 const dest = join(desktopDir, "dist");
+
+console.log("Preparing desktop frontend assets...");
+console.log("Building web application for desktop (VITE_API_URL=https://studyos-api-wy5w.onrender.com)...");
+execSync("bun run build", {
+  cwd: webDir,
+  stdio: "inherit",
+  env: {
+    ...process.env,
+    VITE_API_URL: "https://studyos-api-wy5w.onrender.com",
+    VITE_WS_URL: "wss://studyos-api-wy5w.onrender.com"
+  }
+});
 
 const isMarketingAsset = (path) => {
   const rel = relative(src, path).split("\\").join("/");
@@ -27,7 +41,7 @@ const shipped = files(dest);
 const total = shipped.reduce((sum, f) => sum + f.size, 0);
 console.log(`${basename(dest)}: ${mb(total)} MB`);
 
-// Guard: the desktop frontend is ~20 MB. If it grows past the limit, someone added large
+// Guard: the desktop frontend is ~20-30 MB. If it grows past the limit, someone added large
 // files to apps/web/public that the desktop app would ship. Exclude them in
 // isMarketingAsset above (or shrink them) instead of raising the limit.
 const LIMIT_MB = 60;

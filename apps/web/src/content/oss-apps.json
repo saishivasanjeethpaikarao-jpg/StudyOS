@@ -10,9 +10,9 @@
         "todo",
         "focus"
       ],
-      "website": "https://opensunsama.com",
+      "website": "https://studyos-web-8ruc.onrender.com",
       "repo": "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS",
-      "docs": "https://opensunsama.com/docs",
+      "docs": "https://studyos-web-8ruc.onrender.com/docs",
       "license": {
         "spdx": "LicenseRef-Open-Sunsama-Non-Commercial",
         "name": "Open Sunsama Non-Commercial License"
@@ -42,8 +42,8 @@
       ],
       "mcp": {
         "kind": "official",
-        "url": "https://opensunsama.com/docs/mcp/overview",
-        "note": "Hosted MCP server at api.opensunsama.com/mcp with OAuth sign-in; 24 tools for tasks, subtasks, time blocks and calendar events."
+        "url": "https://studyos-web-8ruc.onrender.com/docs/mcp/overview",
+        "note": "Hosted MCP server at https://studyos-api-wy5w.onrender.com/mcp with OAuth sign-in; 24 tools for tasks, subtasks, time blocks and calendar events."
       },
       "status": "active",
       "caveat": "The code is public under a non-commercial license: you can read, run and self-host it for personal use. Companies need a commercial license.",

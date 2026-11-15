@@ -4,44 +4,44 @@
 
 ## Product
 
-- [Home](https://opensunsama.com/): What StudyOS is and how daily planning works in it
-- [Download](https://opensunsama.com/download): Desktop apps for macOS, Windows and Linux
-- [Open-source task manager](https://opensunsama.com/open-source-task-manager): Why it is open source and how to self-host it
+- [Home](https://studyos-web-8ruc.onrender.com/): What StudyOS is and how daily planning works in it
+- [Download](https://studyos-web-8ruc.onrender.com/download): Desktop apps for macOS, Windows and Linux
+- [Open-source task manager](https://studyos-web-8ruc.onrender.com/open-source-task-manager): Why it is open source and how to self-host it
 
 ## Features
 
-- [Kanban board](https://opensunsama.com/features/kanban): Plan each day as a column of tasks
-- [Time blocking](https://opensunsama.com/features/time-blocking): Drag tasks onto a calendar timeline
-- [Focus mode](https://opensunsama.com/features/focus-mode): Work on one task with a timer
-- [AI integration](https://opensunsama.com/features/ai-integration): Control your planner from any AI agent over MCP
-- [Command palette](https://opensunsama.com/features/command-palette): Keyboard-first navigation with Cmd+K
-- [Calendar sync](https://opensunsama.com/features/calendar-sync): Two-way sync with Google Calendar, Outlook and iCloud
+- [Kanban board](https://studyos-web-8ruc.onrender.com/features/kanban): Plan each day as a column of tasks
+- [Time blocking](https://studyos-web-8ruc.onrender.com/features/time-blocking): Drag tasks onto a calendar timeline
+- [Focus mode](https://studyos-web-8ruc.onrender.com/features/focus-mode): Work on one task with a timer
+- [AI integration](https://studyos-web-8ruc.onrender.com/features/ai-integration): Control your planner from any AI agent over MCP
+- [Command palette](https://studyos-web-8ruc.onrender.com/features/command-palette): Keyboard-first navigation with Cmd+K
+- [Calendar sync](https://studyos-web-8ruc.onrender.com/features/calendar-sync): Two-way sync with Google Calendar, Outlook and iCloud
 
 ## Docs
 
-- [Getting started](https://opensunsama.com/docs/getting-started): Set up your account and plan your first day
-- [MCP overview](https://opensunsama.com/docs/mcp/overview): Connect Claude, ChatGPT, Cursor and other agents with one URL and OAuth
-- [Connect Claude](https://opensunsama.com/docs/mcp/claude): Add StudyOS as a Claude connector
-- [Connect ChatGPT](https://opensunsama.com/docs/mcp/chatgpt): Add StudyOS to ChatGPT
-- [REST API: tasks](https://opensunsama.com/docs/api/tasks): Create and update tasks from code
-- [Self-hosting with Docker](https://opensunsama.com/docs/self-hosting/docker): Run your own instance
+- [Getting started](https://studyos-web-8ruc.onrender.com/docs/getting-started): Set up your account and plan your first day
+- [MCP overview](https://studyos-web-8ruc.onrender.com/docs/mcp/overview): Connect Claude, ChatGPT, Cursor and other agents with one URL and OAuth
+- [Connect Claude](https://studyos-web-8ruc.onrender.com/docs/mcp/claude): Add StudyOS as a Claude connector
+- [Connect ChatGPT](https://studyos-web-8ruc.onrender.com/docs/mcp/chatgpt): Add StudyOS to ChatGPT
+- [REST API: tasks](https://studyos-web-8ruc.onrender.com/docs/api/tasks): Create and update tasks from code
+- [Self-hosting with Docker](https://studyos-web-8ruc.onrender.com/docs/self-hosting/docker): Run your own instance
 
 ## Comparisons
 
-- [Sunsama alternative](https://opensunsama.com/alternative/sunsama): How StudyOS compares with Sunsama
-- [Motion alternative](https://opensunsama.com/alternative/motion): How StudyOS compares with Motion
-- [Reclaim alternative](https://opensunsama.com/alternative/reclaim): How StudyOS compares with Reclaim
-- [Akiflow alternative](https://opensunsama.com/alternative/akiflow): How StudyOS compares with Akiflow
-- [Todoist alternative](https://opensunsama.com/alternative/todoist): How StudyOS compares with Todoist
+- [Sunsama alternative](https://studyos-web-8ruc.onrender.com/alternative/sunsama): How StudyOS compares with Sunsama
+- [Motion alternative](https://studyos-web-8ruc.onrender.com/alternative/motion): How StudyOS compares with Motion
+- [Reclaim alternative](https://studyos-web-8ruc.onrender.com/alternative/reclaim): How StudyOS compares with Reclaim
+- [Akiflow alternative](https://studyos-web-8ruc.onrender.com/alternative/akiflow): How StudyOS compares with Akiflow
+- [Todoist alternative](https://studyos-web-8ruc.onrender.com/alternative/todoist): How StudyOS compares with Todoist
 
 ## Guides
 
-- [The complete guide to time blocking](https://opensunsama.com/blog/complete-guide-time-blocking): The method, templates and apps
-- [What is time blocking?](https://opensunsama.com/blog/what-is-time-blocking): A definition, its history and why it works
-- [How to plan your day](https://opensunsama.com/blog/how-to-plan-your-day): Ten steps for a planned workday
-- [The complete guide to daily planning](https://opensunsama.com/blog/complete-daily-planning-guide): Methods, habits and tools
-- [Switching from Sunsama to Open Sunsama](https://opensunsama.com/blog/replace-sunsama-open-sunsama): A step-by-step migration
-- [Sunsama alternatives compared](https://opensunsama.com/blog/best-free-sunsama-alternatives): Daily planners side by side
-- [Motion vs Sunsama](https://opensunsama.com/blog/motion-vs-sunsama): Two AI planners compared
-- [Open-source productivity apps](https://opensunsama.com/blog/best-open-source-productivity-apps): Self-hostable tools for tasks, notes and time
-- [All blog posts](https://opensunsama.com/blog): Every guide and comparison
+- [The complete guide to time blocking](https://studyos-web-8ruc.onrender.com/blog/complete-guide-time-blocking): The method, templates and apps
+- [What is time blocking?](https://studyos-web-8ruc.onrender.com/blog/what-is-time-blocking): A definition, its history and why it works
+- [How to plan your day](https://studyos-web-8ruc.onrender.com/blog/how-to-plan-your-day): Ten steps for a planned workday
+- [The complete guide to daily planning](https://studyos-web-8ruc.onrender.com/blog/complete-daily-planning-guide): Methods, habits and tools
+- [Switching from Sunsama to StudyOS](https://studyos-web-8ruc.onrender.com/blog/replace-sunsama-open-sunsama): A step-by-step migration
+- [Sunsama alternatives compared](https://studyos-web-8ruc.onrender.com/blog/best-free-sunsama-alternatives): Daily planners side by side
+- [Motion vs Sunsama](https://studyos-web-8ruc.onrender.com/blog/motion-vs-sunsama): Two AI planners compared
+- [Open-source productivity apps](https://studyos-web-8ruc.onrender.com/blog/best-open-source-productivity-apps): Self-hostable tools for tasks, notes and time
+- [All blog posts](https://studyos-web-8ruc.onrender.com/blog): Every guide and comparison

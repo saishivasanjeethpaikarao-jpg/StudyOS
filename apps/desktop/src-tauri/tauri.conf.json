@@ -5,8 +5,8 @@
   "identifier": "app.studyos.desktop",
   "build": {
     "beforeDevCommand": "cd ../../web && bun run dev",
-    "beforeBuildCommand": "",
-    "frontendDist": "../../web/dist"
+    "beforeBuildCommand": "node -e \"const { existsSync } = require('fs'); const { execSync } = require('child_process'); const script = existsSync('scripts/prepare-frontend.mjs') ? 'scripts/prepare-frontend.mjs' : '../scripts/prepare-frontend.mjs'; execSync('node ' + script, { stdio: 'inherit' });\"",
+    "frontendDist": "../dist"
   },
   "app": {
     "withGlobalTauri": true,

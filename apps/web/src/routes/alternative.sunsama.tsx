@@ -337,10 +337,10 @@ export default function AlternativeSunsamaPage() {
     <MarketingLayout>
       <ProductComparisonSchema
         mainProduct={{
-          name: "Open Sunsama",
+          name: "StudyOS",
           description:
-            "Open-source daily planner with a kanban board of days, time blocking, focus mode and calendar sync. Works with Claude, ChatGPT and any MCP client.",
-          url: "https://opensunsama.com",
+            "Student-first daily planner with a kanban board of days, time blocking, focus mode and calendar sync. Works with Claude, ChatGPT and any MCP client.",
+          url: "https://studyos-web-8ruc.onrender.com",
         }}
         comparedProducts={[
           {
@@ -349,8 +349,8 @@ export default function AlternativeSunsamaPage() {
             url: "https://sunsama.com",
           },
         ]}
-        articleTitle="Open Sunsama vs Sunsama: Open-Source Alternative Comparison"
-        articleUrl="https://opensunsama.com/alternative/sunsama"
+        articleTitle="StudyOS vs Sunsama: Open-Source Alternative Comparison"
+        articleUrl="https://studyos-web-8ruc.onrender.com/alternative/sunsama"
       />
 
       <PageHero

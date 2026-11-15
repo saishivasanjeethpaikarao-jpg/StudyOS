@@ -35,8 +35,8 @@ const RELEASE_ASSETS = [
   {
     name: "StudyOS.apk",
     platform: "Android 8.0+ (Universal)",
-    size: "62.6 MB",
-    sha256: "0012ab5267c731e3c02ce5674ebc2f006e6a2f22a95a5c9ccff00877da6ec1d8",
+    size: "62.5 MB",
+    sha256: "aab264149fdd85278372174d264b6693c831c8b5655fc5301abf58dc228b32c6",
     url: ANDROID_APK_URL,
     description: "Universal Android package with native Clock alarms, FocusTube & Telegram integration",
   },
@@ -51,8 +51,8 @@ const RELEASE_ASSETS = [
   {
     name: "StudyOS_1.2.0.apk",
     platform: "Android (Versioned Mirror)",
-    size: "62.6 MB",
-    sha256: "0012ab5267c731e3c02ce5674ebc2f006e6a2f22a95a5c9ccff00877da6ec1d8",
+    size: "62.5 MB",
+    sha256: "aab264149fdd85278372174d264b6693c831c8b5655fc5301abf58dc228b32c6",
     url: ANDROID_APK_MIRROR,
     description: "Pinned v1.2.0 release archive for Android",
   },
