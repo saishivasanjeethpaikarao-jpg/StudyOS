@@ -2,7 +2,9 @@ import crypto from "node:crypto";
 import dns from "node:dns";
 try {
   dns.setDefaultResultOrder("ipv4first");
-} catch {}
+} catch {
+  // Ignore DNS ordering errors on unsupported runtimes
+}
 import {
   getDb,
   eq,

@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appName: 'StudyOS',
   webDir: 'dist',
   server: {
+    url: 'https://studyos-web-8ruc.onrender.com',
     androidScheme: 'https',
     cleartext: true,
   },

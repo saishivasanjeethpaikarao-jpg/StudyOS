@@ -9,7 +9,7 @@ import { CONSENT_REQUEST_TTL_SECONDS } from "./config.js";
 
 const SECRET = process.env.JWT_SECRET || "studyos-dev-secret-change-in-production";
 const PRIMARY_AUDIENCE = "studyos:oauth-consent";
-const ACCEPTED_AUDIENCES = ["studyos:oauth-consent", "open-sunsama:oauth-consent"];
+const ACCEPTED_AUDIENCES: [string, ...string[]] = ["studyos:oauth-consent", "open-sunsama:oauth-consent"];
 
 export interface ConsentRequest {
   clientId: string;

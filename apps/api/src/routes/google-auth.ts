@@ -67,7 +67,11 @@ function sameSiteBrowserRequest(c: Context): boolean {
 
 async function start(c: Context<{ Variables: AuthVariables }>, intent: "login" | "link", userId?: string, mobileRedirectUri?: string | null) {
   let oauth;
-  try { oauth = config(); } catch { return c.json({ success: false, error: "Google sign-in is unavailable" }, 503); }
+  try {
+    oauth = config();
+  } catch {
+    return c.redirect(appRedirect("unavailable"), 302);
+  }
   const state = randomToken();
   const nonce = randomToken();
   const verifier = randomToken();

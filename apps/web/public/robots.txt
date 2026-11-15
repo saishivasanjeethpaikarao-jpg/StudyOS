@@ -1,5 +1,5 @@
 # robots.txt for StudyOS
-# https://opensunsama.com
+# https://studyos-web-8ruc.onrender.com
 
 # Search engines and AI assistants are welcome everywhere except the signed-in app.
 # The named agents share this one group, so they get the same rules as everyone.
@@ -24,4 +24,4 @@ Disallow: /forgot-password
 Disallow: /reset-password
 
 # Sitemap
-Sitemap: https://opensunsama.com/sitemap.xml
+Sitemap: https://studyos-web-8ruc.onrender.com/sitemap.xml

@@ -9,7 +9,9 @@ import "dotenv/config";
 import dns from "node:dns";
 try {
   dns.setDefaultResultOrder("ipv4first");
-} catch {}
+} catch {
+  // Ignore DNS ordering errors on unsupported runtimes
+}
 import { createServer, type Server as HttpServer } from "http";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -68,13 +70,17 @@ const app = new Hono();
 // Global middleware
 app.use("*", logger());
 
-const allowedOrigins = process.env.CORS_ORIGIN?.split(",") || [
+const allowedOrigins = [
+  ...(process.env.CORS_ORIGIN?.split(",") || []),
+  "https://studyos-web-8ruc.onrender.com",
   "http://localhost:3000",
+  "http://localhost:3001",
   "http://localhost",
   "https://localhost",
+  "http://tauri.localhost",
+  "https://tauri.localhost",
   "capacitor://localhost",
   "tauri://localhost",
-  "https://tauri.localhost",
 ];
 // OAuth discovery/token endpoints and the MCP endpoint are called by
 // third-party clients (including browser-based ones like MCP Inspector), so
@@ -100,6 +106,7 @@ app.use(
         allowedOrigins.includes(origin) ||
         origin.startsWith("http://localhost") ||
         origin.startsWith("https://localhost") ||
+        origin.includes("tauri.localhost") ||
         origin.startsWith("capacitor://") ||
         origin.startsWith("tauri://")
       ) {

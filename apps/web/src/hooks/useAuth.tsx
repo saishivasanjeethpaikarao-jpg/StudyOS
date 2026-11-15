@@ -98,7 +98,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (code) {
           void handleAuthHandoff(code);
         }
-      } catch {}
+      } catch {
+        // Ignore invalid callback URLs
+      }
     };
 
     // 2. Tauri Desktop deep link listener
@@ -113,11 +115,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (code) {
                   void handleAuthHandoff(code);
                 }
-              } catch {}
+              } catch {
+                // Ignore invalid callback URLs
+              }
             }
           });
         })
-        .catch(() => {});
+        .catch(() => {
+          // Deep link plugin unavailable in non-desktop environments
+        });
     }
 
     return () => {

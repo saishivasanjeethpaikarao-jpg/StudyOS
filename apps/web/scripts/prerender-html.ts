@@ -14,8 +14,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export const BASE_URL = "https://opensunsama.com";
-export const SITE_NAME = "Open Sunsama";
+export const BASE_URL = "https://studyos-web-8ruc.onrender.com";
+export const SITE_NAME = "StudyOS";
 const ROOT_DIR = path.resolve(import.meta.dir, "..");
 export const DIST_DIR = path.join(ROOT_DIR, "dist");
 

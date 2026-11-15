@@ -433,6 +433,7 @@ export function StudyOSWebShell() {
       {(loading || !bootstrapped) && !error ? (
         <View style={[styles.overlay, isDark && styles.overlayDark]} pointerEvents="none">
           <Image
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             source={require('../../assets/icon.png')}
             style={styles.logo}
             accessibilityLabel="StudyOS"
@@ -447,6 +448,7 @@ export function StudyOSWebShell() {
       {error ? (
         <View style={[styles.overlay, isDark && styles.overlayDark]}>
           <Image
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             source={require('../../assets/icon.png')}
             style={styles.logo}
             accessibilityLabel="StudyOS"

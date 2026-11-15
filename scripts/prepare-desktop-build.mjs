@@ -10,6 +10,7 @@ const conf = JSON.parse(readFileSync(confPath, "utf8"));
 // Clear beforeBuildCommand during CI because frontend is built and staged separately in previous steps
 conf.build.beforeBuildCommand = "";
 delete conf.build.devUrl;
+delete conf.build.beforeDevCommand;
 conf.build.frontendDist = "../dist";
 if (!conf.app) conf.app = {};
 if (!Array.isArray(conf.app.windows) || conf.app.windows.length === 0) conf.app.windows = [{ title: "StudyOS" }];

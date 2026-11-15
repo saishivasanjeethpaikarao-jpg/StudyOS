@@ -158,7 +158,7 @@ function renderSection(section: MarketingSection): string {
         )
         .join("")}</ul></section>`;
     case "agent":
-      return `<section id="${section.id}">${heading(section)}${paragraphs(section.body)}<p>MCP server URL: <code>https://api.opensunsama.com/mcp</code></p><h3>Prompts to try</h3><ul>${section.prompts
+      return `<section id="${section.id}">${heading(section)}${paragraphs(section.body)}<p>MCP server URL: <code>https://studyos-api-wy5w.onrender.com/mcp</code></p><h3>Prompts to try</h3><ul>${section.prompts
         .map((p) => `<li>${esc(p)}</li>`)
         .join("")}</ul>${
         section.tools?.length ? `<p>Tools it calls: ${section.tools.map((t) => `<code>${esc(t)}</code>`).join(", ")}</p>` : ""

@@ -14,6 +14,8 @@ export default tseslint.config(
       "**/.turbo/**",
       "**/coverage/**",
       "**/.next/**",
+      "**/android/**",
+      "**/ios/**",
       "**/routeTree.gen.tsx",
     ],
   },

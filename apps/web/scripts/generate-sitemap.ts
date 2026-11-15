@@ -12,7 +12,7 @@ import matter from "gray-matter";
 import { lastUpdated, readBlogPosts } from "./blog-content";
 import { loadMarketingPages } from "./prerender-marketing";
 
-const SITE_URL = "https://opensunsama.com";
+const SITE_URL = "https://studyos-web-8ruc.onrender.com";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, "..");
