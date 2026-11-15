@@ -385,6 +385,12 @@ const appRemindersRoute = createRoute({
   component: lazyRouteComponent(() => import("./routes/app/reminders")),
 });
 
+const appIntegrationsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/integrations",
+  component: lazyRouteComponent(() => import("./routes/app/integrations")),
+});
+
 const appFocusRoute = createRoute({
   getParentRoute: () => appRoute,
   path: "/focus/$taskId",
@@ -466,6 +472,7 @@ const routeTree = rootRoute.addChildren([
     appNotesRoute,
     appQuizzesRoute,
     appRemindersRoute,
+    appIntegrationsRoute,
     appFocusRoute,
     appFocusCompleteRoute,
     appMoreRoute,

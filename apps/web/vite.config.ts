@@ -21,6 +21,9 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true, // Listen on all interfaces for mobile dev
+    watch: {
+      ignored: ["**/android/**", "**/dist/**", "**/.gradle/**"],
+    },
     proxy: {
       "/api": {
         target: "http://localhost:3001",

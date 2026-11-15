@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
@@ -6,8 +7,11 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  ExternalLink,
   Plus,
   Send,
+  Share2,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import { format, formatDistanceToNow, isPast } from "date-fns";
@@ -267,6 +271,36 @@ export function RemindersPage() {
           </Dialog>
         </div>
       </div>
+
+      {/* Telegram Auto-Alarms Banner */}
+      <Card className="border-sky-500/20 bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-transparent">
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-sky-500/15 p-2.5 text-sky-500">
+              <Send className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Telegram Auto-Alarms & Daily Briefings
+                </h3>
+                <Badge variant="outline" className="border-sky-500/30 text-sky-500 text-[10px]">
+                  @Study_OSbot
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Automatically receive daily morning study plans, assignment deadline warnings, and study session triggers on your phone.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="sm" className="bg-sky-500 hover:bg-sky-600 text-white shrink-0">
+            <Link to="/app/integrations">
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+              Configure Bot & Alarms
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Reminders List */}
       <div className="space-y-4">

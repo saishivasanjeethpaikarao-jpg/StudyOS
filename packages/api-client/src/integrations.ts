@@ -65,6 +65,13 @@ export function createIntegrationsApi(client: OpenSunsamaClient) {
       await client.post("integrations/telegram/disconnect");
     },
 
+    sendTelegramBriefing: async () =>
+      (
+        await client.post<{ success: boolean; sent: boolean; message?: string }>(
+          "integrations/telegram/send-briefing"
+        )
+      ),
+
     getAgentStatus: async () =>
       (await client.get<Result<AgentConnectionStatus>>("integrations/agent/status")).data,
 

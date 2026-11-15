@@ -23,6 +23,8 @@ import {
   GraduationCap,
   ClipboardList,
   Sparkles,
+  Send,
+  Share2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -69,6 +71,8 @@ function MenuItemComponent({ item }: MenuItemComponentProps) {
               ? "text-red-500"
               : item.id === "assistant"
               ? "text-amber-500"
+              : item.id === "telegram"
+              ? "text-sky-500"
               : "text-muted-foreground"
           )}
         />
@@ -174,6 +178,25 @@ export function MobileMoreMenu({ onLogout }: MobileMoreMenuProps) {
             label: "Ask AI Learning Assistant",
             badge: "Grounded",
             onClick: openAssistant,
+          },
+        ],
+      },
+      {
+        title: "Telegram Bot & Integrations",
+        items: [
+          {
+            id: "telegram",
+            icon: Send,
+            label: "Telegram Study Bot & Auto-Alarms",
+            badge: "@Study_OSbot",
+            href: "/app/integrations",
+          },
+          {
+            id: "integrations",
+            icon: Share2,
+            label: "All Connected Integrations",
+            badge: "QR Sync",
+            href: "/app/integrations",
           },
         ],
       },
@@ -315,6 +338,13 @@ export function MobileMoreMenu({ onLogout }: MobileMoreMenuProps) {
             icon: Lock,
             label: "Security & Passwords",
             href: "/app/settings?tab=security",
+          },
+          {
+            id: "integrations-settings",
+            icon: Share2,
+            label: "Integrations & Telegram Bot",
+            badge: "Alarms",
+            href: "/app/integrations",
           },
           {
             id: "mcp",
