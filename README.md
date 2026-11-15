@@ -179,7 +179,7 @@ Every release build is cryptographically hashed with SHA-256 for integrity verif
 
 | Platform | Format & Version | Size | Direct Download | SHA-256 Checksum |
 | :--- | :--- | :--- | :--- | :--- |
-| **Android Mobile** | Universal APK (`v1.2.0`) | ~654 MB | [📱 Download StudyOS.apk](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.2.0/StudyOS.apk) | `647e7d9198c9ff4853fffec33672b90a9cb8896fd51f526d721cc247fc26042a` |
+| **Android Mobile** | Universal APK (`v1.2.0`) | ~62.6 MB | [📱 Download StudyOS.apk](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.2.0/StudyOS.apk) | `0012ab5267c731e3c02ce5674ebc2f006e6a2f22a95a5c9ccff00877da6ec1d8` |
 | **Windows Desktop** | 64-bit NSIS Setup (`v1.2.0`) | ~11.9 MB | [🖥️ Download StudyOS_Setup.exe](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.2.0/StudyOS_Setup.exe) | `cbb344f416e3381a42986888e273e40b2b8e26c27d4602a02c549d437c571b8a` |
 | **Web Distribution** | Production Static Bundle | ~5.8 MB | [🌐 Download Web Bundle (.zip)](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.2.0/StudyOS_1.2.0_web.zip) | `0bd67e8fcf01f13711cd5438e9ebe3603abffc79003d2f4d11c4a88fd2ae360c` |
 | **Official Documentation** | Interactive Guides & APIs | Web | [📚 StudyOS Documentation](https://studyos-web-8ruc.onrender.com/docs) | Verified Live |

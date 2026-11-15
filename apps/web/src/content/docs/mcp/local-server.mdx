@@ -20,7 +20,7 @@ The tools need these scopes: `tasks:read`, `tasks:write`, `time-blocks:read`, `t
 
 ## Option A: local server (stdio)
 
-The npm package `@open-sunsama/mcp` runs on your machine and talks to the API with your key. It needs Node.js 18 or newer.
+The npm package `@studyos/mcp` runs on your machine and talks to the API with your key. It needs Node.js 18 or newer.
 
 ### Cursor
 
@@ -31,7 +31,7 @@ The npm package `@open-sunsama/mcp` runs on your machine and talks to the API wi
   "mcpServers": {
     "studyos": {
       "command": "npx",
-      "args": ["-y", "@open-sunsama/mcp"],
+      "args": ["-y", "@studyos/mcp"],
       "env": { "STUDYOS_API_KEY": "os_your_key_here" }
     }
   }
@@ -62,7 +62,7 @@ To use the local server with a key instead:
     "studyos": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@open-sunsama/mcp"],
+      "args": ["-y", "@studyos/mcp"],
       "env": { "STUDYOS_API_KEY": "os_your_key_here" }
     }
   }
@@ -78,7 +78,7 @@ To use the local server with a key instead:
   "mcpServers": {
     "studyos": {
       "command": "npx",
-      "args": ["-y", "@open-sunsama/mcp"],
+      "args": ["-y", "@studyos/mcp"],
       "env": { "STUDYOS_API_KEY": "os_your_key_here" }
     }
   }
