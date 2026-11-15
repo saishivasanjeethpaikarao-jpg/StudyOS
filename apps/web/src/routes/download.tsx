@@ -28,7 +28,7 @@ const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases/tag/v1.2.0`;
 const WINDOWS_EXE_URL = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS_Setup.exe`;
 const WINDOWS_EXE_MIRROR = `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS_1.2.0_x64-setup.exe`;
 const ANDROID_APK_URL = `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS.apk`;
-const ANDROID_APK_DIRECT = "/downloads/StudyOS.apk";
+const ANDROID_APK_DIRECT = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS.apk`;
 const ANDROID_APK_MIRROR = `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS_1.2.0.apk`;
 
 const RELEASE_ASSETS = [
