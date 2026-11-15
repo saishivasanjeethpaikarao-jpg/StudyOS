@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 
 export const ANDROID_APK_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.2.0/StudyOS.apk";
 export const ANDROID_APK_VERSION = "v1.2.0";
-export const ANDROID_APK_SHA256 = "a9be68bca4b1ac75b7001720c565b1b74044ea57eaee66eb9cc5b77a6765d946";
+export const ANDROID_APK_SHA256 = "aab264149fdd85278372174d264b6693c831c8b5655fc5301abf58dc228b32c6";
 
 interface MobileAppQrModalProps {
   open: boolean;
