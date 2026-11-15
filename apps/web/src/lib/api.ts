@@ -18,17 +18,16 @@ const isNativeApp = (): boolean => {
 };
 
 export function getApiBaseUrl(): string {
-  // Desktop and Native Mobile must ALWAYS use the absolute production API URL
-  // unless explicitly configured with an absolute remote URL.
+  // Desktop and Native Mobile must ALWAYS use the official StudyOS production API URL
   if (isNativeApp()) {
     const custom = import.meta.env.VITE_API_URL;
-    if (custom && custom.startsWith("https://") && !custom.includes("localhost")) {
+    if (custom && custom.startsWith("https://") && !custom.includes("localhost") && !custom.includes("opensunsama") && !custom.includes("127.0.0.1")) {
       return custom;
     }
     return PRODUCTION_API_URL;
   }
   const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl && envUrl.trim() && envUrl !== "/api") {
+  if (envUrl && envUrl.trim() && envUrl !== "/api" && !envUrl.includes("opensunsama")) {
     return envUrl;
   }
   return import.meta.env.DEV ? "http://localhost:3001" : PRODUCTION_API_URL;
@@ -42,10 +41,24 @@ const desktopFetch: typeof globalThis.fetch = async (input, init) => {
   let requestUrl = input instanceof Request ? input.url : typeof input === "string" ? input : input.toString();
   if (requestUrl.startsWith("/")) {
     requestUrl = `${PRODUCTION_API_URL}${requestUrl}`;
-  } else if (requestUrl.startsWith("http://localhost:3001")) {
-    requestUrl = requestUrl.replace("http://localhost:3001", PRODUCTION_API_URL);
-  } else if (requestUrl.startsWith("http://tauri.localhost")) {
-    requestUrl = requestUrl.replace("http://tauri.localhost", PRODUCTION_API_URL);
+  } else if (
+    requestUrl.startsWith("http://localhost") ||
+    requestUrl.startsWith("https://localhost") ||
+    requestUrl.startsWith("http://127.0.0.1") ||
+    requestUrl.startsWith("http://tauri.localhost") ||
+    requestUrl.startsWith("https://tauri.localhost") ||
+    requestUrl.startsWith("tauri://localhost") ||
+    requestUrl.includes("opensunsama.com")
+  ) {
+    try {
+      const parsed = new URL(requestUrl);
+      requestUrl = `${PRODUCTION_API_URL}${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch {
+      requestUrl = requestUrl
+        .replace(/https?:\/\/[^/]*opensunsama\.com/i, PRODUCTION_API_URL)
+        .replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, PRODUCTION_API_URL)
+        .replace(/https?:\/\/tauri\.localhost(:\d+)?/i, PRODUCTION_API_URL);
+    }
   }
   return fetch(requestUrl, init);
 };
