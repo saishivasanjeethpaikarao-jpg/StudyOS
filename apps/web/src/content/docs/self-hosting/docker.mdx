@@ -18,7 +18,7 @@ One command builds StudyOS from source, starts PostgreSQL, and creates the datab
 
 ```bash
 git clone https://github.com/saishivasanjeethpaikarao-jpg/StudyOS.git
-cd open-sunsama
+cd StudyOS
 docker compose up -d --build
 ```
 
@@ -113,7 +113,7 @@ Docker Compose reads `.env` from the repository root. After you change it, run `
 | ------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `API_URL`                 | `http://localhost:3001` | Public API URL. The web app calls it, and it is the OAuth issuer for MCP connectors, so your connector URL is `${API_URL}/mcp` |
 | `WEB_APP_URL`             | `http://localhost:3000` | Public web app URL. Used for CORS, email links, and the MCP consent screen                                                  |
-| `POSTGRES_PASSWORD`       | `opensunsama`           | Database password, read when the volume is first created                                                                     |
+| `POSTGRES_PASSWORD`       | `studyos`               | Database password, read when the volume is first created                                                                     |
 | `JWT_SECRET`              | generated               | Signs login tokens. Set your own with `openssl rand -base64 32`                                                              |
 | `CALENDAR_ENCRYPTION_KEY` | generated               | Encrypts stored calendar credentials. Set your own with `openssl rand -hex 32`                                              |
 | `ROLLOVER_ENABLED`        | `true`                  | Moves unfinished tasks to the next day at midnight                                                                           |
@@ -159,18 +159,18 @@ docker compose run --rm api node dist/migrate.js
 ### Manual Backup
 
 ```bash
-docker compose exec postgres pg_dump -U opensunsama opensunsama > backup.sql
+docker compose exec postgres pg_dump -U studyos studyos > backup.sql
 ```
 
 ### Automated Backup Script
 
 ```bash
 #!/bin/bash
-cd /path/to/open-sunsama
-BACKUP_DIR=/var/backups/opensunsama
+cd /path/to/StudyOS
+BACKUP_DIR=/var/backups/studyos
 DATE=$(date +%Y%m%d_%H%M%S)
 
-docker compose exec -T postgres pg_dump -U opensunsama opensunsama | gzip > $BACKUP_DIR/backup_$DATE.sql.gz
+docker compose exec -T postgres pg_dump -U studyos studyos | gzip > $BACKUP_DIR/backup_$DATE.sql.gz
 
 # Keep last 7 days
 find $BACKUP_DIR -name "backup_*.sql.gz" -mtime +7 -delete
@@ -185,7 +185,7 @@ Add to crontab:
 ### Restore
 
 ```bash
-gunzip < backup.sql.gz | docker compose exec -T postgres psql -U opensunsama opensunsama
+gunzip < backup.sql.gz | docker compose exec -T postgres psql -U studyos studyos
 ```
 
 ## Monitoring

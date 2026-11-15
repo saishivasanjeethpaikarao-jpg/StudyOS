@@ -45,9 +45,14 @@ export function getGoogleAuthStartUrl(
   nativeMobile = isNativeMobile()
 ): string {
   const isDesktopEnv = isDesktop();
-  const effectiveBaseUrl = isDesktopEnv && apiBaseUrl.startsWith("http://localhost")
-    ? PRODUCTION_API_URL
-    : apiBaseUrl;
+  const effectiveBaseUrl =
+    nativeMobile ||
+    isDesktopEnv ||
+    !apiBaseUrl ||
+    apiBaseUrl.startsWith("http://localhost") ||
+    apiBaseUrl.startsWith("/")
+      ? PRODUCTION_API_URL
+      : apiBaseUrl;
 
   const url = new URL("/auth/google/start", effectiveBaseUrl);
   if (nativeMobile || isDesktopEnv) {

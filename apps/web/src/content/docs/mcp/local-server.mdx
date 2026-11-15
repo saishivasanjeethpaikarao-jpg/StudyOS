@@ -29,10 +29,10 @@ The npm package `@open-sunsama/mcp` runs on your machine and talks to the API wi
 ```json
 {
   "mcpServers": {
-    "open-sunsama": {
+    "studyos": {
       "command": "npx",
       "args": ["-y", "@open-sunsama/mcp"],
-      "env": { "OPENSUNSAMA_API_KEY": "os_your_key_here" }
+      "env": { "STUDYOS_API_KEY": "os_your_key_here" }
     }
   }
 }
@@ -49,7 +49,7 @@ VS Code also supports the hosted server with OAuth. Add this to `.vscode/mcp.jso
 ```json
 {
   "servers": {
-    "open-sunsama": { "type": "http", "url": "https://api.studyos-web-8ruc.onrender.com/mcp" }
+    "studyos": { "type": "http", "url": "https://studyos-api-wy5w.onrender.com/mcp" }
   }
 }
 ```
@@ -59,11 +59,11 @@ To use the local server with a key instead:
 ```json
 {
   "servers": {
-    "open-sunsama": {
+    "studyos": {
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@open-sunsama/mcp"],
-      "env": { "OPENSUNSAMA_API_KEY": "os_your_key_here" }
+      "env": { "STUDYOS_API_KEY": "os_your_key_here" }
     }
   }
 }
@@ -76,10 +76,10 @@ To use the local server with a key instead:
 ```json
 {
   "mcpServers": {
-    "open-sunsama": {
+    "studyos": {
       "command": "npx",
       "args": ["-y", "@open-sunsama/mcp"],
-      "env": { "OPENSUNSAMA_API_KEY": "os_your_key_here" }
+      "env": { "STUDYOS_API_KEY": "os_your_key_here" }
     }
   }
 }
@@ -87,12 +87,12 @@ To use the local server with a key instead:
 
 ### Self-hosted instances
 
-Add `OPENSUNSAMA_API_URL` next to the key:
+Add `STUDYOS_API_URL` next to the key:
 
 ```json
 "env": {
-  "OPENSUNSAMA_API_KEY": "os_your_key_here",
-  "OPENSUNSAMA_API_URL": "https://api.your-domain.com"
+  "STUDYOS_API_KEY": "os_your_key_here",
+  "STUDYOS_API_URL": "https://api.your-domain.com"
 }
 ```
 
@@ -103,8 +103,8 @@ Clients that support remote servers but not OAuth can send the key as a header t
 ```json
 {
   "mcpServers": {
-    "open-sunsama": {
-      "url": "https://api.studyos-web-8ruc.onrender.com/mcp",
+    "studyos": {
+      "url": "https://studyos-api-wy5w.onrender.com/mcp",
       "headers": { "X-API-Key": "os_your_key_here" }
     }
   }

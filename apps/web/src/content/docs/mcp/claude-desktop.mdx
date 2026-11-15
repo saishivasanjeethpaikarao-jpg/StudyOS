@@ -34,23 +34,23 @@ Use this if your organization blocks custom connectors, or if you point Claude D
    ```json
    {
      "mcpServers": {
-       "open-sunsama": {
+       "studyos": {
          "command": "npx",
          "args": ["-y", "@open-sunsama/mcp"],
          "env": {
-           "OPENSUNSAMA_API_KEY": "os_your_key_here"
+           "STUDYOS_API_KEY": "os_your_key_here"
          }
        }
      }
    }
    ```
 
-   For a self-hosted instance, add `"OPENSUNSAMA_API_URL": "https://api.your-domain.com"` to `env`.
+   For a self-hosted instance, add `"STUDYOS_API_URL": "https://api.your-domain.com"` to `env`.
 4. Quit and reopen Claude Desktop.
 
-The local server needs Node.js 18 or newer. To check it outside Claude, run `OPENSUNSAMA_API_KEY=os_your_key npx @open-sunsama/mcp`. It should print `StudyOS MCP Server running on stdio`.
+The local server needs Node.js 18 or newer. To check it outside Claude, run `STUDYOS_API_KEY=os_your_key npx @open-sunsama/mcp`. It should print `StudyOS MCP Server running on stdio`.
 
-Logs are at `~/Library/Logs/Claude/mcp-server-open-sunsama.log` on macOS and `%APPDATA%\Claude\logs\mcp-server-open-sunsama.log` on Windows.
+Logs are at `~/Library/Logs/Claude/mcp-server-studyos.log` on macOS and `%APPDATA%\Claude\logs\mcp-server-studyos.log` on Windows.
 
 ## Example workflows
 

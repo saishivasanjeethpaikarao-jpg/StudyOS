@@ -8,9 +8,10 @@
 
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Menu } from "lucide-react";
+import { ArrowRight, Menu, QrCode } from "lucide-react";
 import { StudyOSLogo, StudyOSWordmark } from "@/components/brand/studyos-logo";
 import { Button } from "@/components/ui/button";
+import { MobileAppQrModal } from "@/components/mobile-app-qr-modal";
 import {
   Sheet,
   SheetContent,
@@ -62,6 +63,7 @@ export function useGitHubStars(): number | null {
 
 const NAV: Array<{ label: string; href: string }> = [
   { label: "Features", href: "/#features" },
+  { label: "Docs", href: "/docs" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "Download App", href: "/download" },
 ];
@@ -167,6 +169,8 @@ export function SiteHeader({
   section?: { label: string; href: string };
 } = {}) {
   const [scrolled, setScrolled] = React.useState(false);
+  const [qrModalOpen, setQrModalOpen] = React.useState(false);
+
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -175,67 +179,79 @@ export function SiteHeader({
   }, []);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 w-full border-b transition-[background-color,border-color,box-shadow] duration-300",
-        scrolled
-          ? "border-border/60 bg-background/80 shadow-[0_1px_12px_-6px_rgb(0_0_0/0.12)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/65"
-          : "border-transparent bg-transparent"
-      )}
-    >
-      <div className="container mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
-        <div className="flex min-w-0 items-center gap-2">
-          {leading}
-          <Link
-            to="/"
-            className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
+    <>
+      <header
+        className={cn(
+          "sticky top-0 z-50 w-full border-b transition-[background-color,border-color,box-shadow] duration-300",
+          scrolled
+            ? "border-border/60 bg-background/80 shadow-[0_1px_12px_-6px_rgb(0_0_0/0.12)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/65"
+            : "border-transparent bg-transparent"
+        )}
+      >
+        <div className="container mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
+          <div className="flex min-w-0 items-center gap-2">
+            {leading}
+            <Link
+              to="/"
+              className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {section && (
+                <StudyOSLogo decorative className="h-7 w-7 sm:hidden" />
+              )}
+              <StudyOSWordmark
+                className={cn("h-7", section && "hidden sm:inline-flex")}
+              />
+            </Link>
             {section && (
-              <StudyOSLogo decorative className="h-7 w-7 sm:hidden" />
+              <>
+                <span className="text-muted-foreground/50" aria-hidden>
+                  /
+                </span>
+                <Link
+                  to={section.href}
+                  className="rounded-md text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {section.label}
+                </Link>
+              </>
             )}
-            <StudyOSWordmark
-              className={cn("h-7", section && "hidden sm:inline-flex")}
-            />
-          </Link>
-          {section && (
-            <>
-              <span className="text-muted-foreground/50" aria-hidden>
-                /
-              </span>
-              <Link
-                to={section.href}
-                className="rounded-md text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {section.label}
-              </Link>
-            </>
-          )}
-        </div>
+          </div>
 
-        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main">
-          {NAV.map((n) => (
-            <NavLink key={n.label} href={n.href} className={NAV_LINK}>
-              {n.label}
-            </NavLink>
-          ))}
-        </nav>
+          <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main">
+            {NAV.map((n) => (
+              <NavLink key={n.label} href={n.href} className={NAV_LINK}>
+                {n.label}
+              </NavLink>
+            ))}
+          </nav>
 
-        <div className="flex shrink-0 items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden h-8 px-3 text-[13px] sm:inline-flex"
-            asChild
-          >
-            <Link to="/login">Sign in</Link>
-          </Button>
-          <Button size="sm" className="h-8 px-3 text-[13px]" asChild>
-            <Link to="/register">Create workspace</Link>
-          </Button>
-          <MobileMenu />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setQrModalOpen(true)}
+              className="hidden h-8 gap-1.5 px-2.5 text-[12.5px] font-medium md:inline-flex"
+            >
+              <QrCode className="h-3.5 w-3.5 text-primary" />
+              <span>Get Android App</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden h-8 px-3 text-[13px] sm:inline-flex"
+              asChild
+            >
+              <Link to="/login">Sign in</Link>
+            </Button>
+            <Button size="sm" className="h-8 px-3 text-[13px]" asChild>
+              <Link to="/register">Create workspace</Link>
+            </Button>
+            <MobileMenu />
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      <MobileAppQrModal open={qrModalOpen} onOpenChange={setQrModalOpen} />
+    </>
   );
 }
 

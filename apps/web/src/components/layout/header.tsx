@@ -20,6 +20,8 @@ import {
   CheckSquare,
   Bell,
   Sparkles,
+  Smartphone,
+  QrCode,
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,6 +31,7 @@ import { isDesktop } from "@/lib/desktop";
 import { prefetchCommandPalette } from "@/components/command-palette/command-palette.lazy";
 import { DesktopUpdateMenuItem } from "@/components/desktop-update-menu-item";
 import { useAiAssistant } from "@/hooks/useAiAssistant";
+import { MobileAppQrModal } from "@/components/mobile-app-qr-modal";
 import { cn, getAvatarUrl } from "@/lib/utils";
 import {
   Button,
@@ -54,6 +57,7 @@ export function Header({ className }: HeaderProps) {
   const { themeMode, setThemeMode } = useTheme();
   const isDesktopApp = React.useMemo(() => isDesktop(), []);
   const { openAssistant } = useAiAssistant();
+  const [qrModalOpen, setQrModalOpen] = React.useState(false);
 
   const userInitials = React.useMemo(() => {
     if (!user?.name) return user?.email?.charAt(0).toUpperCase() ?? "U";
@@ -244,6 +248,18 @@ export function Header({ className }: HeaderProps) {
             <span className="hidden lg:inline text-[11px]">AI Tutor</span>
           </Button>
 
+          {/* Mobile App & QR Code Trigger */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setQrModalOpen(true)}
+            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+            title="Scan QR to download Android App"
+          >
+            <Smartphone className="h-3.5 w-3.5 text-orange-500" />
+            <span className="hidden xl:inline text-[11px]">Mobile App</span>
+          </Button>
+
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -303,6 +319,13 @@ export function Header({ className }: HeaderProps) {
                   Documentation
                 </a>
               </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer text-[13px] py-1.5"
+                onClick={() => setQrModalOpen(true)}
+              >
+                <Smartphone className="mr-2 h-3.5 w-3.5 text-orange-500" />
+                Get Android App (QR Code)
+              </DropdownMenuItem>
               {!isDesktopApp && (
                 <DropdownMenuItem asChild className="text-[13px] py-1.5">
                   <a href="/download" className="w-full cursor-pointer">
@@ -324,6 +347,7 @@ export function Header({ className }: HeaderProps) {
           </DropdownMenu>
         </div>
       </div>
+      <MobileAppQrModal open={qrModalOpen} onOpenChange={setQrModalOpen} />
     </header>
   );
 }

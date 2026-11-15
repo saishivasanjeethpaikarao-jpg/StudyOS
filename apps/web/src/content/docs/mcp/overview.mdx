@@ -13,16 +13,16 @@ StudyOS runs a hosted [Model Context Protocol](https://modelcontextprotocol.io) 
 Paste this connector URL into your AI assistant:
 
 ```
-https://api.studyos-web-8ruc.onrender.com/mcp
+https://studyos-api-wy5w.onrender.com/mcp
 ```
 
-Your assistant opens an StudyOS sign-in page. You approve access, and you're connected. There's no API key to create, copy, or rotate.
+Your assistant opens a StudyOS sign-in page. You approve access, and you're connected. There's no API key to create, copy, or rotate.
 
 | Assistant | How to add it | Guide |
 | --- | --- | --- |
 | **Claude** (claude.ai, Desktop, mobile) | Settings → Customize → Connectors → Add | [Claude setup](/docs/mcp/claude) |
 | **ChatGPT** | Turn on Developer mode, then Plugins → **+** | [ChatGPT setup](/docs/mcp/chatgpt) |
-| **Claude Code** | `claude mcp add --transport http open-sunsama https://api.studyos-web-8ruc.onrender.com/mcp` | [Claude setup](/docs/mcp/claude#claude-code) |
+| **Claude Code** | `claude mcp add --transport http studyos https://studyos-api-wy5w.onrender.com/mcp` | [Claude setup](/docs/mcp/claude#claude-code) |
 | **Cursor** | One-click install, or add the URL to `mcp.json` | [Cursor setup](/docs/mcp/cursor) |
 | **VS Code** | Add the URL as an `http` server in `.vscode/mcp.json` | [Local & other clients](/docs/mcp/local-server#vs-code) |
 | **Any other MCP client** | Add the URL as a Streamable HTTP server with OAuth | [Local & other clients](/docs/mcp/local-server) |

@@ -29,7 +29,7 @@ function config() {
 }
 
 function appRedirect(result: "success" | "unavailable" | "failed", token?: string) {
-  const base = process.env.WEB_APP_ORIGIN || "http://localhost:3000";
+  const base = process.env.WEB_APP_ORIGIN || (process.env.NODE_ENV === "production" ? "https://studyos-web-8ruc.onrender.com" : "http://localhost:3000");
   const url = new URL(result === "success" ? "/app" : "/login", base);
   if (result !== "success") {
     url.searchParams.set("google", result);

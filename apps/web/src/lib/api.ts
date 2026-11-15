@@ -3,15 +3,51 @@ import { isDesktop } from "./desktop";
 import { notifyNativeTokenChanged } from "./native-bridge";
 
 export const PRODUCTION_API_URL = "https://studyos-api-wy5w.onrender.com";
-export const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "http://localhost:3001" : PRODUCTION_API_URL);
 
+const isNativeApp = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return (
+    isDesktop() ||
+    !!(
+      (window as any).StudyOSNative ||
+      (window as any).__STUDYOS_NATIVE__ ||
+      (window as any).ReactNativeWebView ||
+      (window as any).Capacitor?.isNativePlatform?.()
+    )
+  );
+};
+
+export function getApiBaseUrl(): string {
+  // Desktop and Native Mobile must ALWAYS use the absolute production API URL
+  // unless explicitly configured with an absolute remote URL.
+  if (isNativeApp()) {
+    const custom = import.meta.env.VITE_API_URL;
+    if (custom && custom.startsWith("https://") && !custom.includes("localhost")) {
+      return custom;
+    }
+    return PRODUCTION_API_URL;
+  }
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && envUrl.trim() && envUrl !== "/api") {
+    return envUrl;
+  }
+  return import.meta.env.DEV ? "http://localhost:3001" : PRODUCTION_API_URL;
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 const baseUrl = API_BASE_URL;
 
 const desktopFetch: typeof globalThis.fetch = async (input, init) => {
   const { fetch } = await import("@tauri-apps/plugin-http");
-  return fetch(input, init);
+  let requestUrl = input instanceof Request ? input.url : typeof input === "string" ? input : input.toString();
+  if (requestUrl.startsWith("/")) {
+    requestUrl = `${PRODUCTION_API_URL}${requestUrl}`;
+  } else if (requestUrl.startsWith("http://localhost:3001")) {
+    requestUrl = requestUrl.replace("http://localhost:3001", PRODUCTION_API_URL);
+  } else if (requestUrl.startsWith("http://tauri.localhost")) {
+    requestUrl = requestUrl.replace("http://tauri.localhost", PRODUCTION_API_URL);
+  }
+  return fetch(requestUrl, init);
 };
 const transportFetch: typeof globalThis.fetch = (input, init) => {
   // Resolve Tauri at call time. The desktop webview injects internals after

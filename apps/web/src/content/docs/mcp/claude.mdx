@@ -32,10 +32,10 @@ An organization owner adds the connector first. In **Organization settings → C
 Run this in your terminal:
 
 ```bash
-claude mcp add --transport http open-sunsama https://api.studyos-web-8ruc.onrender.com/mcp
+claude mcp add --transport http studyos https://studyos-api-wy5w.onrender.com/mcp
 ```
 
-Start Claude Code, run `/mcp`, select **open-sunsama**, and choose **Authenticate**. Your browser opens the StudyOS consent screen. After you allow access, the tools are available in every session.
+Start Claude Code, run `/mcp`, select **studyos**, and choose **Authenticate**. Your browser opens the StudyOS consent screen. After you allow access, the tools are available in every session.
 
 Add `--scope user` to make the server available in all your projects, not just the current one.
 
@@ -47,6 +47,6 @@ To disconnect, remove the connector in Claude, or open **StudyOS → Settings �
 
 ## Troubleshooting
 
-- **"Couldn't reach the MCP server"**: check the URL is exactly `https://api.studyos-web-8ruc.onrender.com/mcp`.
+- **"Couldn't reach the MCP server"**: check the URL is exactly `https://studyos-api-wy5w.onrender.com/mcp`.
 - **The connector shows as disconnected**: click **Connect** again and approve access. This happens after you disconnect it from StudyOS's settings.
 - **Claude doesn't use the tools**: make sure the connector is on for the conversation (**+** → **Connectors**), or mention StudyOS in your request.
