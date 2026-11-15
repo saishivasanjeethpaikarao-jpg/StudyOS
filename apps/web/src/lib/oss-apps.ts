@@ -200,7 +200,7 @@ export function licenseShort(app: OssApp): string {
  * pages stay plain internal links.
  */
 export function outboundLink(url: string, follow = false) {
-  const own = url.match(/^https:\/\/opensunsama\.com(\/.*)?$/);
+  const own = url.match(/^https:\/\/(?:opensunsama\.com|studyos-web-8ruc\.onrender\.com)(\/.*)?$/);
   if (own) return { href: own[1] || "/" };
   return { href: url, target: "_blank", rel: follow ? "noopener" : "nofollow noopener" };
 }

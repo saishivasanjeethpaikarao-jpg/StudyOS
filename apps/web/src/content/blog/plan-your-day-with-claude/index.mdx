@@ -4,7 +4,7 @@ export const frontmatter = {
     "Plan your day with Claude: connect your tasks and calendar over MCP in 2 minutes, then use 9 copy-paste prompts for morning plans, re-plans and shutdowns.",
   date: "2026-09-24",
   updated: "2026-09-24",
-  author: "Open Sunsama Team",
+  author: "StudyOS Team",
   tags: ["claude", "mcp", "ai", "daily-planning", "time-blocking"],
   readingTime: 9,
   image: "/blog-plan-your-day-with-claude.webp",
@@ -12,17 +12,17 @@ export const frontmatter = {
     {
       question: "Can Claude manage my to-do list?",
       answer:
-        "Yes, once you connect a task app. On its own, Claude has no lasting task list. With a connector such as Open Sunsama or Todoist, it can create, update, complete and move your real tasks.",
+        "Yes, once you connect a task app. On its own, Claude has no lasting task list. With a connector such as StudyOS or Todoist, it can create, update, complete and move your real tasks.",
     },
     {
       question: "Can Claude access my calendar?",
       answer:
-        "Yes. Open Sunsama's connector reads the meetings synced from your Google, Outlook or iCloud calendar, next to your tasks and time blocks, so Claude sees your meetings and your work in one plan. Claude's built-in Google Calendar connector can also create and edit events.",
+        "Yes. StudyOS's connector reads the meetings synced from your Google, Outlook or iCloud calendar, next to your tasks and time blocks, so Claude sees your meetings and your work in one plan. Claude's built-in Google Calendar connector can also create and edit events.",
     },
     {
       question: "Does this work on the free Claude plan?",
       answer:
-        "Yes. Custom connectors work on every Claude plan, including Free. The Free plan allows one custom connector, so Open Sunsama can be that one.",
+        "Yes. Custom connectors work on every Claude plan, including Free. The Free plan allows one custom connector, so StudyOS can be that one.",
     },
     {
       question: "Will Claude change my schedule without asking?",
@@ -37,24 +37,24 @@ export const frontmatter = {
     {
       question: "Is there a Claude task management app that works on my phone?",
       answer:
-        "Yes. A custom connector added on claude.ai also works in the Claude mobile apps. Open Sunsama runs on the web, on Mac, Windows and Linux, and in your phone's browser, so you can check the plan anywhere.",
+        "Yes. A custom connector added on claude.ai also works in the Claude mobile apps. StudyOS runs on the web, on Mac, Windows and Linux, and in your phone's browser, so you can check the plan anywhere.",
     },
     {
       question: "Does the same setup work with ChatGPT or Cursor?",
       answer:
-        "Yes. Open Sunsama's connector is a standard MCP server. The same URL works in ChatGPT, Cursor, Claude Code and any other MCP client.",
+        "Yes. StudyOS's connector is a standard MCP server. The same URL works in ChatGPT, Cursor, Claude Code and any other MCP client.",
     },
   ],
 };
 
-To plan your day with Claude, connect it to a task app and your calendar, then say "plan my day" in a chat. Claude reads your tasks and meetings, proposes a time-blocked schedule, and books it only after you say yes. This guide sets that up with Open Sunsama's MCP connector in about 2 minutes, then gives you 9 prompts for real routines.
+To plan your day with Claude, connect it to a task app and your calendar, then say "plan my day" in a chat. Claude reads your tasks and meetings, proposes a time-blocked schedule, and books it only after you say yes. This guide sets that up with StudyOS's MCP connector in about 2 minutes, then gives you 9 prompts for real routines.
 
-Open Sunsama is an open-source daily planner built for this. It keeps your tasks, time blocks and meetings in one place, so Claude needs one connector to plan your day.
+StudyOS is an open-source daily planner built for this. It keeps your tasks, time blocks and meetings in one place, so Claude needs one connector to plan your day.
 
 **Key takeaways**
 
 - **Claude needs a place to write.** Chat alone forgets your list. A connector gives Claude a real planner it can read and change.
-- **One connector covers the whole day.** Open Sunsama holds your tasks and time blocks and reads the meetings synced from your calendar.
+- **One connector covers the whole day.** StudyOS holds your tasks and time blocks and reads the meetings synced from your calendar.
 - **Setup takes 2 minutes on any plan.** Paste one URL, sign in, click Allow. The Free plan allows one custom connector.
 - **You approve every booking.** Claude proposes first. Nothing lands on your calendar until you say yes.
 - **Nine prompts cover a full week:** morning plan, time blocking, brain dump, get back on track, rollover, shutdown and weekly review.
@@ -71,28 +71,28 @@ A connector fixes that. It is a small bridge, built on the Model Context Protoco
 | --- | --- | --- | --- | --- |
 | Claude alone | No | No | No | No |
 | Claude + Google Calendar connector | Yes | No | As calendar events | No |
-| Claude + Open Sunsama connector | Yes, synced from Google, Outlook or iCloud | Yes | Yes, linked to tasks | Yes |
+| Claude + StudyOS connector | Yes, synced from Google, Outlook or iCloud | Yes | Yes, linked to tasks | Yes |
 | **Claude + both** | **Yes** | **Yes** | **Yes** | **Yes** |
 
-Open Sunsama's connector also reads the meetings you synced from Google Calendar, Outlook or iCloud, so Claude sees your whole day through one connector. Add Claude's own Google Calendar connector only if you want Claude to create or edit calendar events.
+StudyOS's connector also reads the meetings you synced from Google Calendar, Outlook or iCloud, so Claude sees your whole day through one connector. Add Claude's own Google Calendar connector only if you want Claude to create or edit calendar events.
 
-## How to connect Open Sunsama to Claude in 2 minutes
+## How to connect StudyOS to Claude in 2 minutes
 
-You need an Open Sunsama account and any Claude plan. [Custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) work on Free, Pro, Max, Team and Enterprise. The Free plan is limited to one.
+You need an StudyOS account and any Claude plan. [Custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) work on Free, Pro, Max, Team and Enterprise. The Free plan is limited to one.
 
 ### claude.ai, Claude Desktop and the mobile apps
 
 1. In Claude, open **Customize → Connectors** ([direct link](https://claude.ai/new#customize/connectors)).
 2. Click **Add** (or **+**), then **Add custom connector**.
-3. Name it **Open Sunsama** and paste this URL: `https://api.opensunsama.com/mcp`
+3. Name it **StudyOS** and paste this URL: `https://studyos-api-wy5w.onrender.com/mcp`
 4. Click **Continue**. Keep the sign-in settings Claude detects, and click **Add**.
-5. Click **Connect**, sign in to Open Sunsama, and click **Allow access**.
+5. Click **Connect**, sign in to StudyOS, and click **Allow access**.
 
-<Shot id="consent-claude" alt="Open Sunsama consent screen asking to allow Claude access to tasks, time blocks and calendar meetings" caption="You approve access once. Claude never sees your password." />
+<Shot id="consent-claude" alt="StudyOS consent screen asking to allow Claude access to tasks, time blocks and calendar meetings" caption="You approve access once. Claude never sees your password." />
 
-Claude now shows **Connected to Open Sunsama**. The connector works in Claude Desktop and the phone apps too, with nothing to install.
+Claude now shows **Connected to StudyOS**. The connector works in Claude Desktop and the phone apps too, with nothing to install.
 
-To let Claude see your meetings, connect your calendar in Open Sunsama under **Settings → Calendars**. If you added the connector before calendar access existed, reconnect it in **Settings → MCP → Connected apps** and allow calendar access.
+To let Claude see your meetings, connect your calendar in StudyOS under **Settings → Calendars**. If you added the connector before calendar access existed, reconnect it in **Settings → MCP → Connected apps** and allow calendar access.
 
 On Team and Enterprise plans, an owner adds it once in **Organization settings → Connectors**, then each person connects. The full steps are in the [Claude setup guide](/docs/mcp/claude) and the [Claude Desktop guide](/docs/mcp/claude-desktop).
 
@@ -101,18 +101,18 @@ On Team and Enterprise plans, an owner adds it once in **Organization settings �
 Run this once in your terminal:
 
 ```bash
-claude mcp add --transport http --scope user open-sunsama https://api.opensunsama.com/mcp
+claude mcp add --transport http --scope user open-sunsama https://studyos-api-wy5w.onrender.com/mcp
 ```
 
 Then start Claude Code, run `/mcp`, pick **open-sunsama**, and choose **Authenticate**. Your browser opens the same consent screen.
 
 Claude asks before each tool call. Once you trust it, open the connector and set **Read-only tools** to **Always allow**. Lookups then run without a prompt, and changes still ask first.
 
-<Shot id="mcp-settings" alt="Open Sunsama Settings, MCP tab, with the connector URL and setup steps for each assistant" caption="Settings → MCP has the URL and steps for every assistant, ready to copy." />
+<Shot id="mcp-settings" alt="StudyOS Settings, MCP tab, with the connector URL and setup steps for each assistant" caption="Settings → MCP has the URL and steps for every assistant, ready to copy." />
 
 ## What Claude does when you say "plan my day"
 
-It helps to know what happens behind the scenes. Open Sunsama gives Claude [24 tools](/docs/mcp/overview) for tasks, subtasks, time blocks and your synced meetings. A morning plan uses a handful of them, in this order:
+It helps to know what happens behind the scenes. StudyOS gives Claude [24 tools](/docs/mcp/overview) for tasks, subtasks, time blocks and your synced meetings. A morning plan uses a handful of them, in this order:
 
 1. **Checks your timezone** with `get_user_profile`, so "today" means your today.
 2. **Reads your list** with `list_tasks`: today's tasks, overdue ones and their time estimates.
@@ -123,7 +123,7 @@ It helps to know what happens behind the scenes. Open Sunsama gives Claude [24 t
 
 Steps 1 to 4 only read. Step 6 writes, and it runs only after your yes. Delete tools are marked as destructive, so Claude asks before it removes anything.
 
-<Clip id="ai-plan" caption="Claude plans the afternoon over MCP, and the time blocks appear in Open Sunsama live." />
+<Clip id="ai-plan" caption="Claude plans the afternoon over MCP, and the time blocks appear in StudyOS live." />
 
 ## 9 Claude prompts to plan your day (copy and paste)
 
@@ -150,7 +150,7 @@ Show me the blocks before you create them.
 
 **What Claude does:** it sorts by priority (P0 to P3) and estimate, then proposes three blocks. You can say "swap the order" before it books them.
 
-<Clip id="time-block" caption="A time block in Open Sunsama is a task placed on the calendar. You can drag or resize it after Claude books it." />
+<Clip id="time-block" caption="A time block in StudyOS is a task placed on the calendar. You can drag or resize it after Claude books it." />
 
 ### 3. Brain dump to tasks
 
@@ -182,7 +182,7 @@ It's the end of the day. Move every unfinished task from today to tomorrow,
 keep their order, and put them at the top of tomorrow's list.
 ```
 
-**What Claude does:** it moves each open task with `schedule_task` and reorders tomorrow. Open Sunsama can also roll over unfinished tasks for you each night (turn it on in Settings). Use this prompt when you want to choose by hand.
+**What Claude does:** it moves each open task with `schedule_task` and reorders tomorrow. StudyOS can also roll over unfinished tasks for you each night (turn it on in Settings). Use this prompt when you want to choose by hand.
 
 ### 6. End-of-day shutdown
 
@@ -192,7 +192,7 @@ with the actual time? What's left, and what should be first tomorrow?
 Keep it short.
 ```
 
-**What Claude does:** it reads completed tasks, compares planned vs actual time, and drafts tomorrow's first move. The focus timer in Open Sunsama records the actual time, so the numbers are real.
+**What Claude does:** it reads completed tasks, compares planned vs actual time, and drafts tomorrow's first move. The focus timer in StudyOS records the actual time, so the numbers are real.
 
 <Clip id="shutdown" caption="Check off what you finished, then let Claude sum up the day and set up tomorrow." />
 
@@ -228,7 +228,7 @@ The task "Launch pricing page" feels too big. Break it into subtasks of
 
 You can have Claude start the day for you. On paid plans (Pro, Max, Team and Enterprise), Claude's [scheduled tasks](https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-claude-cowork) run a saved prompt on a set cadence. They use your connectors and run even when your computer is asleep.
 
-Tell it: "Every weekday at 8am, draft my plan for today from Open Sunsama and my calendar. Don't book anything." Then open the result with your coffee and reply "looks good, book it."
+Tell it: "Every weekday at 8am, draft my plan for today from StudyOS and my calendar. Don't book anything." Then open the result with your coffee and reply "looks good, book it."
 
 ## 4 tips that make Claude's plans realistic
 
@@ -239,18 +239,18 @@ Tell it: "Every weekday at 8am, draft my plan for today from Open Sunsama and my
 
 ## Other Claude task management options
 
-Open Sunsama isn't the only planner with an MCP server. Here is a fair look at the main choices in 2026:
+StudyOS isn't the only planner with an MCP server. Here is a fair look at the main choices in 2026:
 
 | App | How it connects to Claude | Best for |
 | --- | --- | --- |
-| **Open Sunsama** | Hosted MCP with OAuth, 24 tools | Tasks and time blocks in one place, open code, self-hosting |
+| **StudyOS** | Hosted MCP with OAuth, 24 tools | Tasks and time blocks in one place, open code, self-hosting |
 | **Todoist** | [Official hosted MCP](https://www.todoist.com/help/todoist/todoist-and-ai/connect-todoist-to-an-ai-assistant-xMSzFfHng) at `ai.todoist.net/mcp` | A mature task list you already use |
 | **Sunsama** | [Official MCP server](https://help.sunsama.com/docs/mcp-model-context-protocol), included in its Pro plan | Guided daily planning rituals |
 | **Google Calendar** | Claude's built-in connector | Meetings and events only |
 
-**Pick Todoist** if your life already runs on it and you mostly need a task list. **Pick Sunsama** if you love its guided rituals and don't mind a closed app. **Pick Open Sunsama** if you want tasks, time blocks and focus time in one planner that your agent can fully use.
+**Pick Todoist** if your life already runs on it and you mostly need a task list. **Pick Sunsama** if you love its guided rituals and don't mind a closed app. **Pick StudyOS** if you want tasks, time blocks and focus time in one planner that your agent can fully use.
 
-A few things set Open Sunsama apart. The code is public on GitHub, and you can [self-host it with Docker](/docs/self-hosting/docker). It also has a documented [REST API](/docs/api) with API keys.
+A few things set StudyOS apart. The code is public on GitHub, and you can [self-host it with Docker](/docs/self-hosting/docker). It also has a documented [REST API](/docs/api) with API keys.
 
 And the same connector works in [ChatGPT](/blog/plan-your-day-with-chatgpt), Cursor and any MCP client, so you aren't tied to one AI.
 
@@ -258,10 +258,10 @@ For a full comparison, see our guide to the [best task managers with MCP](/blog/
 
 ## Which setup should you pick?
 
-- **If you want Claude to plan your whole day,** connect Open Sunsama and sync your calendar in its settings.
+- **If you want Claude to plan your whole day,** connect StudyOS and sync your calendar in its settings.
 - **If you only need Claude to read your meetings,** the Google Calendar connector alone is enough.
-- **If you live in the terminal,** add Open Sunsama to Claude Code with one command.
+- **If you live in the terminal,** add StudyOS to Claude Code with one command.
 - **If you want the plan to run each morning,** use a scheduled task on a paid Claude plan.
-- **If you want to plan by hand too,** use the Open Sunsama app on [desktop](/download), web or phone. Claude and you edit the same plan.
+- **If you want to plan by hand too,** use the StudyOS app on [desktop](/download), web or phone. Claude and you edit the same plan.
 
 Want to see more of what AI can do with your calendar? Read [time blocking with AI](/blog/time-blocking-with-ai), or see how the [AI integration](/features/ai-integration) works.

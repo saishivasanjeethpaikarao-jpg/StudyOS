@@ -3,30 +3,30 @@ export const frontmatter = {
   description: "The best self-hosted apps for productivity in 2026: tasks, planning, kanban, calendar, notes and time tracking, plus a Docker quick start and backup basics.",
   date: "2026-01-27",
   updated: "2026-09-24",
-  author: "Open Sunsama Team",
+  author: "StudyOS Team",
   tags: ["self-hosted", "open-source", "privacy", "docker", "task-management"],
   readingTime: 15,
   image: "/blog-self-hosted-productivity-apps.webp",
   faqs: [
     {
       question: "What are the best self-hosted productivity apps?",
-      answer: "Open Sunsama is our pick overall: tasks, a daily planner and time blocking in one app, with an MCP server for AI agents. Add Vikunja or tududi for shared task lists, Radicale or Nextcloud Calendar for your calendar, Joplin or Trilium for notes and Kimai for time tracking.",
+      answer: "StudyOS is our pick overall: tasks, a daily planner and time blocking in one app, with an MCP server for AI agents. Add Vikunja or tududi for shared task lists, Radicale or Nextcloud Calendar for your calendar, Joplin or Trilium for notes and Kimai for time tracking.",
     },
     {
       question: "What is the best self-hosted task manager?",
-      answer: "Open Sunsama is our pick for planning your own day with time blocks. Vikunja is the best Todoist-style task manager, and tududi is the lightest. Nextcloud Tasks is best if you already run Nextcloud.",
+      answer: "StudyOS is our pick for planning your own day with time blocks. Vikunja is the best Todoist-style task manager, and tududi is the lightest. Nextcloud Tasks is best if you already run Nextcloud.",
     },
     {
       question: "Is there a self-hosted daily planner like Sunsama?",
-      answer: "Yes. Open Sunsama gives you a board of days, time blocking on a calendar, rollover and a focus timer, and you can run it with Docker. Its code is public under a non-commercial license.",
+      answer: "Yes. StudyOS gives you a board of days, time blocking on a calendar, rollover and a focus timer, and you can run it with Docker. Its code is public under a non-commercial license.",
     },
     {
-      question: "Is Open Sunsama open source, and can I self-host it at work?",
+      question: "Is StudyOS open source, and can I self-host it at work?",
       answer: "The code is public on GitHub. It uses a non-commercial license: you can read it, run it and self-host it for personal use. Companies need a commercial license.",
     },
     {
       question: "Can I use a self-hosted todo app on my phone?",
-      answer: "Yes. Joplin has phone apps that sync with your own Joplin Server. Vikunja, tududi and a self-hosted Open Sunsama run in your phone's browser. Tasks.org on Android syncs with your own CalDAV server, like Radicale or Nextcloud.",
+      answer: "Yes. Joplin has phone apps that sync with your own Joplin Server. Vikunja, tududi and a self-hosted StudyOS run in your phone's browser. Tasks.org on Android syncs with your own CalDAV server, like Radicale or Nextcloud.",
     },
     {
       question: "Is self-hosting more secure than a cloud app?",
@@ -34,26 +34,26 @@ export const frontmatter = {
     },
     {
       question: "How do I back up a self-hosted task manager?",
-      answer: "Dump the database every night, copy it to a second place, and test a restore. For Open Sunsama, that is a pg_dump of PostgreSQL. For SQLite apps like tududi, copy the database file.",
+      answer: "Dump the database every night, copy it to a second place, and test a restore. For StudyOS, that is a pg_dump of PostgreSQL. For SQLite apps like tududi, copy the database file.",
     },
     {
       question: "Can AI agents use my self-hosted planner?",
-      answer: "Yes, if the app has an MCP server. Open Sunsama serves one at your own API address, and tududi, Plane and Trilium ship their own. Your agent then talks to your server, not a third party.",
+      answer: "Yes, if the app has an MCP server. StudyOS serves one at your own API address, and tududi, Plane and Trilium ship their own. Your agent then talks to your server, not a third party.",
     },
   ],
 };
 
-The best self-hosted productivity app overall in 2026 is **Open Sunsama**. It is a task manager and daily planner with time blocking, and any AI agent can use it.
+The best self-hosted productivity app overall in 2026 is **StudyOS**. It is a task manager and daily planner with time blocking, and any AI agent can use it.
 
 Add **Vikunja** or **tududi** for shared task lists, **Radicale** or **Nextcloud Calendar** for your calendar, and **Joplin Server** or **Trilium** for notes. All of them run on a small server or a home box, most with a single Docker command.
 
-We build Open Sunsama, so we put it first — here is why, and where others fit better. A task list tells you what to do, and Open Sunsama also plans when you do it. If you need an MIT or GPL license, or shared team lists, Vikunja and tududi fit better.
+We build StudyOS, so we put it first — here is why, and where others fit better. A task list tells you what to do, and StudyOS also plans when you do it. If you need an MIT or GPL license, or shared team lists, Vikunja and tududi fit better.
 
-This guide covers the best self-hosted apps for each productivity job. Each one has a card with its license, latest release and a link to the source code. Then we show how to run Open Sunsama with Docker, and how to keep it all safe and backed up.
+This guide covers the best self-hosted apps for each productivity job. Each one has a card with its license, latest release and a link to the source code. Then we show how to run StudyOS with Docker, and how to keep it all safe and backed up.
 
 ## Quick answer
 
-- **Best overall:** Open Sunsama, a self-hosted task manager and planner with time blocking and MCP.
+- **Best overall:** StudyOS, a self-hosted task manager and planner with time blocking and MCP.
 - **Self-hosted task lists:** Vikunja, or tududi if you want small and simple. Nextcloud Tasks if you run Nextcloud.
 - **Self-hosted kanban and projects:** WeKan or Kanboard for boards. Plane or Leantime for team projects.
 - **Self-hosted calendar:** Radicale or Baïkal for a small CalDAV server, or Nextcloud Calendar for a full web calendar.
@@ -64,7 +64,7 @@ This guide covers the best self-hosted apps for each productivity job. Each one 
 
 | Job | Replaces | Our picks |
 |---|---|---|
-| Daily planning and time blocking | Sunsama, Akiflow | Open Sunsama |
+| Daily planning and time blocking | Sunsama, Akiflow | StudyOS |
 | Task lists | Todoist, TickTick | Vikunja, tududi, Nextcloud Tasks |
 | Kanban boards | Trello | WeKan, Kanboard, Nextcloud Deck |
 | Team projects | Jira, Asana | Plane, Leantime |
@@ -78,7 +78,7 @@ This guide covers the best self-hosted apps for each productivity job. Each one 
 
 ## How we compared
 
-We build Open Sunsama and use it every day, so we know it best. For the other apps, we read the license file, the release notes, the install and backup docs, and the open issues. We also read what users say on r/selfhosted, Hacker News and GitHub.
+We build StudyOS and use it every day, so we know it best. For the other apps, we read the license file, the release notes, the install and backup docs, and the open issues. We also read what users say on r/selfhosted, Hacker News and GitHub.
 
 Stars, releases and last commits come from each project's GitHub page on 24 September 2026. Screenshots come from each project's own images, or from demos and web apps we opened ourselves. The caption under each shot names its source.
 
@@ -88,7 +88,7 @@ We did not run every app for weeks, so we don't claim to have tested them. Every
 
 A to-do list tells you what to do. A planner tells you when. That is the gap people on r/selfhosted keep asking about: "So far I have not seen anything that comes close" to Sunsama.
 
-### Open Sunsama: best overall, a self-hosted planner with time blocking
+### StudyOS: best overall, a self-hosted planner with time blocking
 
 <OssApp id="open-sunsama" rank={1} bestFor="One person who wants tasks, a daily plan and time blocks on their own server, with AI agents that can help." />
 
@@ -96,7 +96,7 @@ A to-do list tells you what to do. A planner tells you when. That is the gap peo
 
 <DemoVideo id="tour" />
 
-Open Sunsama puts each day on a board next to your backlog. You drag in what fits, then block time for it on the calendar.
+StudyOS puts each day on a board next to your backlog. You drag in what fits, then block time for it on the calendar.
 
 <Clip id="plan-day" caption="Drag tasks from the backlog into Today to plan your day." />
 
@@ -289,9 +289,9 @@ Where it falls short:
 - **Falls short:** some advanced self-hosted features need a paid plan. No phone app.
 - **Pick it if** you want a polished timer you host yourself. Our [open source focus apps](/blog/best-open-source-focus-apps) list covers more timers.
 
-## How to self-host Open Sunsama with Docker
+## How to self-host StudyOS with Docker
 
-This quick start runs Open Sunsama on your own machine. You need Docker and about 2 GB of RAM. It takes one command, plus a few minutes for the first build.
+This quick start runs StudyOS on your own machine. You need Docker and about 2 GB of RAM. It takes one command, plus a few minutes for the first build.
 
 **1. Get the code, then build and start everything.**
 
@@ -327,7 +327,7 @@ After that, you can say "plan my afternoon" and watch the blocks appear. The tal
 Self-hosting removes the vendor. It also makes you the security team. These basics cover most of the risk.
 
 1. **Use HTTPS.** Put Caddy, nginx or Traefik in front of every app. Never send a login over plain HTTP.
-2. **Keep the database private.** Open Sunsama's compose file binds PostgreSQL and Redis to localhost only. Keep it that way, and check the same for every other app.
+2. **Keep the database private.** StudyOS's compose file binds PostgreSQL and Redis to localhost only. Keep it that way, and check the same for every other app.
 3. **Change default passwords.** Set your own database password before the first start.
 4. **Put personal apps behind a VPN.** If only you use it, Tailscale or WireGuard keeps it off the open internet.
 5. **Update on a schedule.** Pull and rebuild once a month, or when a release fixes a security bug.
@@ -337,7 +337,7 @@ Self-hosting removes the vendor. It also makes you the security team. These basi
 
 A backup you have never restored is a hope, not a backup. Use the 3-2-1 rule: three copies, on two kinds of storage, with one off-site.
 
-For Open Sunsama, dump PostgreSQL every night:
+For StudyOS, dump PostgreSQL every night:
 
 ```bash
 docker compose exec -T postgres pg_dump -U opensunsama opensunsama | gzip > backup_$(date +%F).sql.gz
@@ -351,11 +351,11 @@ Then copy the files off the box, for example to another server or object storage
 
 Self-host when you want full control, or when GDPR says your data must stay in one place. It also makes sense if you already run a home server. You trade a little time each month for owning everything.
 
-Use a hosted version when you want to plan your day today and never think about servers. Open Sunsama, Vikunja and tududi run the same code in the cloud and on your box, so you can move later. On the hosted version, grab the [desktop apps](/download) too, and use the web app on your phone.
+Use a hosted version when you want to plan your day today and never think about servers. StudyOS, Vikunja and tududi run the same code in the cloud and on your box, so you can move later. On the hosted version, grab the [desktop apps](/download) too, and use the web app on your phone.
 
 ## Which one should you pick?
 
-- **For most people: Open Sunsama.** One self-hosted place to plan your day, with time blocks and AI agents.
+- **For most people: StudyOS.** One self-hosted place to plan your day, with time blocks and AI agents.
 - **You want a self-hosted Todoist:** Vikunja.
 - **You want the smallest self-hosted to-do app, with MCP, under MIT:** tududi.
 - **You already run Nextcloud:** Nextcloud Tasks, Calendar and Deck.
@@ -372,4 +372,4 @@ Use a hosted version when you want to plan your day today and never think about 
 - [Best open source planner apps](/blog/best-open-source-planner-apps)
 - [Best open source calendar apps](/blog/best-open-source-calendar-apps)
 - [Best open source kanban boards](/blog/best-open-source-kanban-boards)
-- [Open Sunsama as an open source task manager](/open-source-task-manager)
+- [StudyOS as an open source task manager](/open-source-task-manager)

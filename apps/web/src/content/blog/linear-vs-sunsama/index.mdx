@@ -1,8 +1,8 @@
 export const frontmatter = {
   title: "Linear vs Sunsama: Which Should Engineers Use in 2026?",
-  description: "Compare Linear and Sunsama for engineering workflows. Issue tracking vs daily planning, and how Open Sunsama bridges both.",
+  description: "Compare Linear and Sunsama for engineering workflows. Issue tracking vs daily planning, and how StudyOS bridges both.",
   date: "2026-02-01",
-  author: "Open Sunsama Team",
+  author: "StudyOS Team",
   tags: ["comparison", "linear", "developers"],
   readingTime: 12,
   image: "/blog-linear-vs-sunsama.webp"
@@ -12,13 +12,13 @@ Linear and Sunsama solve fundamentally different problems for engineering teams�
 
 The confusion arises because both are popular among developers, both have beautiful keyboard-first interfaces, and both promise to make you more productive. But comparing Linear vs Sunsama is like comparing GitHub and your calendar app—they serve different purposes in your workflow.
 
-In this comprehensive comparison, we'll break down exactly what each tool does, how they fit into engineering workflows, and why the smartest approach might be using Linear for team issues while adopting a free daily planner like Open Sunsama for personal productivity.
+In this comprehensive comparison, we'll break down exactly what each tool does, how they fit into engineering workflows, and why the smartest approach might be using Linear for team issues while adopting a free daily planner like StudyOS for personal productivity.
 
-## Quick Comparison: Linear vs Sunsama vs Open Sunsama
+## Quick Comparison: Linear vs Sunsama vs StudyOS
 
 Before diving deep, here's how these three tools compare across features that matter to engineering teams:
 
-| Feature | Linear | Sunsama | Open Sunsama |
+| Feature | Linear | Sunsama | StudyOS |
 |---------|--------|---------|--------------|
 | **Primary Purpose** | Issue tracking | Daily planning | Daily planning |
 | **Price (Free)** | ✅ Generous free tier | ❌ No free tier | ✅ Free forever |
@@ -258,21 +258,21 @@ Issue trackers show what work exists. Daily planners answer a different question
 
 Here's the problem: If you're already paying for Linear (free or $8/user), adding Sunsama at $240/year is a significant additional expense. For a team of 10 engineers, that's $2,400/year just for daily planning—more than the Linear subscription itself.
 
-This is where Open Sunsama enters the picture.
+This is where StudyOS enters the picture.
 
-## Open Sunsama for Engineering Teams
+## StudyOS for Engineering Teams
 
-Open Sunsama is a free, open-source daily planner built specifically with developers in mind. It provides the daily planning capabilities that Linear lacks, without the $240/year price tag.
+StudyOS is a free, open-source daily planner built specifically with developers in mind. It provides the daily planning capabilities that Linear lacks, without the $240/year price tag.
 
 ### Built for Developers
 
 **Open Source**: The entire codebase is publicly available. Audit the code, contribute improvements, or fork it for custom needs. No black boxes.
 
-**Self-Hostable**: Run Open Sunsama on your own infrastructure. Your productivity data never leaves your servers—important for security-conscious engineering teams.
+**Self-Hostable**: Run StudyOS on your own infrastructure. Your productivity data never leaves your servers—important for security-conscious engineering teams.
 
-**Full REST API**: Build custom integrations, automate workflows, or connect Open Sunsama to your internal tools. Unlike Sunsama's limited API, Open Sunsama gives you complete programmatic control.
+**Full REST API**: Build custom integrations, automate workflows, or connect StudyOS to your internal tools. Unlike Sunsama's limited API, StudyOS gives you complete programmatic control.
 
-**MCP Tools for AI Agents**: Open Sunsama includes 24 MCP (Model Context Protocol) tools that let AI assistants like Claude create tasks, manage time blocks, and interact with your planning workflow. Developers using AI coding assistants can integrate their planning directly into their development environment.
+**MCP Tools for AI Agents**: StudyOS includes 24 MCP (Model Context Protocol) tools that let AI assistants like Claude create tasks, manage time blocks, and interact with your planning workflow. Developers using AI coding assistants can integrate their planning directly into their development environment.
 
 ### Key Features for Engineers
 
@@ -280,7 +280,7 @@ Open Sunsama is a free, open-source daily planner built specifically with develo
 
 **Focus Mode**: When working on a task, focus mode expands it to fill the screen, starts a timer, and minimizes distractions. Pomodoro timer included.
 
-**Keyboard-First Interface**: Like Linear, Open Sunsama is designed for keyboard navigation. Command palette (Cmd+K) for quick access to everything.
+**Keyboard-First Interface**: Like Linear, StudyOS is designed for keyboard navigation. Command palette (Cmd+K) for quick access to everything.
 
 **Calendar Sync**: Two-way sync with Google Calendar, Outlook, and iCloud. Time blocks appear on your calendar, protecting your focus time from meeting invites.
 
@@ -290,25 +290,25 @@ Open Sunsama is a free, open-source daily planner built specifically with develo
 
 ### API and Automation
 
-Open Sunsama's REST API lets you:
+StudyOS's REST API lets you:
 
 ```bash
 # Create a task
-curl -X POST https://api.opensunsama.com/tasks \
+curl -X POST https://studyos-api-wy5w.onrender.com/tasks \
   -H "X-API-Key: os_your_key" \
   -d '{"title": "Review PR #234", "scheduledDate": "2026-02-01"}'
 
 # Schedule a time block
-curl -X POST https://api.opensunsama.com/time-blocks \
+curl -X POST https://studyos-api-wy5w.onrender.com/time-blocks \
   -H "X-API-Key: os_your_key" \
   -d '{"taskId": "task_123", "startTime": "2026-02-01T09:00:00Z", "endTime": "2026-02-01T11:00:00Z"}'
 ```
 
-Build scripts that sync Linear issues to Open Sunsama tasks, create time blocks from your team's standup bot, or integrate planning into your CI/CD pipeline.
+Build scripts that sync Linear issues to StudyOS tasks, create time blocks from your team's standup bot, or integrate planning into your CI/CD pipeline.
 
 ### MCP Tools for AI-Assisted Planning
 
-Open Sunsama includes 24 MCP tools that AI assistants can use:
+StudyOS includes 24 MCP tools that AI assistants can use:
 
 | Category | Tools |
 |----------|-------|
@@ -324,20 +324,20 @@ This enables workflows like:
 
 ### Cost Comparison for Engineering Teams
 
-| Team Size | Linear (Standard) | Sunsama | Open Sunsama | Total with Sunsama | Total with Open Sunsama |
+| Team Size | Linear (Standard) | Sunsama | StudyOS | Total with Sunsama | Total with StudyOS |
 |-----------|-------------------|---------|--------------|-------------------|------------------------|
 | 1 developer | Free | $240/year | Free | $240/year | $0/year |
 | 5 developers | $480/year | $1,200/year | Free | $1,680/year | $480/year |
 | 10 developers | $960/year | $2,400/year | Free | $3,360/year | $960/year |
 | 25 developers | $2,400/year | $6,000/year | Free | $8,400/year | $2,400/year |
 
-For a 10-person engineering team, switching from Sunsama to Open Sunsama saves $2,400/year while maintaining daily planning capabilities.
+For a 10-person engineering team, switching from Sunsama to StudyOS saves $2,400/year while maintaining daily planning capabilities.
 
 ## Frequently Asked Questions
 
 ### What's the difference between Linear and Sunsama?
 
-**Linear** is an issue tracking tool for software development teams. It manages bugs, features, and projects across your engineering organization. **Sunsama** is a personal daily planner that helps individuals decide what to work on each day. They solve different problems—Linear for team coordination, Sunsama (or Open Sunsama) for personal productivity.
+**Linear** is an issue tracking tool for software development teams. It manages bugs, features, and projects across your engineering organization. **Sunsama** is a personal daily planner that helps individuals decide what to work on each day. They solve different problems—Linear for team coordination, Sunsama (or StudyOS) for personal productivity.
 
 ### Can I use Linear for daily planning?
 
@@ -347,33 +347,33 @@ Linear shows your assigned issues but doesn't include daily planning features li
 
 Yes, Sunsama has native Linear integration. You can pull your assigned Linear issues into your Sunsama daily view, schedule them as time blocks, and the completion status can sync back to Linear. This is one of Sunsama's strengths for engineering teams already using Linear.
 
-### Is Open Sunsama a replacement for Linear?
+### Is StudyOS a replacement for Linear?
 
-No. Open Sunsama is a daily planner, not an issue tracker. It's meant to complement Linear, not replace it. Use Linear for team issue tracking and project management; use Open Sunsama for personal daily planning and time blocking. See our list of [free Sunsama alternatives](/blog/best-free-sunsama-alternatives) for more daily planning options.
+No. StudyOS is a daily planner, not an issue tracker. It's meant to complement Linear, not replace it. Use Linear for team issue tracking and project management; use StudyOS for personal daily planning and time blocking. See our list of [free Sunsama alternatives](/blog/best-free-sunsama-alternatives) for more daily planning options.
 
-### Can I self-host Open Sunsama?
+### Can I self-host StudyOS?
 
-Yes. Open Sunsama is fully self-hostable. Clone the repository, configure your database, and run it on your own infrastructure. This is particularly valuable for engineering teams with strict data security requirements who can't use external SaaS tools.
+Yes. StudyOS is fully self-hostable. Clone the repository, configure your database, and run it on your own infrastructure. This is particularly valuable for engineering teams with strict data security requirements who can't use external SaaS tools.
 
-### What integrations does Open Sunsama have?
+### What integrations does StudyOS have?
 
-Open Sunsama currently integrates with Google Calendar, Outlook, and iCloud for calendar sync. Additional integrations with Linear, GitHub, and other developer tools are on the roadmap. The open API means you can build custom integrations for your specific needs today.
+StudyOS currently integrates with Google Calendar, Outlook, and iCloud for calendar sync. Additional integrations with Linear, GitHub, and other developer tools are on the roadmap. The open API means you can build custom integrations for your specific needs today.
 
 ### Is Linear free for small teams?
 
 Yes. Linear's free tier includes unlimited issues, unlimited members, and all core features. For most small engineering teams, the free tier is sufficient. Paid plans ($8/user/month) add advanced integrations and features like time tracking.
 
-### How does Open Sunsama's API compare to Sunsama's?
+### How does StudyOS's API compare to Sunsama's?
 
-Open Sunsama offers a full REST API with complete access to tasks, time blocks, subtasks, and user data. API keys support granular scopes for different access levels. Sunsama's API is more limited—you primarily interact through their official integrations rather than building custom solutions.
+StudyOS offers a full REST API with complete access to tasks, time blocks, subtasks, and user data. API keys support granular scopes for different access levels. Sunsama's API is more limited—you primarily interact through their official integrations rather than building custom solutions.
 
-### Can AI assistants use Open Sunsama?
+### Can AI assistants use StudyOS?
 
-Yes. Open Sunsama includes 24 MCP (Model Context Protocol) tools that allow AI assistants like Claude to create tasks, schedule time blocks, and interact with your planning workflow. This enables AI-assisted daily planning directly from your development environment or AI chat interface.
+Yes. StudyOS includes 24 MCP (Model Context Protocol) tools that allow AI assistants like Claude to create tasks, schedule time blocks, and interact with your planning workflow. This enables AI-assisted daily planning directly from your development environment or AI chat interface.
 
 ### Which is better for engineering managers: Linear or Sunsama?
 
-Engineering managers typically need both. **Linear** for visibility into team progress, cycle planning, and cross-team coordination. A **daily planner** for managing your own time between meetings, 1:1s, planning sessions, and individual contributor work. Open Sunsama provides the daily planning layer at no cost.
+Engineering managers typically need both. **Linear** for visibility into team progress, cycle planning, and cross-team coordination. A **daily planner** for managing your own time between meetings, 1:1s, planning sessions, and individual contributor work. StudyOS provides the daily planning layer at no cost.
 
 ## Conclusion: The Right Tool for Each Job
 
@@ -383,14 +383,14 @@ The Linear vs Sunsama comparison reveals a fundamental truth: **these tools aren
 
 **Use a daily planner** for deciding what YOU will accomplish today. Time blocking, focus mode, and intentional planning help you actually complete the work that Linear tracks.
 
-**Choose Open Sunsama** if you want powerful daily planning without the $240/year price tag. As the only [free Sunsama alternative](/alternative/sunsama) designed for developers, Open Sunsama offers:
+**Choose StudyOS** if you want powerful daily planning without the $240/year price tag. As the only [free Sunsama alternative](/alternative/sunsama) designed for developers, StudyOS offers:
 - Full REST API for custom integrations
 - MCP tools for AI-assisted planning
 - Self-hosting for data sovereignty
 - Keyboard-first interface developers love
 
-The smartest engineering workflow combines Linear for team coordination with Open Sunsama for personal productivity—giving you the best of both worlds at a fraction of the cost.
+The smartest engineering workflow combines Linear for team coordination with StudyOS for personal productivity—giving you the best of both worlds at a fraction of the cost.
 
 ---
 
-Ready to add intentional daily planning to your engineering workflow? [Get started with Open Sunsama for free](/register) and discover how time blocking transforms your productivity—without the premium price tag.
+Ready to add intentional daily planning to your engineering workflow? [Get started with StudyOS for free](/register) and discover how time blocking transforms your productivity—without the premium price tag.

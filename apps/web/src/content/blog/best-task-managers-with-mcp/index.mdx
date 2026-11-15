@@ -1,16 +1,16 @@
 export const frontmatter = {
   title: "Best Task Managers With MCP for Claude and ChatGPT (2026)",
-  description: "Which to-do apps have a real MCP server in 2026? We checked Todoist, Sunsama, TickTick, Akiflow, Open Sunsama and more: URLs, setup, what the AI can do.",
+  description: "Which to-do apps have a real MCP server in 2026? We checked Todoist, Sunsama, TickTick, Akiflow, StudyOS and more: URLs, setup, what the AI can do.",
   date: "2026-09-24",
   updated: "2026-09-24",
-  author: "Open Sunsama Team",
+  author: "StudyOS Team",
   tags: ["mcp", "ai", "claude", "chatgpt", "task-management", "comparison"],
   readingTime: 11,
   image: "/blog-best-task-managers-with-mcp.webp",
   faqs: [
     {
       question: "What is the best task manager with MCP?",
-      answer: "Open Sunsama is the best overall. It is an open-source daily planner whose MCP server covers tasks, calendar time blocks and your meetings, and it works with any AI agent. Pick Todoist for a simple to-do list, or Sunsama if you already use its daily ritual.",
+      answer: "StudyOS is the best overall. It is an open-source daily planner whose MCP server covers tasks, calendar time blocks and your meetings, and it works with any AI agent. Pick Todoist for a simple to-do list, or Sunsama if you already use its daily ritual.",
     },
     {
       question: "What is a task manager MCP server?",
@@ -34,7 +34,7 @@ export const frontmatter = {
     },
     {
       question: "Which MCP task manager can also time block my day?",
-      answer: "Open Sunsama's MCP server reads your synced meetings, and creates and moves calendar time blocks linked to tasks. Akiflow's server covers tasks, calendar and time slots. Reclaim's server works on your calendar events.",
+      answer: "StudyOS's MCP server reads your synced meetings, and creates and moves calendar time blocks linked to tasks. Akiflow's server covers tasks, calendar and time slots. Reclaim's server works on your calendar events.",
     },
     {
       question: "Is it safe to let an AI edit my tasks?",
@@ -43,15 +43,15 @@ export const frontmatter = {
   ],
 };
 
-The best task manager with MCP in 2026 is **Open Sunsama**. It is an open-source daily planner with time blocking that works with any AI agent. Your data stays yours: you can self-host it, and it has a public API.
+The best task manager with MCP in 2026 is **StudyOS**. It is an open-source daily planner with time blocking that works with any AI agent. Your data stays yours: you can self-host it, and it has a public API.
 
 Todoist, Sunsama, TickTick and Akiflow also run official, hosted MCP servers with OAuth sign-in. Pick Todoist for a plain, fast to-do list. Pick Sunsama or Akiflow if you want a daily planner that pulls in work from many other tools.
 
-We build Open Sunsama, so we put it first — here is why, and where others fit better.
+We build StudyOS, so we put it first — here is why, and where others fit better.
 
 ## Quick answer: the best MCP task manager for each job
 
-- **Best overall:** [Open Sunsama](/features/ai-integration). 24 tools for tasks, subtasks, time blocks and your synced meetings, plus a REST API and self-hosting. Your AI can plan your whole day.
+- **Best overall:** [StudyOS](/features/ai-integration). 24 tools for tasks, subtasks, time blocks and your synced meetings, plus a REST API and self-hosting. Your AI can plan your whole day.
 - **Best for a simple to-do list:** [Todoist](https://www.todoist.com). Official server at `ai.todoist.net/mcp`, works on its Beginner plan.
 - **Best for a guided daily planner with many integrations:** [Sunsama](https://www.sunsama.com). Official MCP server, included in the Pro plan.
 - **Best for tasks plus habits and focus stats:** [TickTick](https://ticktick.com). Its server can read habits and focus records too.
@@ -65,7 +65,7 @@ Here is what each app offers today. "Official" means the company runs the server
 
 | App | Official MCP server | Server URL | What your AI can reach | Public REST API | Self-host |
 | --- | --- | --- | --- | --- | --- |
-| Open Sunsama | Yes | `https://api.opensunsama.com/mcp` | Tasks, subtasks, time blocks, synced meetings (read-only) | Yes, with API keys | Yes (Docker) |
+| StudyOS | Yes | `https://studyos-api-wy5w.onrender.com/mcp` | Tasks, subtasks, time blocks, synced meetings (read-only) | Yes, with API keys | Yes (Docker) |
 | Todoist | Yes | `https://ai.todoist.net/mcp` | Tasks, projects, activity log | Yes | No |
 | Sunsama | Yes | `https://api.sunsama.com/mcp` | Tasks, notes, channels, comments | No | No |
 | TickTick | Yes | `https://mcp.ticktick.com` | Tasks, lists, habits, focus records | Yes (narrow) | No |
@@ -93,7 +93,7 @@ With a good server, you can say "plan my day" or "move everything I didn't finis
 
 Most servers here use OAuth. You sign in on the app's own page, and the AI gets a token, never your password. You can cut off access from either side at any time.
 
-## 1. Open Sunsama: best overall, because your AI can plan your whole day
+## 1. StudyOS: best overall, because your AI can plan your whole day
 
 **Verdict:** the best overall pick. Tasks and time blocks live in one place, with code you can read and run yourself.
 
@@ -101,7 +101,7 @@ Most servers here use OAuth. You sign in on the app's own page, and the AI gets 
 
 <DemoVideo id="ai" />
 
-**What it does well:** Open Sunsama is an open-source daily planner with a hosted MCP server at `https://api.opensunsama.com/mcp`. You paste the URL, sign in with OAuth and click **Allow access**. It works in Claude (web, desktop, mobile and Claude Code), ChatGPT, Cursor, VS Code and any other MCP client.
+**What it does well:** StudyOS is an open-source daily planner with a hosted MCP server at `https://studyos-api-wy5w.onrender.com/mcp`. You paste the URL, sign in with OAuth and click **Allow access**. It works in Claude (web, desktop, mobile and Claude Code), ChatGPT, Cursor, VS Code and any other MCP client.
 
 The server has 24 tools. Your AI can list and create tasks, add subtasks, move work between days and reorder a day.
 
@@ -119,7 +119,7 @@ Your synced Google, Outlook or iCloud meetings show on that calendar in the app,
 
 Each tool is marked read-only or destructive, so your AI asks before it deletes anything. Access tokens last one hour and refresh on their own. You can see and cut off every connected app in **Settings → MCP**.
 
-<Shot id="mcp-settings" alt="Open Sunsama Settings page with the MCP server URL and setup steps for each AI app" caption="Settings → MCP has the URL and the steps for each AI app, ready to copy." />
+<Shot id="mcp-settings" alt="StudyOS Settings page with the MCP server URL and setup steps for each AI app" caption="Settings → MCP has the URL and the steps for each AI app, ready to copy." />
 
 There is also a documented [REST API with API keys](/docs/api/authentication), and a local server if you want to use a local model. The code is [public on GitHub](https://github.com/ShadowWalker2014/open-sunsama), and you can self-host it with Docker. So your agent can even read the code and help you add the feature you want.
 
@@ -127,7 +127,7 @@ There is also a documented [REST API with API keys](/docs/api/authentication), a
 
 **Pick it if** you want your AI to plan real time blocks, not just lists, and you want full control of your data. Setup takes about a minute: see the [Claude guide](/docs/mcp/claude) or the [ChatGPT guide](/docs/mcp/chatgpt).
 
-<Shot id="consent-claude" alt="Open Sunsama consent screen asking to allow Claude to access tasks, time blocks and calendar meetings" caption="You approve access once on Open Sunsama's own sign-in page. Claude never sees your password." />
+<Shot id="consent-claude" alt="StudyOS consent screen asking to allow Claude to access tasks, time blocks and calendar meetings" caption="You approve access once on StudyOS's own sign-in page. Claude never sees your password." />
 
 ## 2. Todoist: best for a simple to-do list
 
@@ -222,7 +222,7 @@ The steps are almost the same for every server on this list.
 
 ## Which task manager with MCP should you pick?
 
-**For most people: [Open Sunsama](/features/ai-integration).** Your AI can plan your day into real time blocks. It is also the only one here you can run on your own server.
+**For most people: [StudyOS](/features/ai-integration).** Your AI can plan your day into real time blocks. It is also the only one here you can run on your own server.
 
 - **If you just want your AI to manage a to-do list,** pick Todoist.
 - **If you already pay for Sunsama and love its ritual,** keep Sunsama and connect its MCP.

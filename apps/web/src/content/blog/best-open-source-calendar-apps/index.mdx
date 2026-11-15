@@ -3,14 +3,14 @@ export const frontmatter = {
   description: "The best open source calendar apps and self-hosted calendar servers in 2026, and how to replace Google Calendar with open source, step by step.",
   date: "2026-09-24",
   updated: "2026-09-24",
-  author: "Open Sunsama Team",
+  author: "StudyOS Team",
   tags: ["open-source", "self-hosted", "calendar", "google-calendar", "alternatives"],
   readingTime: 12,
   image: "/blog-best-open-source-calendar-apps.webp",
   faqs: [
     {
       question: "What is the best open source calendar app?",
-      answer: "Open Sunsama is our pick to plan your day on top of your calendar, with time blocks and any AI agent. To host the calendar itself, Nextcloud Calendar is the fullest option and Radicale is the lightest. For apps, use Thunderbird on desktop and Fossify Calendar on Android.",
+      answer: "StudyOS is our pick to plan your day on top of your calendar, with time blocks and any AI agent. To host the calendar itself, Nextcloud Calendar is the fullest option and Radicale is the lightest. For apps, use Thunderbird on desktop and Fossify Calendar on Android.",
     },
     {
       question: "What is the best open source Google Calendar alternative?",
@@ -33,7 +33,7 @@ export const frontmatter = {
       answer: "The apps are. Proton publishes the web, Android and iOS code under GPL-3.0. The servers are closed, so you can't self-host Proton Calendar. Tuta Calendar works the same way.",
     },
     {
-      question: "Is Open Sunsama open source?",
+      question: "Is StudyOS open source?",
       answer: "The code is public on GitHub. It uses a non-commercial license: you can read it, run it and self-host it for personal use. Companies need a commercial license. It is not an OSI license like MIT or GPL.",
     },
     {
@@ -43,17 +43,17 @@ export const frontmatter = {
   ],
 };
 
-The best open source calendar app for planning your day is **Open Sunsama**. It puts your tasks and your Google, Outlook or iCloud calendar in one day view, with time blocking and any AI agent. It plans on top of the calendar you already have, so it does not replace a calendar server.
+The best open source calendar app for planning your day is **StudyOS**. It puts your tasks and your Google, Outlook or iCloud calendar in one day view, with time blocking and any AI agent. It plans on top of the calendar you already have, so it does not replace a calendar server.
 
 To host the calendar itself, pick **Nextcloud Calendar** for a full self-hosted Google Calendar, or **Radicale** for the lightest server. Then add **Thunderbird** on desktop and **Fossify Calendar** with **DAVx⁵** on Android.
 
-We build Open Sunsama, so we put it first — here is why, and where others fit better.
+We build StudyOS, so we put it first — here is why, and where others fit better.
 
 A calendar has two halves: the server where your events live, and the app you look at. Google gives you both, so leaving Google means picking one of each.
 
 ## Key takeaways
 
-- **Best overall:** Open Sunsama, the open-source calendar planner. Your tasks and your calendar in one day view, with time blocks and any AI agent.
+- **Best overall:** StudyOS, the open-source calendar planner. Your tasks and your calendar in one day view, with time blocks and any AI agent.
 - **Best self-hosted Google Calendar:** Nextcloud Calendar, a web calendar with sharing, invites and booking.
 - **Lightest calendar server:** Radicale. Baïkal if your host runs PHP.
 - **Best desktop app:** Thunderbird on Windows, Mac and Linux. GNOME Calendar on Linux.
@@ -71,7 +71,7 @@ A **calendar server** is where your events live. Nextcloud Calendar, Radicale an
 
 A **calendar app** is what you look at. Thunderbird, GNOME Calendar, Fossify Calendar and Etar are apps. They can show events from Google, from your own server, or from both at once.
 
-Some tools sit on top of both. Open Sunsama is a planner that shows your calendar next to your tasks. Cal.diy is a booking page that reads your calendar to find free times.
+Some tools sit on top of both. StudyOS is a planner that shows your calendar next to your tasks. Cal.diy is a booking page that reads your calendar to find free times.
 
 ## How we compared
 
@@ -79,25 +79,25 @@ We read each project's license file, releases, docs and open issues. We pulled s
 
 We captured the screenshots ourselves from each app's demo or web app, or took them from the project's official images. The card says which.
 
-We build Open Sunsama and use it every day. We did not run every other app for weeks, so we don't claim to have tested them.
+We build StudyOS and use it every day. We did not run every other app for weeks, so we don't claim to have tested them.
 
-## 1. Open Sunsama: the best open-source calendar planner
+## 1. StudyOS: the best open-source calendar planner
 
 <OssApp id="open-sunsama" rank={1} bestFor="Planning your day with tasks and your Google, Outlook or iCloud calendar in one view, with time blocks and any AI agent." />
 
 **Verdict:** best overall. It turns your calendar into a plan for the day, and Claude or ChatGPT can help you make it.
 
-Open Sunsama is a daily planner, not a calendar server. You connect the calendars you already use: Google, Outlook and iCloud, and as many accounts as you like. Your meetings then sit next to your tasks.
+StudyOS is a daily planner, not a calendar server. You connect the calendars you already use: Google, Outlook and iCloud, and as many accounts as you like. Your meetings then sit next to your tasks.
 
-<Shot id="calendar-week" alt="Open Sunsama week view with time blocks next to synced calendar events" caption="The week view shows your time blocks next to your real meetings." />
+<Shot id="calendar-week" alt="StudyOS week view with time blocks next to synced calendar events" caption="The week view shows your time blocks next to your real meetings." />
 
 You plan by dragging a task into a gap between meetings. Resize the block to fit the work. Now your to-do list has a time, not just a date.
 
 <Clip id="time-block" caption="Drag a task onto the calendar, then resize the block to fit the work." />
 
-Sync goes both ways for events. Create, move or resize a meeting in Open Sunsama, and it saves back to Google, Outlook or iCloud. Your time blocks stay in Open Sunsama, so coworkers don't see your plan.
+Sync goes both ways for events. Create, move or resize a meeting in StudyOS, and it saves back to Google, Outlook or iCloud. Your time blocks stay in StudyOS, so coworkers don't see your plan.
 
-<Shot id="calendar-day" alt="Open Sunsama day view with tasks beside a calendar of meetings and time blocks" caption="The day view puts today's tasks beside today's calendar." />
+<Shot id="calendar-day" alt="StudyOS day view with tasks beside a calendar of meetings and time blocks" caption="The day view puts today's tasks beside today's calendar." />
 
 - **Good:** time blocking in day and week views, rollover of unfinished tasks, a focus timer that tracks planned vs actual time, and a hosted MCP server. Your agent can read your meetings and plan around them. See [calendar sync](/features/calendar-sync).
 - **Falls short:** it does not store your calendar or replace a CalDAV server. It reads Google, Outlook and iCloud today. There is no month view, and no iOS or Android app; phones use the mobile web app.
@@ -227,7 +227,7 @@ You need three things: a server to hold your events, a way to sync, and an app o
 6. **Connect your computer.** Thunderbird works on Windows, Mac and Linux. GNOME Calendar and the Mac's own Calendar app can add CalDAV accounts too.
 7. **Plan your days.** Keep a calendar for meetings, and a planner for the work between them.
 
-One honest note on step 7. Open Sunsama connects to Google, Outlook and iCloud today. Its iCloud form takes a custom CalDAV URL, but those three are the calendars we support.
+One honest note on step 7. StudyOS connects to Google, Outlook and iCloud today. Its iCloud form takes a custom CalDAV URL, but those three are the calendars we support.
 
 ## Open source licenses in plain words
 
@@ -239,15 +239,15 @@ Every app here shows its license on its card. Here is what those licenses mean f
 | **GPL-3.0** (Radicale, Baïkal, Fossify, Etar, DAVx⁵, GNOME Calendar, Proton, Tuta) | Use and change it freely. If you share a changed version, share your code too. |
 | **AGPL-3.0** (Nextcloud Calendar) | Like GPL, and it also covers apps you run for others over the web. |
 | **MPL-2.0** (Thunderbird) | Share changes to its own files; the rest of your project can use any license. |
-| **Non-commercial** (Open Sunsama) | Read it, run it and self-host it for personal use. Companies need a commercial license. |
+| **Non-commercial** (StudyOS) | Read it, run it and self-host it for personal use. Companies need a commercial license. |
 
-For personal use and self-hosting, all of these give you full control. Open Sunsama's license is not an OSI license like MIT or GPL, so check it if you are a company.
+For personal use and self-hosting, all of these give you full control. StudyOS's license is not an OSI license like MIT or GPL, so check it if you are a company.
 
 ## Which calendars work with AI agents?
 
 An AI agent talks to apps over MCP. Here is where each calendar stands.
 
-- **Open Sunsama:** a hosted MCP server with OAuth sign-in. Claude, ChatGPT or Cursor can read your meetings and plan time blocks around them. Calendar events are read-only over MCP. See the [MCP setup guide](/docs/mcp/overview).
+- **StudyOS:** a hosted MCP server with OAuth sign-in. Claude, ChatGPT or Cursor can read your meetings and plan time blocks around them. Calendar events are read-only over MCP. See the [MCP setup guide](/docs/mcp/overview).
 - **Nextcloud Calendar:** Nextcloud's Context Agent app has an MCP server with calendar tools. It needs the AppAPI setup.
 - **Radicale and Baïkal:** community CalDAV MCP servers work with any CalDAV server.
 - **DAVx⁵:** its makers publish davmcp, an early MCP server for CalDAV events. Its own README says it is not ready for real use.
@@ -255,7 +255,7 @@ An AI agent talks to apps over MCP. Here is where each calendar stands.
 
 ## Which one should you pick?
 
-- **For most people: Open Sunsama.** Keep your calendar where it is, and plan your tasks right next to your meetings.
+- **For most people: StudyOS.** Keep your calendar where it is, and plan your tasks right next to your meetings.
 - **If you want Google Calendar on your own server,** pick Nextcloud Calendar.
 - **If you want the smallest possible server,** pick Radicale, or Baïkal on a PHP host.
 - **If you want a desktop app,** pick Thunderbird. On GNOME, pick GNOME Calendar.

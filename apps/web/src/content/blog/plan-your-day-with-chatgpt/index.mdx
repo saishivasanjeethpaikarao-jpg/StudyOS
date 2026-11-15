@@ -4,7 +4,7 @@ export const frontmatter = {
     "Turn ChatGPT into a calendar planner: connect your tasks, time blocks and meetings over MCP, work around the calendar plugin's limits, and plan your day with 9 prompts.",
   date: "2026-09-24",
   updated: "2026-09-24",
-  author: "Open Sunsama Team",
+  author: "StudyOS Team",
   tags: ["chatgpt", "mcp", "ai", "daily-planning", "calendar"],
   readingTime: 9,
   image: "/blog-plan-your-day-with-chatgpt.webp",
@@ -12,12 +12,12 @@ export const frontmatter = {
     {
       question: "Can ChatGPT plan my day?",
       answer:
-        "Yes, if it can see your tasks and calendar. Connect a planner such as Open Sunsama, which also reads the meetings synced from your calendar, and ask it to plan your day. It proposes a schedule and books it after you approve.",
+        "Yes, if it can see your tasks and calendar. Connect a planner such as StudyOS, which also reads the meetings synced from your calendar, and ask it to plan your day. It proposes a schedule and books it after you approve.",
     },
     {
       question: "Can ChatGPT add events to my calendar?",
       answer:
-        "Sometimes. ChatGPT's calendar plugins read your schedule well, but writing events has depended on the calendar, your plan and your admin. A planner connector like Open Sunsama gives ChatGPT a place it can always write time blocks.",
+        "Sometimes. ChatGPT's calendar plugins read your schedule well, but writing events has depended on the calendar, your plan and your admin. A planner connector like StudyOS gives ChatGPT a place it can always write time blocks.",
     },
     {
       question: "Why is ChatGPT's Google Calendar connection not working?",
@@ -42,12 +42,12 @@ export const frontmatter = {
     {
       question: "Does the same planner work with Claude?",
       answer:
-        "Yes. Open Sunsama's connector is a standard MCP server, so the same URL works in Claude, Claude Code, Cursor and other MCP clients.",
+        "Yes. StudyOS's connector is a standard MCP server, so the same URL works in Claude, Claude Code, Cursor and other MCP clients.",
     },
   ],
 };
 
-The ChatGPT calendar plugins can read your meetings, but they don't give ChatGPT a place to keep your tasks or book focused work. To plan your day, add a planner it can write to, such as Open Sunsama, which also reads your synced meetings. Then one prompt, "plan my day," gets you a time-blocked schedule that you approve before anything is booked.
+The ChatGPT calendar plugins can read your meetings, but they don't give ChatGPT a place to keep your tasks or book focused work. To plan your day, add a planner it can write to, such as StudyOS, which also reads your synced meetings. Then one prompt, "plan my day," gets you a time-blocked schedule that you approve before anything is booked.
 
 This guide shows the 2-minute setup, explains where ChatGPT's calendar support falls short, and gives you 9 prompts for real days.
 
@@ -55,7 +55,7 @@ This guide shows the 2-minute setup, explains where ChatGPT's calendar support f
 
 - **ChatGPT reads calendars well.** Its Google Calendar and Outlook plugins can list events and check free time.
 - **It needs help to plan.** A calendar has no tasks, estimates or rollover, and chat forgets your list.
-- **Open Sunsama fills the gap.** It holds your tasks and time blocks and reads your synced meetings. ChatGPT reaches all three over MCP.
+- **StudyOS fills the gap.** It holds your tasks and time blocks and reads your synced meetings. ChatGPT reaches all three over MCP.
 - **Setup takes 2 minutes** on Plus, Pro, Business, Enterprise or Edu, in ChatGPT on the web.
 - **You stay in charge.** ChatGPT proposes first and books after your yes.
 
@@ -73,9 +73,9 @@ That is why "ChatGPT Google Calendar connector not working" is such a common sea
 
 **Chat forgets.** If you paste your to-do list into a chat, it lives only in that chat. Tomorrow you start over.
 
-The fix is simple: give ChatGPT a planner that sees your meetings and that it can write to. Open Sunsama is an open-source daily planner with a hosted MCP server. ChatGPT reads your meetings and tasks in one call, then creates tasks, blocks time and moves work between days.
+The fix is simple: give ChatGPT a planner that sees your meetings and that it can write to. StudyOS is an open-source daily planner with a hosted MCP server. ChatGPT reads your meetings and tasks in one call, then creates tasks, blocks time and moves work between days.
 
-| What you need | Calendar plugin only | + Open Sunsama |
+| What you need | Calendar plugin only | + StudyOS |
 | --- | --- | --- |
 | See meetings and free time | Yes | Yes |
 | A task list that lasts between chats | No | Yes |
@@ -84,21 +84,21 @@ The fix is simple: give ChatGPT a planner that sees your meetings and that it ca
 | Roll unfinished work to tomorrow | No | Yes |
 | Planned vs actual time | No | Yes |
 
-## How to connect Open Sunsama to ChatGPT
+## How to connect StudyOS to ChatGPT
 
 ChatGPT adds outside tools as **plugins**, and a custom plugin like this one needs developer mode. OpenAI [lists it](https://developers.openai.com/api/docs/guides/developer-mode) for Plus, Pro, Business, Enterprise and Education accounts on the web. On Business and Enterprise, an admin may need to allow it.
 
 1. **Turn on developer mode.** In ChatGPT, open **Settings → Security and login** and switch on **Developer mode**.
 2. **Create the plugin.** Go to [ChatGPT Plugins](https://chatgpt.com/plugins) and click the **+** next to the search box.
-3. **Fill in the form.** Name: **Open Sunsama**. Description: *My tasks, time blocks and calendar meetings*. Server URL: `https://api.opensunsama.com/mcp`. Leave authentication on **OAuth**.
+3. **Fill in the form.** Name: **StudyOS**. Description: *My tasks, time blocks and calendar meetings*. Server URL: `https://studyos-api-wy5w.onrender.com/mcp`. Leave authentication on **OAuth**.
 4. **Confirm.** Check **I understand and want to continue**, then click **Create**.
-5. **Sign in.** The Open Sunsama page opens. Sign in and click **Allow access**.
+5. **Sign in.** The StudyOS page opens. Sign in and click **Allow access**.
 
-<Shot id="consent-chatgpt" alt="Open Sunsama consent screen asking to allow ChatGPT access to tasks, time blocks and calendar meetings" caption="You sign in to Open Sunsama once. ChatGPT gets a scoped token, never your password." />
+<Shot id="consent-chatgpt" alt="StudyOS consent screen asking to allow ChatGPT access to tasks, time blocks and calendar meetings" caption="You sign in to StudyOS once. ChatGPT gets a scoped token, never your password." />
 
-To use it, start a new chat, click **+** in the message box, and pick **Open Sunsama**. The [ChatGPT setup guide](/docs/mcp/chatgpt) has screenshots and fixes for common errors.
+To use it, start a new chat, click **+** in the message box, and pick **StudyOS**. The [ChatGPT setup guide](/docs/mcp/chatgpt) has screenshots and fixes for common errors.
 
-Connect your Google, Outlook or iCloud calendar in Open Sunsama under **Settings → Calendars**, and ChatGPT sees your meetings through the same plugin. It sees each meeting's title, time and place, never who's invited or the notes.
+Connect your Google, Outlook or iCloud calendar in StudyOS under **Settings → Calendars**, and ChatGPT sees your meetings through the same plugin. It sees each meeting's title, time and place, never who's invited or the notes.
 
 If you added the plugin before calendar access existed, reconnect it in **Settings → MCP → Connected apps** and allow calendar access.
 
@@ -109,10 +109,10 @@ OpenAI's docs say write actions need your OK by default, and you can expand any 
 Here is an example. Alex Rivera, Head of Product, has three meetings and five open tasks. Alex types this:
 
 ```
-Plan my day around my meetings, using my open tasks in Open Sunsama.
+Plan my day around my meetings, using my open tasks in StudyOS.
 ```
 
-ChatGPT calls Open Sunsama's `get_schedule_for_day`, which returns today's meetings and time blocks together, and `list_tasks` for open work. It replies with a plan like this and waits:
+ChatGPT calls StudyOS's `get_schedule_for_day`, which returns today's meetings and time blocks together, and `list_tasks` for open work. It replies with a plan like this and waits:
 
 | Time | Block | Why |
 | --- | --- | --- |
@@ -127,7 +127,7 @@ ChatGPT calls Open Sunsama's `get_schedule_for_day`, which returns today's meeti
 
 Alex replies: swap the specs review and the pricing reply, then book it. ChatGPT calls `create_time_block` and `link_task_to_time_block` for each block. Then it uses `schedule_task` to move the two leftovers to Thursday.
 
-<Clip id="ai-plan" caption="An AI agent plans the afternoon over MCP. The blocks appear in Open Sunsama as it works." />
+<Clip id="ai-plan" caption="An AI agent plans the afternoon over MCP. The blocks appear in StudyOS as it works." />
 
 ## 9 ChatGPT prompts for planning your day and week
 
@@ -136,7 +136,7 @@ Paste these as they are, or add your own details. Most of them ask ChatGPT to sh
 ### 1. Plan my day around my meetings
 
 ```
-Plan my day. Read today's meetings and my open tasks from Open Sunsama.
+Plan my day. Read today's meetings and my open tasks from StudyOS.
 Fit my top tasks into the free gaps, biggest first,
 with 10-minute buffers. Show the plan and wait for my OK before booking.
 ```
@@ -212,7 +212,7 @@ How did this week go? For each task I finished, compare the time estimate
 with the actual time. Where was I most off? Suggest better estimates.
 ```
 
-**What ChatGPT does:** it reads each task's estimate and the actual time from Open Sunsama's focus timer. Then it shows where your guesses run short.
+**What ChatGPT does:** it reads each task's estimate and the actual time from StudyOS's focus timer. Then it shows where your guesses run short.
 
 ### 9. Clean up the backlog
 
@@ -225,7 +225,7 @@ schedule, or delete. Don't delete anything until I say which ones.
 
 ## You can still plan by hand
 
-ChatGPT doesn't have to do all the work. Open Sunsama is a full planner on web, [desktop](/download) and phone. You can drag tasks from the backlog into Today, then let ChatGPT fill the calendar.
+ChatGPT doesn't have to do all the work. StudyOS is a full planner on web, [desktop](/download) and phone. You can drag tasks from the backlog into Today, then let ChatGPT fill the calendar.
 
 <Clip id="plan-day" caption="Drag tasks from the backlog into Today. ChatGPT sees the same plan you do." />
 
@@ -233,22 +233,22 @@ Your edits and ChatGPT's edits land in the same place, and they sync across devi
 
 ## Other ways to connect ChatGPT to your tasks
 
-Open Sunsama isn't the only planner ChatGPT can use. Here is a fair look:
+StudyOS isn't the only planner ChatGPT can use. Here is a fair look:
 
 - **Todoist** has an [official hosted MCP server](https://www.todoist.com/help/articles/use-chatgpt-with-todoist-mcp-WEeLx9d8h). Pick it if you already live in Todoist and mostly need a task list.
 - **Sunsama** has an official MCP server and is listed in ChatGPT's plugin directory. Pick it if you want its guided planning rituals and don't mind a closed app.
 - **Google Calendar or Outlook plugins alone** work if you only need ChatGPT to answer questions about meetings.
 
-Pick Open Sunsama if you want tasks, time blocks and meetings in one planner that any agent can use. The code is public on GitHub, you can [self-host it](/docs/self-hosting/docker), and it has a [REST API](/docs/api). The same connector also works in [Claude](/blog/plan-your-day-with-claude) and Cursor.
+Pick StudyOS if you want tasks, time blocks and meetings in one planner that any agent can use. The code is public on GitHub, you can [self-host it](/docs/self-hosting/docker), and it has a [REST API](/docs/api). The same connector also works in [Claude](/blog/plan-your-day-with-claude) and Cursor.
 
 For the full list, see the [best task managers with MCP](/blog/best-task-managers-with-mcp).
 
 ## Which setup should you pick?
 
 - **If you only ask about meetings,** the calendar plugin alone is enough.
-- **If you want ChatGPT to plan your day,** add Open Sunsama. It covers tasks, time blocks and your meetings.
-- **If you want ChatGPT to create or move meetings,** add your calendar plugin too. Open Sunsama reads meetings but doesn't change them.
-- **If you're on ChatGPT Free or Go,** custom plugins aren't available. Use Open Sunsama with Claude instead, since Claude's Free plan allows one custom connector.
+- **If you want ChatGPT to plan your day,** add StudyOS. It covers tasks, time blocks and your meetings.
+- **If you want ChatGPT to create or move meetings,** add your calendar plugin too. StudyOS reads meetings but doesn't change them.
+- **If you're on ChatGPT Free or Go,** custom plugins aren't available. Use StudyOS with Claude instead, since Claude's Free plan allows one custom connector.
 - **If you switch between ChatGPT and Claude,** use one planner that both can reach, so your plan follows you.
 
-Learn more about [AI integration](/features/ai-integration) in Open Sunsama, or read how [time blocking with AI](/blog/time-blocking-with-ai) works.
+Learn more about [AI integration](/features/ai-integration) in StudyOS, or read how [time blocking with AI](/blog/time-blocking-with-ai) works.

@@ -3,7 +3,7 @@ export const frontmatter = {
   description: "AI time blocking two ways: auto-schedulers like Motion and Reclaim, or an AI planner you talk to in Claude or ChatGPT. Steps, prompts and how to re-plan.",
   date: "2026-09-24",
   updated: "2026-09-24",
-  author: "Open Sunsama Team",
+  author: "StudyOS Team",
   tags: ["time-blocking", "ai", "ai-scheduling", "claude", "chatgpt", "daily-planning"],
   readingTime: 8,
   image: "/blog-time-blocking-with-ai.webp",
@@ -14,7 +14,7 @@ export const frontmatter = {
     },
     {
       question: "Can ChatGPT make a time-blocked schedule?",
-      answer: "Yes. On its own it can only write a plan as text. Connect it to a planner with an MCP server, like Open Sunsama, and it can put the blocks on your real calendar.",
+      answer: "Yes. On its own it can only write a plan as text. Connect it to a planner with an MCP server, like StudyOS, and it can put the blocks on your real calendar.",
     },
     {
       question: "Can Claude time block my calendar?",
@@ -22,11 +22,11 @@ export const frontmatter = {
     },
     {
       question: "What is the best AI scheduling assistant?",
-      answer: "For most people, we recommend Claude or ChatGPT connected to Open Sunsama. It plans with you and waits for your yes. If you want the app to schedule for you in the background, try Motion or Reclaim.",
+      answer: "For most people, we recommend Claude or ChatGPT connected to StudyOS. It plans with you and waits for your yes. If you want the app to schedule for you in the background, try Motion or Reclaim.",
     },
     {
       question: "Why does my AI plan never fit my day?",
-      answer: "Usually because tasks have no time estimates, or the AI can't see your meetings. Add an estimate to every task, and connect your calendar in Open Sunsama so the AI reads your meetings itself. Then ask it to leave 20 percent of the day free.",
+      answer: "Usually because tasks have no time estimates, or the AI can't see your meetings. Add an estimate to every task, and connect your calendar in StudyOS so the AI reads your meetings itself. Then ask it to leave 20 percent of the day free.",
     },
     {
       question: "Is AI time blocking good for ADHD?",
@@ -41,11 +41,11 @@ An auto-scheduler like Motion or Reclaim fills and moves your calendar for you. 
 
 Pick an auto-scheduler if you want planning off your plate and don't mind the app moving things. Pick the agent route if you want a calm, realistic day that you still decide. This guide shows both, then walks you through the agent route step by step, with prompts you can copy.
 
-For most readers, we recommend the agent route with [Open Sunsama](/features/ai-integration), an open-source daily planner that works with any AI agent. We build Open Sunsama, so we put it first — here is why, and where others fit better.
+For most readers, we recommend the agent route with [StudyOS](/features/ai-integration), an open-source daily planner that works with any AI agent. We build StudyOS, so we put it first — here is why, and where others fit better.
 
 ## Key takeaways
 
-- **Our pick for most people:** Claude or ChatGPT plus Open Sunsama. Tasks, time blocks and AI access sit in one place, and you decide what lands on your calendar.
+- **Our pick for most people:** Claude or ChatGPT plus StudyOS. Tasks, time blocks and AI access sit in one place, and you decide what lands on your calendar.
 - **Two ways:** auto-schedulers move blocks for you. AI agents suggest blocks and you approve them.
 - **The agent needs access.** Connect Claude or ChatGPT to a planner over MCP, so it can read tasks and write real time blocks.
 - **Estimates matter most.** A task with no time estimate can't be planned well by any AI.
@@ -88,19 +88,19 @@ For that, the AI needs access to your planner. MCP (Model Context Protocol) is t
 
 The planner matters. If tasks live in one app and your calendar in another, the AI has to juggle two connectors. It works best when tasks, time blocks and meetings sit in one place.
 
-[Open Sunsama](/features/ai-integration) is built this way: an open-source daily planner whose hosted MCP server gives your AI 24 tools. One reads your meetings and time blocks for a day in one call. Others create, move and resize time blocks and link them to tasks.
+[StudyOS](/features/ai-integration) is built this way: an open-source daily planner whose hosted MCP server gives your AI 24 tools. One reads your meetings and time blocks for a day in one call. Others create, move and resize time blocks and link them to tasks.
 
 Your Google, Outlook or iCloud meetings sync onto the same calendar in the app, and the AI reads them over the same connection. It plans your time blocks around your meetings, so you never type a meeting time into the chat.
 
 ## How to time block your day with Claude or ChatGPT
 
-These steps use Open Sunsama, but the flow works with any planner whose MCP server can write time blocks. See [the best task managers with MCP](/blog/best-task-managers-with-mcp) for other options.
+These steps use StudyOS, but the flow works with any planner whose MCP server can write time blocks. See [the best task managers with MCP](/blog/best-task-managers-with-mcp) for other options.
 
 ### Step 1: Connect your planner
 
-Paste `https://api.opensunsama.com/mcp` into Claude (Settings → Connectors) or ChatGPT (developer mode, on paid plans). Sign in and click **Allow access**. The [Claude guide](/docs/mcp/claude) and [ChatGPT guide](/docs/mcp/chatgpt) show each click.
+Paste `https://studyos-api-wy5w.onrender.com/mcp` into Claude (Settings → Connectors) or ChatGPT (developer mode, on paid plans). Sign in and click **Allow access**. The [Claude guide](/docs/mcp/claude) and [ChatGPT guide](/docs/mcp/chatgpt) show each click.
 
-Then connect your calendar in Open Sunsama under **Settings → Calendars**. Now the AI sees your meetings and your tasks in one call.
+Then connect your calendar in StudyOS under **Settings → Calendars**. Now the AI sees your meetings and your tasks in one call.
 
 ### Step 2: Brain dump into your backlog
 
@@ -136,7 +136,7 @@ The blocks land on the same calendar you use by hand. So you can still drag, res
 
 <Clip id="time-block" caption="Drag a task onto the calendar and resize the block. Your changes and the AI's share one calendar." />
 
-<Shot id="calendar-day" alt="Open Sunsama day view with meetings and time blocks for tasks" caption="A planned day: meetings and task blocks side by side, with room to breathe." />
+<Shot id="calendar-day" alt="StudyOS day view with meetings and time blocks for tasks" caption="A planned day: meetings and task blocks side by side, with room to breathe." />
 
 When a block starts, open the task in focus mode. The timer tracks your actual time, so you can later compare planned vs actual.
 
@@ -165,7 +165,7 @@ tell me what you moved.
 
 Days break. A meeting runs long, a fire starts, and by 2pm the plan is fiction. This is where talking to an AI beats dragging blocks around by hand.
 
-In Open Sunsama, tasks you don't finish roll over to the next day on their own. So nothing gets lost. The job is to trim, not to rescue.
+In StudyOS, tasks you don't finish roll over to the next day on their own. So nothing gets lost. The job is to trim, not to rescue.
 
 ```
 Today went off track. It's 2pm. Look at what's left and re-plan
@@ -192,14 +192,14 @@ Review my day. What did I finish? Which tasks took longer than
 my estimate? Suggest better estimates for tasks like them.
 ```
 
-Open Sunsama's MCP shares both the estimate and the tracked time for each task, so the AI can do this math. Over a few weeks, your estimates get closer to the truth, and every plan gets more realistic.
+StudyOS's MCP shares both the estimate and the tracked time for each task, so the AI can do this math. Over a few weeks, your estimates get closer to the truth, and every plan gets more realistic.
 
 ## Which approach should you pick?
 
-**For most people: an AI agent with Open Sunsama.** You stay in charge, the AI skips the busywork, and your tasks, time blocks and AI access live in one open-source app.
+**For most people: an AI agent with StudyOS.** You stay in charge, the AI skips the busywork, and your tasks, time blocks and AI access live in one open-source app.
 
 - **If you want your calendar to plan itself,** try Motion or Reclaim.
-- **If you already use Claude or ChatGPT every day,** connect Open Sunsama to it. See our guides to plan your day with [Claude](/blog/plan-your-day-with-claude) and [ChatGPT](/blog/plan-your-day-with-chatgpt).
+- **If you already use Claude or ChatGPT every day,** connect StudyOS to it. See our guides to plan your day with [Claude](/blog/plan-your-day-with-claude) and [ChatGPT](/blog/plan-your-day-with-chatgpt).
 - **If your tasks already live in another app,** check [the best task managers with MCP](/blog/best-task-managers-with-mcp) first.
 
-New to the method itself? Start with our [complete guide to time blocking](/blog/complete-guide-time-blocking). Then [download Open Sunsama](/download) and follow the [MCP overview](/docs/mcp/overview) to connect your AI.
+New to the method itself? Start with our [complete guide to time blocking](/blog/complete-guide-time-blocking). Then [download StudyOS](/download) and follow the [MCP overview](/docs/mcp/overview) to connect your AI.
