@@ -6,8 +6,9 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { isDesktop } from '@/lib/desktop';
+import { isDesktop, openExternal } from '@/lib/desktop';
 import { isNativeMobile } from '@/lib/native-bridge';
+import { PRODUCTION_API_URL } from '@/lib/api';
 import {
   checkForUpdate,
   downloadAndInstallUpdate,
@@ -27,7 +28,7 @@ export interface AppUpdateState {
   dismiss: () => void;
 }
 
-const CURRENT_APP_VERSION = "1.1.0";
+export const CURRENT_APP_VERSION = "1.2.0";
 
 function compareSemver(a: string, b: string): number {
   const pa = a.replace(/^v/, '').split('.').map(Number);
@@ -45,19 +46,41 @@ async function checkMobileUpdate(): Promise<UpdateInfo | null> {
   if (typeof window === "undefined") return null;
   try {
     const currentVer = window.StudyOSNative?.getAppVersionName?.() || CURRENT_APP_VERSION;
-    const res = await fetch("https://api.github.com/repos/saishivasanjeethpaikarao-jpg/StudyOS/releases/latest", {
-      headers: { Accept: "application/vnd.github.v3+json" },
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { tag_name?: string; published_at?: string; body?: string };
-    const latestTag = (data.tag_name || "").replace(/^v/, "");
-    if (latestTag && compareSemver(latestTag, currentVer) > 0) {
-      return {
-        version: latestTag,
-        currentVersion: currentVer,
-        date: data.published_at ?? null,
-        body: data.body ?? "New version with the latest features and fixes.",
-      };
+    // Primary check: GitHub Releases API
+    try {
+      const res = await fetch("https://api.github.com/repos/saishivasanjeethpaikarao-jpg/StudyOS/releases/latest", {
+        headers: { Accept: "application/vnd.github.v3+json" },
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { tag_name?: string; published_at?: string; body?: string };
+        const latestTag = (data.tag_name || "").replace(/^v/, "");
+        if (latestTag && compareSemver(latestTag, currentVer) > 0) {
+          return {
+            version: latestTag,
+            currentVersion: currentVer,
+            date: data.published_at ?? null,
+            body: data.body ?? "New version with Telegram bot auto-alarms, schedule sync, and performance improvements.",
+          };
+        }
+        return null;
+      }
+    } catch {
+      // Fall through to backend API
+    }
+
+    // Fallback check: StudyOS API /releases/latest
+    const apiRes = await fetch(`${PRODUCTION_API_URL}/releases/latest`);
+    if (apiRes.ok) {
+      const apiData = (await apiRes.json()) as { data?: Record<string, { version?: string; createdAt?: string; notes?: string }> };
+      const androidRelease = apiData.data?.["android"];
+      if (androidRelease?.version && compareSemver(androidRelease.version, currentVer) > 0) {
+        return {
+          version: androidRelease.version,
+          currentVersion: currentVer,
+          date: androidRelease.createdAt ?? null,
+          body: androidRelease.notes ?? "New version with Telegram bot auto-alarms, schedule sync, and performance improvements.",
+        };
+      }
     }
   } catch {
     // network or rate-limit
@@ -123,15 +146,17 @@ export function useAppUpdate(): AppUpdateState {
         });
         setStatus('installing');
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err || 'Failed to install update'));
-        setStatus('error');
+        console.warn("Tauri updater failed, falling back to direct download:", err);
+        void openExternal("https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/latest/download/StudyOS_Setup.exe");
+        setStatus('idle');
       }
     } else if (mobile) {
       setStatus('installing');
+      const apkUrl = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/latest/download/StudyOS.apk";
       if (typeof window !== "undefined" && window.StudyOSNative?.installApkUpdate) {
-        window.StudyOSNative.installApkUpdate("https://studyos-web-8ruc.onrender.com/downloads/StudyOS.apk");
+        window.StudyOSNative.installApkUpdate(apkUrl);
       } else if (typeof window !== "undefined") {
-        window.location.assign("/downloads/StudyOS.apk");
+        window.location.assign(apkUrl);
       }
       setTimeout(() => setStatus('idle'), 4000);
     }

@@ -177,8 +177,8 @@ Jump to any subject, assignment, or setting in a single keystroke. Search across
 
 | Platform | Format | Direct Download |
 | :--- | :--- | :--- |
-| **Android Mobile** | Universal APK (v1.1.0) | [Download StudyOS.apk](https://studyos-web-8ruc.onrender.com/downloads/StudyOS.apk) |
-| **Windows Desktop** | 64-bit NSIS Setup (.exe) | [Download StudyOS_Setup.exe](https://studyos-web-8ruc.onrender.com/downloads/StudyOS_Setup.exe) |
+| **Android Mobile** | Universal APK (v1.2.0) | [Download StudyOS.apk](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.2.0/StudyOS.apk) |
+| **Windows Desktop** | 64-bit NSIS Setup (.exe) | [Download StudyOS_Setup.exe](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.2.0/StudyOS_Setup.exe) |
 | **Web App** | Hosted Cloud Instance | [Open StudyOS Web App](https://studyos-web-8ruc.onrender.com) |
 | **All Releases** | Source & Assets | [GitHub Releases](https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases) |
 

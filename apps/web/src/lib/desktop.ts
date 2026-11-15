@@ -26,6 +26,9 @@ export function isDesktop(): boolean {
   if (typeof window === "undefined") return false;
   const win = window as Window & { __TAURI_INTERNALS__?: unknown; __TAURI__?: unknown };
   if ("__TAURI_INTERNALS__" in win || "__TAURI__" in win) return true;
+  if (typeof navigator !== "undefined" && (navigator.userAgent.includes("StudyOS-Desktop") || navigator.userAgent.includes("Tauri"))) {
+    return true;
+  }
   const { protocol, hostname } = window.location;
   return protocol === "tauri:" || protocol === "asset:" || hostname === "tauri.localhost";
 }

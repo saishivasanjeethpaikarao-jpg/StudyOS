@@ -1,10 +1,11 @@
 import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User, LoginInput, CreateUserInput, AuthResponse, UpdateUserInput } from "@open-sunsama/types";
-import { getApi, clearApiClient, clearCsrfToken, getToken, setAuthToken, refreshAuthToken } from "@/lib/api";
+import { getApi, clearApiClient, clearCsrfToken, getToken, setAuthToken, refreshAuthToken, API_BASE_URL } from "@/lib/api";
 import { clearPersistedCache } from "@/lib/query-persister";
 import { identifyUser, trackGoal } from "@/lib/analytics";
 import { notifyNativeLogout } from "@/lib/native-bridge";
+import { isDesktop } from "@/lib/desktop";
 
 const AUTH_USER_KEY = "studyos_user";
 const LEGACY_AUTH_USER_KEY = "open_sunsama_user";
@@ -65,6 +66,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [cachedUser, setCachedUser] = React.useState<User | null>(getStoredUser);
   const [hasSession, setHasSession] = React.useState(() => !!getToken());
   const [checkingSession, setCheckingSession] = React.useState(true);
+
+  const handleAuthHandoff = React.useCallback(async (code: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/google/mobile/exchange`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      if (!res.ok) return;
+      const body = (await res.json()) as { success?: boolean; data?: { token?: string } };
+      const token = body.data?.token;
+      if (token) {
+        setAuthToken(token);
+        setHasSession(true);
+        void queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      }
+    } catch (err) {
+      console.error("Failed to exchange auth handoff code", err);
+    }
+  }, [queryClient]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // 1. Android Native WebView deep link callback
+    (window as any).handleMobileAuthCallback = (url: string) => {
+      try {
+        const u = new URL(url);
+        const code = u.searchParams.get("code");
+        if (code) {
+          void handleAuthHandoff(code);
+        }
+      } catch {}
+    };
+
+    // 2. Tauri Desktop deep link listener
+    if (isDesktop()) {
+      import("@tauri-apps/plugin-deep-link")
+        .then(({ onOpenUrl }) => {
+          onOpenUrl((urls: string[]) => {
+            for (const rawUrl of urls) {
+              try {
+                const u = new URL(rawUrl);
+                const code = u.searchParams.get("code");
+                if (code) {
+                  void handleAuthHandoff(code);
+                }
+              } catch {}
+            }
+          });
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      delete (window as any).handleMobileAuthCallback;
+    };
+  }, [handleAuthHandoff]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;

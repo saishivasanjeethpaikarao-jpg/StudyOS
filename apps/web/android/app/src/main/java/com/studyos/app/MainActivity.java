@@ -398,7 +398,11 @@ public class MainActivity extends BridgeActivity {
 
         @JavascriptInterface
         public String getAppVersionName() {
-            return "1.1.0";
+            try {
+                return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            } catch (Exception e) {
+                return "1.2.0";
+            }
         }
 
         @JavascriptInterface
@@ -406,7 +410,7 @@ public class MainActivity extends BridgeActivity {
             try {
                 String targetUrl = (apkUrl != null && !apkUrl.trim().isEmpty())
                     ? apkUrl.trim()
-                    : "https://studyos-web-8ruc.onrender.com/downloads/StudyOS.apk";
+                    : "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/latest/download/StudyOS.apk";
                 Log.d(TAG, "installApkUpdate launching: " + targetUrl);
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

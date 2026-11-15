@@ -37,6 +37,7 @@
     "store:allow-save",
     "store:allow-load",
     "updater:default",
+    "deep-link:default",
     "process:allow-restart",
     {
       "identifier": "http:default",

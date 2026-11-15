@@ -19,14 +19,14 @@ import { Button } from "@/components/ui/button";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 
-const CURRENT_VERSION = "v1.1.0";
+const CURRENT_VERSION = "v1.2.0";
 const GITHUB_REPO_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS";
-const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases/tag/v1.1.0`;
+const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases/tag/v1.2.0`;
 const WINDOWS_EXE_URL = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS_Setup.exe`;
-const WINDOWS_EXE_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.1.0/StudyOS_1.1.0_x64-setup.exe";
-const ANDROID_APK_URL = `${GITHUB_REPO_URL}/releases/download/v1.1.0/StudyOS.apk`;
+const WINDOWS_EXE_MIRROR = `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS_1.2.0_x64-setup.exe`;
+const ANDROID_APK_URL = `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS.apk`;
 const ANDROID_APK_DIRECT = "/downloads/StudyOS.apk";
-const ANDROID_APK_MIRROR = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.1.0/StudyOS_1.1.0.apk";
+const ANDROID_APK_MIRROR = `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS_1.2.0.apk`;
 
 export default function DownloadPage() {
   useSEO(SEO_CONFIGS.download);
@@ -100,7 +100,7 @@ export default function DownloadPage() {
 
               <div className="space-y-3 pt-2">
                 <Button size="lg" className="w-full gap-2 text-sm font-semibold shadow-md" asChild>
-                  <a href={WINDOWS_EXE_URL} download="StudyOS_1.0.20_x64-setup.exe">
+                  <a href={WINDOWS_EXE_URL} download="StudyOS_1.2.0_x64-setup.exe">
                     <Download className="h-4 w-4" />
                     Download Setup (.exe)
                   </a>
@@ -176,9 +176,9 @@ export default function DownloadPage() {
 
               <div className="space-y-2 pt-4">
                 <Button size="lg" className="w-full gap-2 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90" asChild>
-                  <a href={ANDROID_APK_URL} download="StudyOS_1.1.0.apk">
+                  <a href={ANDROID_APK_URL} download="StudyOS_1.2.0.apk">
                     <Download className="h-4 w-4" />
-                    Download APK (v1.1.0)
+                    Download APK (v1.2.0)
                   </a>
                 </Button>
                 <button
