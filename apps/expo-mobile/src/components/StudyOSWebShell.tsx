@@ -101,8 +101,16 @@ function isAllowedNavigation(url: string): boolean {
       'https://www.googleapis.com',
       'https://apis.google.com',
       'https://oauth2.googleapis.com',
+      'https://www.youtube.com',
+      'https://www.youtube-nocookie.com',
+      'https://youtube.com',
+      'https://i.ytimg.com',
+      'https://fonts.googleapis.com',
+      'https://fonts.gstatic.com',
+      'https://cdn.jsdelivr.net',
+      'https://datafa.st',
     ].map((origin) => new URL(origin).origin));
-    return parsed.protocol === 'https:' && trustedOrigins.has(parsed.origin);
+    return parsed.protocol === 'https:' && (trustedOrigins.has(parsed.origin) || parsed.origin.endsWith('.onrender.com'));
   } catch {
     return false;
   }
@@ -112,12 +120,13 @@ export function StudyOSWebShell() {
   const webViewRef = useRef<WebView>(null);
   const canGoBackRef = useRef(false);
   const bootstrapCompleteRef = useRef(false);
+  const initialLoadDoneRef = useRef(false);
   const pendingDeepLinkRef = useRef<string | null>(null);
   const handledCodesRef = useRef(new Set<string>());
   const noticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [bootstrapped, setBootstrapped] = useState(false);
   const [initialToken, setInitialToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const isDark = useColorScheme() === 'dark';
@@ -128,10 +137,27 @@ export function StudyOSWebShell() {
   );
   const injectedJavaScript = useMemo(() => {
     const seedToken = initialToken
-      ? `try { window.localStorage.setItem('open_sunsama_token', ${JSON.stringify(initialToken)}); } catch (error) { window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'AUTH_STORAGE_ERROR', message: String(error) })); }`
+      ? `try {
+          var t = ${JSON.stringify(initialToken)};
+          window.localStorage.setItem('studyos_token', t);
+          window.localStorage.setItem('studyos-auth-token', t);
+          window.localStorage.setItem('open_sunsama_token', t);
+          window.localStorage.setItem('open-sunsama-auth-token', t);
+        } catch (error) {
+          window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'AUTH_STORAGE_ERROR', message: String(error) }));
+        }`
       : '';
     return `${INJECTED}\n${seedToken}\ntrue;`;
   }, [initialToken]);
+
+  // Failsafe timer: Dismiss splash overlay after 3.5s regardless of network delays
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      initialLoadDoneRef.current = true;
+      setInitialLoading(false);
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const showNotice = useCallback((message: string) => {
     setNotice(message);
@@ -353,6 +379,10 @@ export function StudyOSWebShell() {
   }, [showNotice]);
 
   const handleRequest = useCallback((request: ShouldStartLoadRequest) => {
+    // Subframes/iframes (YouTube video embeds, fonts, analytics) must always load without interception
+    if (request.isTopFrame === false) {
+      return true;
+    }
     const url = request.url;
     if (url.startsWith('studyos://') || url.startsWith('opensunsama://')) {
       void handleMobileCallback(url);
@@ -411,12 +441,20 @@ export function StudyOSWebShell() {
             canGoBackRef.current = navigation.canGoBack;
           }}
           onLoadStart={() => {
-            setLoading(true);
+            // Only show loading screen during initial cold boot; never intercept tab transitions
+            if (!initialLoadDoneRef.current) {
+              setInitialLoading(true);
+            }
           }}
-          onLoadEnd={() => setLoading(false)}
+          onLoadEnd={() => {
+            initialLoadDoneRef.current = true;
+            setInitialLoading(false);
+          }}
           onError={() => {
-            setLoading(false);
-            setError('Unable to reach StudyOS. Check your connection and retry.');
+            if (!initialLoadDoneRef.current) {
+              setInitialLoading(false);
+              setError('Unable to reach StudyOS. Check your connection and retry.');
+            }
           }}
           onShouldStartLoadWithRequest={handleRequest}
           javaScriptEnabled
@@ -428,12 +466,12 @@ export function StudyOSWebShell() {
           mediaPlaybackRequiresUserAction={false}
           allowsInlineMediaPlayback
           mixedContentMode="never"
-          originWhitelist={[WEB_APP_URL, API_URL, 'https://accounts.google.com', 'https://accounts.youtube.com', 'https://ssl.gstatic.com', 'https://www.gstatic.com', 'https://www.googleapis.com', 'https://apis.google.com', 'https://oauth2.googleapis.com', 'about:blank']}
-          userAgent="Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 StudyOSMobile/1.0.21"
+          originWhitelist={['https://*', 'http://*', 'studyos://*', 'opensunsama://*', 'about:blank']}
+          userAgent="Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 StudyOSMobile/1.2.0"
           style={styles.webview}
         />
       ) : null}
-      {(loading || !bootstrapped) && !error ? (
+      {(initialLoading || !bootstrapped) && !error ? (
         <View style={[styles.overlay, isDark && styles.overlayDark]} pointerEvents="none">
           <Image
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -463,7 +501,7 @@ export function StudyOSWebShell() {
             style={styles.retry}
             onPress={() => {
               setError(null);
-              setLoading(true);
+              setInitialLoading(true);
               webViewRef.current?.reload();
             }}
           >
