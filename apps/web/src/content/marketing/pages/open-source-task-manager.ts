@@ -350,7 +350,7 @@ export default defineMarketingPage({
         {
           feature: "Phone",
           cells: [
-            { mark: "partial", text: "Mobile web app" },
+            { mark: "yes", text: "Android native APK, Web" },
             { mark: "partial", text: "Web app (PWA)" },
             { mark: "yes", text: "Android, iOS" },
             { mark: "partial", text: "Web app (PWA)" },
@@ -361,7 +361,7 @@ export default defineMarketingPage({
         {
           feature: "Latest release",
           cells: [
-            { text: "v1.0.13, Sep 24, 2026" },
+            { text: "v1.2.0, Nov 16, 2026" },
             { text: "v2.6.0, Aug 31, 2026" },
             { text: "v19.1.0, Sep 19, 2026" },
             { text: "v1.5.0, Sep 16, 2026" },

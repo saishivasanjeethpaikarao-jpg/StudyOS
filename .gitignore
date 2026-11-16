@@ -71,4 +71,6 @@ e2e/playwright-report/
 apps/web/public/downloads/*.apk
 *.aab
 apps/web/public/downloads/*.exe
+apps/web/public/downloads/RELEASE_NOTES.md
+apps/web/public/downloads/signing-status.json
 recordings/

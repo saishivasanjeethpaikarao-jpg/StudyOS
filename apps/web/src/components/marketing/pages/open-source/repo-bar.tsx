@@ -70,7 +70,7 @@ export function RepoBar({ className }: { className?: string }) {
             <Tag className="h-3 w-3 shrink-0" aria-hidden />
             StudyOS Apps
           </span>
-          <span className={VALUE}>v1.0.18 Live</span>
+          <span className={VALUE}>v1.2.0 Live</span>
           <span className={META}>Windows & Android APK</span>
         </Link>
       </div>
