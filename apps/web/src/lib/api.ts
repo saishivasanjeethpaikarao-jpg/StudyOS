@@ -37,7 +37,6 @@ export const API_BASE_URL = getApiBaseUrl();
 const baseUrl = API_BASE_URL;
 
 const desktopFetch: typeof globalThis.fetch = async (input, init) => {
-  const { fetch } = await import("@tauri-apps/plugin-http");
   let requestUrl = input instanceof Request ? input.url : typeof input === "string" ? input : input.toString();
   if (requestUrl.startsWith("/")) {
     requestUrl = `${PRODUCTION_API_URL}${requestUrl}`;
@@ -60,7 +59,14 @@ const desktopFetch: typeof globalThis.fetch = async (input, init) => {
         .replace(/https?:\/\/tauri\.localhost(:\d+)?/i, PRODUCTION_API_URL);
     }
   }
-  return fetch(requestUrl, init);
+
+  try {
+    const { fetch } = await import("@tauri-apps/plugin-http");
+    return await fetch(requestUrl, init);
+  } catch (err) {
+    // If Tauri plugin-http fails or throws, smoothly fall back to native WebView fetch
+    return globalThis.fetch(requestUrl, init);
+  }
 };
 const transportFetch: typeof globalThis.fetch = (input, init) => {
   // Resolve Tauri at call time. The desktop webview injects internals after
@@ -72,7 +78,13 @@ const transportFetch: typeof globalThis.fetch = (input, init) => {
 let csrfToken: string | null = null;
 let csrfPromise: Promise<string | null> | null = null;
 const unsafe = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-const authBootstrapPaths = new Set(["/auth/login", "/auth/register"]);
+const authBootstrapPaths = new Set([
+  "/auth/login",
+  "/auth/register",
+  "/auth/google/mobile/exchange",
+  "/auth/request-password-reset",
+  "/auth/reset-password",
+]);
 
 async function getCsrfToken(): Promise<string | null> {
   if (csrfToken) return csrfToken;

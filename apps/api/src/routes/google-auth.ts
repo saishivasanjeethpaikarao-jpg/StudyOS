@@ -72,16 +72,32 @@ async function start(c: Context<{ Variables: AuthVariables }>, intent: "login" |
   } catch {
     return c.redirect(appRedirect("unavailable"), 302);
   }
-  const state = randomToken();
+  const txToken = randomToken();
   const nonce = randomToken();
   const verifier = randomToken();
   const challenge = createHash("sha256").update(verifier).digest("base64url");
+  // Encode both the transaction token and the PKCE verifier directly into OAuth state.
+  // This guarantees recovery even if cross-site redirect policies in third-party browsers
+  // block or drop the cookie.
+  const state = `${txToken}.${verifier}`;
+
   await getDb().insert(googleOAuthTransactions).values({
-    stateHash: sha256(state), nonceHash: sha256(nonce), userId: userId ?? null, intent,
+    stateHash: sha256(txToken),
+    nonceHash: sha256(nonce),
+    userId: userId ?? null,
+    intent,
     expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     mobileRedirectUri: mobileRedirectUri ?? null,
   });
-  setCookie(c, PKCE_COOKIE, verifier, { httpOnly: true, secure: isSecure(), sameSite: "Lax", path: "/auth/google/callback", maxAge: 300 });
+
+  setCookie(c, PKCE_COOKIE, verifier, {
+    httpOnly: true,
+    secure: isSecure(),
+    sameSite: "Lax",
+    path: "/",
+    maxAge: 300,
+  });
+
   const target = new URL(GOOGLE_AUTH);
   target.searchParams.set("client_id", oauth.clientId);
   target.searchParams.set("redirect_uri", oauth.redirectUri);
@@ -103,40 +119,107 @@ router.get("/link", auth, async (c) => {
 });
 
 router.get("/callback", async (c) => {
-  const state = c.req.query("state");
+  const rawState = c.req.query("state");
   const code = c.req.query("code");
-  const verifier = getCookie(c, PKCE_COOKIE);
+
+  if (!rawState || !code) {
+    console.error("[Google OAuth Callback] Missing state or code query parameter:", { hasState: !!rawState, hasCode: !!code });
+    return c.redirect(appRedirect("failed"));
+  }
+
+  // Recover verifier from state or cookie
+  let txToken: string = rawState;
+  let verifier = getCookie(c, PKCE_COOKIE);
+  if (rawState.includes(".")) {
+    const [tokenPart, verifierPart] = rawState.split(".");
+    if (tokenPart) {
+      txToken = tokenPart;
+    }
+    if (verifierPart) {
+      verifier = verifierPart;
+    }
+  }
+
+  deleteCookie(c, PKCE_COOKIE, { path: "/", secure: isSecure(), sameSite: "Lax" });
   deleteCookie(c, PKCE_COOKIE, { path: "/auth/google/callback", secure: isSecure(), sameSite: "Lax" });
-  if (!state || !code || !verifier) return c.redirect(appRedirect("failed"));
+
+  if (!verifier) {
+    console.error("[Google OAuth Callback] Missing PKCE verifier from both state and cookie");
+    return c.redirect(appRedirect("failed"));
+  }
 
   const db = getDb();
   const [transaction] = await db.delete(googleOAuthTransactions).where(and(
-    eq(googleOAuthTransactions.stateHash, sha256(state)),
+    eq(googleOAuthTransactions.stateHash, sha256(txToken)),
     gt(googleOAuthTransactions.expiresAt, new Date()),
   )).returning();
-  if (!transaction) return c.redirect(appRedirect("failed"));
+
+  if (!transaction) {
+    console.error("[Google OAuth Callback] Transaction not found or expired for stateHash:", sha256(txToken));
+    return c.redirect(appRedirect("failed"));
+  }
 
   let oauth;
-  try { oauth = config(); } catch { return c.redirect(appRedirect("unavailable")); }
+  try {
+    oauth = config();
+  } catch (cfgErr) {
+    console.error("[Google OAuth Callback] Config error:", (cfgErr as Error).message);
+    return c.redirect(appRedirect("unavailable"));
+  }
+
   try {
     const tokenResponse = await fetch(GOOGLE_TOKEN, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        code, client_id: oauth.clientId, client_secret: oauth.clientSecret,
-        redirect_uri: oauth.redirectUri, grant_type: "authorization_code", code_verifier: verifier,
+        code,
+        client_id: oauth.clientId,
+        client_secret: oauth.clientSecret,
+        redirect_uri: oauth.redirectUri,
+        grant_type: "authorization_code",
+        code_verifier: verifier,
       }),
     });
-    if (!tokenResponse.ok) return c.redirect(appRedirect("failed"));
+
+    if (!tokenResponse.ok) {
+      const errText = await tokenResponse.text().catch(() => "");
+      console.error("[Google OAuth Callback] Token exchange with Google failed:", tokenResponse.status, errText);
+      return c.redirect(appRedirect("failed"));
+    }
+
     const tokens = await tokenResponse.json() as { id_token?: string };
-    if (!tokens.id_token) return c.redirect(appRedirect("failed"));
-    const verified = await jwtVerify(tokens.id_token, GOOGLE_JWKS, {
-      issuer: ["https://accounts.google.com", "accounts.google.com"], audience: oauth.clientId,
-    });
+    if (!tokens.id_token) {
+      console.error("[Google OAuth Callback] No id_token returned from Google");
+      return c.redirect(appRedirect("failed"));
+    }
+
+    let verified;
+    try {
+      verified = await jwtVerify(tokens.id_token, GOOGLE_JWKS, {
+        issuer: ["https://accounts.google.com", "accounts.google.com"],
+        audience: oauth.clientId,
+      });
+    } catch (verifyErr) {
+      console.error("[Google OAuth Callback] ID token verification failed:", (verifyErr as Error).message);
+      return c.redirect(appRedirect("failed"));
+    }
+
     const claims = verified.payload;
-    if (typeof claims.sub !== "string" || typeof claims.email !== "string" || claims.email_verified !== true ||
-        typeof claims.exp !== "number" || claims.exp <= Math.floor(Date.now() / 1000) ||
-        typeof claims.nonce !== "string" || sha256(claims.nonce) !== transaction.nonceHash) {
+    if (
+      typeof claims.sub !== "string" ||
+      typeof claims.email !== "string" ||
+      claims.email_verified !== true ||
+      typeof claims.exp !== "number" ||
+      claims.exp <= Math.floor(Date.now() / 1000) ||
+      typeof claims.nonce !== "string" ||
+      sha256(claims.nonce) !== transaction.nonceHash
+    ) {
+      console.error("[Google OAuth Callback] Claims validation failed:", {
+        hasSub: typeof claims.sub === "string",
+        hasEmail: typeof claims.email === "string",
+        emailVerified: claims.email_verified,
+        nonceMatch: typeof claims.nonce === "string" && sha256(claims.nonce) === transaction.nonceHash,
+      });
       return c.redirect(appRedirect("failed"));
     }
     const googleSubject = claims.sub;
@@ -189,7 +272,11 @@ router.get("/callback", async (c) => {
         userId = created.id;
       }
     }
-    if (!userId) return c.redirect(appRedirect("failed"));
+    if (!userId) {
+      console.error("[Google OAuth Callback] No userId established");
+      return c.redirect(appRedirect("failed"));
+    }
+
     if (transaction.mobileRedirectUri) {
       const handoff = randomToken();
       await db.insert(mobileAuthHandoffs).values({
@@ -201,11 +288,12 @@ router.get("/callback", async (c) => {
       target.searchParams.set("code", handoff);
       return c.redirect(target.toString());
     }
+
     await issueBrowserSession(c, userId);
     const token = signToken(userId);
     return c.redirect(appRedirect("success", token));
-  } catch {
-    // Provider/verification failures intentionally do not log tokens or claims.
+  } catch (err) {
+    console.error("[Google OAuth Callback] Unhandled error:", err instanceof Error ? err.stack : err);
     return c.redirect(appRedirect("failed"));
   }
 });
