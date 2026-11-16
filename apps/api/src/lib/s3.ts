@@ -7,14 +7,15 @@
 
 import {
   getStorageProvider,
+  LocalStorageProvider,
   extractKeyFromUrl,
   type StorageObjectResult,
 } from '../services/storage/index.js';
 
-export { generateUniqueKey, extractKeyFromUrl, sanitizeFilename } from '../services/storage/index.js';
+export { generateUniqueKey, extractKeyFromUrl, sanitizeFilename, LocalStorageProvider } from '../services/storage/index.js';
 
 /**
- * Upload a file to object storage (Supabase Storage / Cloudflare R2 / S3)
+ * Upload a file to object storage (Supabase Storage / Cloudflare R2 / S3 / Local fallback)
  * @param key - The object key (path)
  * @param body - The file content as a Buffer
  * @param contentType - The MIME type of the file
@@ -26,7 +27,19 @@ export async function uploadToS3(
   contentType: string
 ): Promise<string> {
   const provider = getStorageProvider();
-  return provider.upload(key, body, contentType);
+  try {
+    return await provider.upload(key, body, contentType);
+  } catch (err) {
+    if (provider.providerType !== 'local') {
+      console.warn(
+        '[Storage] Cloud storage upload failed. Falling back to local disk storage:',
+        (err as Error).message
+      );
+      const fallback = new LocalStorageProvider();
+      return await fallback.upload(key, body, contentType);
+    }
+    throw err;
+  }
 }
 
 /**
@@ -38,7 +51,23 @@ export async function getS3Object(
   key: string
 ): Promise<StorageObjectResult | null> {
   const provider = getStorageProvider();
-  return provider.getObject(key);
+  try {
+    const res = await provider.getObject(key);
+    if (res) return res;
+  } catch (err) {
+    console.warn('[Storage] Provider getObject error:', (err as Error).message);
+  }
+
+  // Fallback to local storage if not found in primary provider
+  if (provider.providerType !== 'local') {
+    try {
+      const fallback = new LocalStorageProvider();
+      return await fallback.getObject(key);
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 /**

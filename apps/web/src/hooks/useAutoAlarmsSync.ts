@@ -1,6 +1,7 @@
 import * as React from "react";
 import { format } from "date-fns";
 import type { Task, StudySession } from "@open-sunsama/types";
+import { useAuth } from "@/hooks/useAuth";
 import { useAssignments } from "@/hooks/useAssignments";
 import { useTasks } from "@/hooks/useTasks";
 import { useStudySessions } from "@/hooks/useStudySessions";
@@ -37,6 +38,7 @@ export function setAutoAlarmsEnabled(enabled: boolean): void {
  * - Uses exact device timezone and background skipUi so the app is not disrupted.
  */
 export function useAutoAlarmsSync() {
+  const { user } = useAuth();
   const isNative = React.useMemo(() => isNativePlatform(), []);
   // Format local date (never toISOString slice which is UTC)
   const todayStr = React.useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
@@ -59,7 +61,10 @@ export function useAutoAlarmsSync() {
     const now = Date.now();
     const nowDate = new Date(now);
     const localHour = nowDate.getHours();
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const userTimezone =
+      user?.timezone ||
+      Intl.DateTimeFormat().resolvedOptions().timeZone ||
+      "Asia/Kolkata";
 
     // Throttle auto-sync to at most once per 30 minutes
     const lastSync = localStorage.getItem(LAST_SYNC_STORAGE_KEY);

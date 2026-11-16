@@ -186,8 +186,37 @@ uploadsRouter.post("/attachments", auth, async (c) => {
 });
 
 /**
- * GET /uploads/* - Proxy endpoint to serve files from S3
- * Railway buckets are private, so we proxy requests through this endpoint
+ * GET /uploads/avatars/* - Public proxy endpoint to serve avatar images
+ * Avatars must be publicly accessible so HTML <img> tags and avatars across
+ * comments/profiles render without requiring bearer token authentication.
+ */
+uploadsRouter.get("/avatars/*", async (c) => {
+  const path = c.req.path;
+  const key = path.replace(/^\/uploads\//, "");
+
+  if (!key) {
+    throw new NotFoundError("File");
+  }
+
+  // Fetch avatar from storage provider (S3 or local fallback)
+  const result = await getS3Object(key);
+
+  if (!result) {
+    throw new NotFoundError("File", key);
+  }
+
+  return new Response(result.body, {
+    headers: {
+      "Content-Type": result.contentType,
+      "Content-Length": result.contentLength.toString(),
+      "Cache-Control": "public, max-age=86400, immutable",
+    },
+  });
+});
+
+/**
+ * GET /uploads/* - Proxy endpoint to serve private files from S3
+ * Railway/S3 buckets are private, so we proxy requests through this endpoint
  * Supports caching headers for immutable content
  */
 uploadsRouter.get("/*", auth, async (c) => {

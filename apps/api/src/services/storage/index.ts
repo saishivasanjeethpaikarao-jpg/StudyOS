@@ -13,6 +13,8 @@
  * 4. Dual Delivery Mode: Supports secure streaming proxy (/uploads/*) and short-lived S3 presigned URLs.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   S3Client,
   PutObjectCommand,
@@ -22,7 +24,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-export type StorageProviderType = 'supabase' | 'r2' | 's3';
+export type StorageProviderType = 'supabase' | 'r2' | 's3' | 'local';
 
 export interface StorageProviderConfig {
   provider: StorageProviderType;
@@ -227,6 +229,85 @@ export class S3CompatibleStorageProvider implements StorageProvider {
   }
 }
 
+/**
+ * Local Disk Storage Provider Implementation.
+ * Provides resilient, zero-configuration storage on the local filesystem
+ * when external S3 / Supabase object storage credentials are not provided
+ * or temporarily unreachable.
+ */
+export class LocalStorageProvider implements StorageProvider {
+  public readonly providerType: StorageProviderType = 'local';
+  public readonly bucket: string = 'local';
+  private readonly uploadsDir: string;
+
+  constructor(uploadsDir?: string) {
+    this.uploadsDir = uploadsDir || process.env.LOCAL_UPLOADS_DIR || path.resolve(process.cwd(), 'uploads_storage');
+    try {
+      if (!fs.existsSync(this.uploadsDir)) {
+        fs.mkdirSync(this.uploadsDir, { recursive: true });
+      }
+    } catch {
+      // Best effort directory creation
+    }
+  }
+
+  async upload(key: string, body: Buffer, contentType: string): Promise<string> {
+    const fullPath = path.resolve(this.uploadsDir, key);
+    const dir = path.dirname(fullPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    await fs.promises.writeFile(fullPath, body);
+    return `/uploads/${key}`;
+  }
+
+  async getObject(key: string): Promise<StorageObjectResult | null> {
+    const fullPath = path.resolve(this.uploadsDir, key);
+    if (!fs.existsSync(fullPath)) {
+      return null;
+    }
+    const stat = await fs.promises.stat(fullPath);
+    const buffer = await fs.promises.readFile(fullPath);
+    const ext = path.extname(key).toLowerCase();
+    const mimeMap: Record<string, string> = {
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp',
+      '.svg': 'image/svg+xml',
+      '.pdf': 'application/pdf',
+      '.mp4': 'video/mp4',
+    };
+    const contentType = mimeMap[ext] || 'application/octet-stream';
+    return {
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(buffer);
+          controller.close();
+        },
+      }),
+      contentType,
+      contentLength: stat.size,
+    };
+  }
+
+  async delete(key: string): Promise<void> {
+    const fullPath = path.resolve(this.uploadsDir, key);
+    if (fs.existsSync(fullPath)) {
+      await fs.promises.unlink(fullPath);
+    }
+  }
+
+  async getSignedDownloadUrl(key: string): Promise<string> {
+    return `/uploads/${key}`;
+  }
+
+  async getSignedUploadUrl(key: string): Promise<string> {
+    return `/uploads/${key}`;
+  }
+}
+
 // Singleton instance and factory
 let activeProvider: StorageProvider | null = null;
 
@@ -236,7 +317,7 @@ let activeProvider: StorageProvider | null = null;
  */
 export function resolveStorageConfig(): StorageProviderConfig {
   const explicitProvider = process.env.STORAGE_PROVIDER?.trim().toLowerCase();
-  if (explicitProvider && !['supabase', 'r2', 's3'].includes(explicitProvider)) {
+  if (explicitProvider && !['supabase', 'r2', 's3', 'local'].includes(explicitProvider)) {
     throw new Error(`Unsupported STORAGE_PROVIDER '${explicitProvider}'. Allowed values: 'supabase', 'r2', 's3'`);
   }
 
@@ -292,11 +373,26 @@ export function resolveStorageConfig(): StorageProviderConfig {
 
 /**
  * Get or initialize the active storage provider singleton.
+ * Falls back safely to LocalStorageProvider if cloud object storage credentials
+ * are not provided in the environment.
  */
 export function getStorageProvider(): StorageProvider {
   if (!activeProvider) {
-    const config = resolveStorageConfig();
-    activeProvider = new S3CompatibleStorageProvider(config);
+    const explicitProvider = process.env.STORAGE_PROVIDER?.trim().toLowerCase();
+    if (explicitProvider === 'local') {
+      activeProvider = new LocalStorageProvider();
+      return activeProvider;
+    }
+    try {
+      const config = resolveStorageConfig();
+      activeProvider = new S3CompatibleStorageProvider(config);
+    } catch (err) {
+      console.warn(
+        '[Storage] Cloud storage credentials not configured. Gracefully falling back to LocalStorageProvider:',
+        (err as Error).message
+      );
+      activeProvider = new LocalStorageProvider();
+    }
   }
   return activeProvider;
 }
