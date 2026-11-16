@@ -135,30 +135,38 @@ export function getToken(): string | undefined {
   );
 }
 
+let refreshPromise: Promise<string | null> | null = null;
+
 const attemptTokenRefresh = async (): Promise<string | null> => {
-  const currentToken = getToken();
-  if (!currentToken) return null;
-  try {
-    const res = await transportFetch(`${baseUrl}/auth/refresh`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${currentToken}`,
-        "X-StudyOS-Web-Session": "1",
-      },
-      credentials: "include",
-    });
-    if (!res.ok) return null;
-    const body = (await res.json()) as { data?: { token?: string } };
-    const newToken = body?.data?.token;
-    if (newToken) {
-      setAuthToken(newToken);
-      return newToken;
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    const currentToken = getToken();
+    if (!currentToken) return null;
+    try {
+      const res = await transportFetch(`${baseUrl}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${currentToken}`,
+          "X-StudyOS-Web-Session": "1",
+        },
+        credentials: "include",
+      });
+      if (!res.ok) return null;
+      const body = (await res.json()) as { data?: { token?: string } };
+      const newToken = body?.data?.token;
+      if (newToken) {
+        setAuthToken(newToken);
+        return newToken;
+      }
+    } catch {
+      /* refresh failed */
     }
-  } catch {
-    /* refresh failed */
-  }
-  return null;
+    return null;
+  })().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
 };
 
 const config = {

@@ -15,26 +15,27 @@
       "docs": "https://studyos-web-8ruc.onrender.com/docs",
       "license": {
         "spdx": "LicenseRef-Open-Sunsama-Non-Commercial",
-        "name": "Open Sunsama Non-Commercial License"
+        "name": "StudyOS Non-Commercial License"
       },
       "stars": 65,
       "latestRelease": {
-        "version": "v1.0.16",
-        "date": "2026-09-25"
+        "version": "v1.2.0",
+        "date": "2026-11-16"
       },
-      "lastCommit": "2026-09-25",
+      "lastCommit": "2026-11-16",
       "primaryLanguage": "TypeScript",
       "platforms": [
         "web",
         "macos",
         "windows",
         "linux",
+        "android",
         "server"
       ],
       "selfHost": "Docker",
       "mobile": {
-        "available": false,
-        "how": "Mobile-friendly web app; no native iOS or Android app"
+        "available": true,
+        "how": "Native Android package with quiet-hours clock alarms & real-time sync"
       },
       "sync": "Real-time sync, hosted or on your own server",
       "api": [
@@ -52,7 +53,7 @@
         "light": "",
         "width": 1600,
         "height": 1000,
-        "source": "Captured from the Open Sunsama web app"
+        "source": "Captured from the StudyOS web app"
       },
       "checkedAt": "2026-09-24",
       "notes": "Facts from .skills/seo-content/playbook.md section 3. No iOS/Android app; desktop app can't point at a self-hosted server."

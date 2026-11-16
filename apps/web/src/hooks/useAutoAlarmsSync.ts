@@ -90,8 +90,11 @@ export function useAutoAlarmsSync() {
       let notifyTime: Date;
       if (dueHour >= 22 || dueHour < 2) {
         const eveningReminder = new Date(due);
+        if (dueHour < 2) {
+          eveningReminder.setDate(eveningReminder.getDate() - 1);
+        }
         eveningReminder.setHours(19, 0, 0, 0);
-        if (eveningReminder.getTime() > now) {
+        if (eveningReminder.getTime() > now && eveningReminder.getTime() < dueTime) {
           notifyTime = eveningReminder;
         } else {
           notifyTime = new Date(Math.max(now + 10000, dueTime - 60 * 60 * 1000));
@@ -139,7 +142,9 @@ export function useAutoAlarmsSync() {
     //    - Deduplicate: Do not repeatedly trigger the same alarm intent.
     //    - Use skipUi: true so background auto-sync does not interrupt the app UI.
     // =========================================================================
-    const isQuietHours = localHour >= 22 || localHour < 7;
+    // Exact Quiet Hours calculation: 21:30 (9:30 PM = 1290m) through 07:00 (7:00 AM = 420m)
+    const currentDayMinutes = localHour * 60 + nowDate.getMinutes();
+    const isQuietHours = currentDayMinutes >= 1290 || currentDayMinutes < 420;
 
     // Sort planned sessions chronologically
     const sortedSessions = [...studySessions]
@@ -151,17 +156,21 @@ export function useAutoAlarmsSync() {
     // Find the next legitimate session to alarm:
     // If during quiet hours, only accept sessions starting tomorrow morning after 7:00 AM
     const nextSession = sortedSessions.find((s) => {
-      const sessionHour = s.startDate.getHours();
+      const sessionMinutes = s.startDate.getHours() * 60 + s.startDate.getMinutes();
+      // Never set an alarm during quiet/sleep hours
+      if (sessionMinutes >= 1290 || sessionMinutes < 420) {
+        return false;
+      }
       if (isQuietHours) {
-        // Only accept morning sessions starting between 7 AM and 12 PM
+        // When user opens app late at night, only accept waking morning sessions (7:00 AM - 12:00 PM)
         return (
-          sessionHour >= 7 &&
-          sessionHour < 12 &&
+          sessionMinutes >= 420 &&
+          sessionMinutes < 720 &&
           s.startDate.getTime() < now + 16 * 60 * 60 * 1000
         );
       }
-      // During daytime, accept sessions between 7 AM and 21:30 PM
-      return sessionHour >= 7 && sessionHour <= 21;
+      // During daytime, accept sessions between 7:00 AM (420m) and 21:30 PM (1290m)
+      return sessionMinutes >= 420 && sessionMinutes <= 1290;
     });
 
     if (nextSession) {

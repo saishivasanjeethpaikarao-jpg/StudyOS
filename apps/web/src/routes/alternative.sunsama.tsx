@@ -35,7 +35,7 @@ const HERO: PageHeroContent = {
   title: "The open-source Sunsama alternative",
   accent: "Sunsama alternative",
   answer:
-    "Open Sunsama is an open-source daily planner that works like Sunsama and connects to any AI agent. Plan your day on a board, time-block your calendar, and let Claude, ChatGPT or Cursor help. The code is public, and you can run it on your own server.",
+    "StudyOS is a student-first daily planner that works like Sunsama and connects to any AI agent. Plan your day on a board, time-block your calendar, and let Claude, ChatGPT or Cursor help. The code is public, and you can run it on your own server.",
   media: { video: "tour" },
   secondary: { label: "View on GitHub", href: GITHUB_URL },
 };
@@ -69,35 +69,35 @@ const LOOP: MediaRow[] = [
     body: [
       "Today, tomorrow and your backlog sit side by side, like in Sunsama. Drag a task to the day you will do it. Anything you don't finish rolls over to the next day on its own.",
     ],
-    media: { clip: "plan-day", alt: "Open Sunsama board with Today, Tomorrow and the backlog", caption: "Drag tasks from the backlog into Today." },
+    media: { clip: "plan-day", alt: "StudyOS board with Today, Tomorrow and the backlog", caption: "Drag tasks from the backlog into Today." },
   },
   {
     title: "Time-block your real calendar",
     body: [
       "Drag a task onto the calendar to give it a time slot, then drag the edge to set how long it takes. Your Google, Outlook and iCloud events sit right next to your blocks.",
     ],
-    media: { clip: "time-block", alt: "Open Sunsama day view with time blocks next to meetings", caption: "Drop a task on the calendar and resize the block." },
+    media: { clip: "time-block", alt: "StudyOS day view with time blocks next to meetings", caption: "Drop a task on the calendar and resize the block." },
   },
   {
     title: "Focus on one task and see planned vs actual",
     body: [
       "Focus mode hides everything but the task in front of you. The timer tracks how long it really took, so tomorrow's plan is more honest.",
     ],
-    media: { clip: "focus", alt: "Open Sunsama focus mode with a running timer", caption: "Start focus mode and the timer tracks actual time." },
+    media: { clip: "focus", alt: "StudyOS focus mode with a running timer", caption: "Start focus mode and the timer tracks actual time." },
   },
   {
     title: "Do it all from the keyboard",
     body: [
       "Press Cmd+K to find a task, jump to a day or run a command. Most actions have a shortcut, so a full plan takes a few minutes.",
     ],
-    media: { clip: "command-palette", alt: "Open Sunsama command palette open over the board", caption: "Cmd+K finds any task or command." },
+    media: { clip: "command-palette", alt: "StudyOS command palette open over the board", caption: "Cmd+K finds any task or command." },
   },
   {
     title: "Take your plan with you",
     body: [
-      "Use Open Sunsama on the web, as a desktop app for Mac, Windows and Linux, or in your phone's browser. Changes sync across devices in real time, so the plan you made at your desk is in your pocket.",
+      "Use StudyOS on the web, as a desktop app for Mac, Windows and Linux, or on your phone with the Android APK. Changes sync across devices in real time, so the plan you made at your desk is in your pocket.",
     ],
-    media: { shot: "mobile-tasks", alt: "Open Sunsama task list on a phone", caption: "Your day on your phone." },
+    media: { shot: "mobile-tasks", alt: "StudyOS task list on a phone", caption: "Your day on your phone." },
     link: { label: "Download the desktop app", href: "/download" },
   },
 ];
@@ -249,17 +249,17 @@ const FAQS: MarketingFaq[] = [
   {
     question: "What is the best open-source Sunsama alternative?",
     answer:
-      "Open Sunsama. It covers Sunsama's daily loop: a board of days, time blocking, focus mode, rollover and calendar sync. The code is public on GitHub, you can self-host it, and any AI agent can run it over MCP.",
+      "StudyOS. It covers Sunsama's daily loop: a board of days, time blocking, focus mode, rollover and calendar sync. The code is public on GitHub, you can self-host it, and any AI agent can run it over MCP.",
   },
   {
     question: "Does Sunsama have an MCP server?",
     answer:
-      "Yes. Sunsama's MCP server and its Sunny assistant are live and come with its Pro plan. Open Sunsama has an MCP server too, plus a public REST API, public code and self-hosting.",
+      "Yes. Sunsama's MCP server and its Sunny assistant are live and come with its Pro plan. StudyOS has an MCP server too, plus a public REST API, public code and self-hosting.",
   },
   {
-    question: "Can I control Open Sunsama from Claude or ChatGPT?",
+    question: "Can I control StudyOS from Claude or ChatGPT?",
     answer:
-      "Yes. Paste https://api.opensunsama.com/mcp into Claude, ChatGPT, Cursor, Claude Code or any MCP client, then sign in. You don't need an API key. Your agent can then read your meetings and tasks, create tasks and time-block your day around your meetings.",
+      "Yes. Paste https://studyos-api-wy5w.onrender.com/mcp into Claude, ChatGPT, Cursor, Claude Code or any MCP client, then sign in. You don't need an API key. Your agent can then read your meetings and tasks, create tasks and time-block your day around your meetings.",
   },
   {
     question: "Can I import my tasks from Sunsama?",
@@ -267,12 +267,12 @@ const FAQS: MarketingFaq[] = [
       "Not with one click yet. Add your open tasks by hand, or connect both apps' MCP servers to Claude and ask it to move them. Your meetings come across when you connect Google, Outlook or iCloud.",
   },
   {
-    question: "Can I self-host Open Sunsama?",
+    question: "Can I self-host StudyOS?",
     answer:
       "Yes. Run it with Docker on your own server; the self-hosting guide walks you through it. The license allows self-hosting for personal, educational and non-profit use.",
   },
   {
-    question: "Is Open Sunsama really open source?",
+    question: "Is StudyOS really open source?",
     answer:
       "The code is public on GitHub. It uses a non-commercial license: you can read it, run it and self-host it for personal use. Companies need a commercial license.",
   },
@@ -286,25 +286,25 @@ const FAQS: MarketingFaq[] = [
 const RELATED: RelatedLink[] = [
   {
     kind: "compare",
-    title: "Open Sunsama vs Motion",
+    title: "StudyOS vs Motion",
     description: "Plan by hand, or with your agent, instead of an auto-scheduler.",
     href: "/alternative/motion",
   },
   {
     kind: "compare",
-    title: "Open Sunsama vs Akiflow",
+    title: "StudyOS vs Akiflow",
     description: "Keyboard-first time blocking with a public API.",
     href: "/alternative/akiflow",
   },
   {
     kind: "compare",
-    title: "Open Sunsama vs Reclaim",
+    title: "StudyOS vs Reclaim",
     description: "A planner you run, not a layer that moves blocks.",
     href: "/alternative/reclaim",
   },
   {
     kind: "compare",
-    title: "Open Sunsama vs Todoist",
+    title: "StudyOS vs Todoist",
     description: "Plan when, not just what.",
     href: "/alternative/todoist",
   },
@@ -379,7 +379,7 @@ export default function AlternativeSunsamaPage() {
 
       <AgentPanel
         id="ai"
-        heading="Any AI agent can plan your day in Open Sunsama"
+        heading="Any AI agent can plan your day in StudyOS"
         lead="Paste one URL into Claude, ChatGPT, Cursor, Claude Code or any MCP client, then sign in. No API key needed. Your agent gets 24 tools for tasks, subtasks, time blocks and your calendar meetings, so it sees your meetings and tasks in one call and plans around them."
         body={[
           "Sunsama has an MCP server too, and it works well. The difference is what sits behind it. Our code is public, so your agent can read it and even add the feature you want. And you can run the whole thing, agent access included, on your own server.",
@@ -401,9 +401,9 @@ export default function AlternativeSunsamaPage() {
 
       <ComparisonSection
         id="compare"
-        heading="Open Sunsama vs Sunsama, feature by feature"
-        lead="Same daily loop. Sunsama has more guidance and integrations. Open Sunsama gives you the code, the API and the server."
-        columns={["Open Sunsama", "Sunsama"]}
+        heading="StudyOS vs Sunsama, feature by feature"
+        lead="Same daily loop. Sunsama has more guidance and integrations. StudyOS gives you the code, the API and the server."
+        columns={["StudyOS", "Sunsama"]}
         rows={FEATURE_ROWS}
         sources="Sunsama features from [sunsama.com](https://www.sunsama.com/pricing) and its [help center](https://help.sunsama.com/docs/mcp-model-context-protocol), checked September 2026."
       />

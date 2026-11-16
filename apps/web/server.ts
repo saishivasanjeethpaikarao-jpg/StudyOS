@@ -84,6 +84,11 @@ async function respond(req: Request) {
     if (pathname.startsWith("/blog-media/")) {
       return new Response("Not Found", { status: 404 });
     }
+    // Direct binary downloads must not return index.html when absent from container dist
+    if (pathname.startsWith("/downloads/")) {
+      const filename = path.basename(pathname);
+      return Response.redirect(`https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/latest/download/${filename}`, 302);
+    }
     found = (await findFile("/index.html"))!;
   }
   const { file, filePath } = found;

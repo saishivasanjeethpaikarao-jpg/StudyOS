@@ -61,26 +61,34 @@ export async function scheduleLocalNotification(
     sound: true,
     ...(input.reminderId ? { data: { studyReminderId: input.reminderId } } : {}),
   };
-  if ('seconds' in trigger) {
-    await Notifications.scheduleNotificationAsync({
-      content,
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: trigger.seconds,
-        ...(Platform.OS === 'android' ? { channelId: 'studyos' } : {}),
-      },
-    });
-  } else {
-    await Notifications.scheduleNotificationAsync({
-      content,
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        date: trigger.date,
-        ...(Platform.OS === 'android' ? { channelId: 'studyos' } : {}),
-      },
-    });
+  try {
+    if ('date' in trigger && trigger.date.getTime() <= Date.now()) {
+      return 'unsupported';
+    }
+    if ('seconds' in trigger) {
+      await Notifications.scheduleNotificationAsync({
+        content,
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: trigger.seconds,
+          ...(Platform.OS === 'android' ? { channelId: 'studyos' } : {}),
+        },
+      });
+    } else {
+      await Notifications.scheduleNotificationAsync({
+        content,
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: trigger.date,
+          ...(Platform.OS === 'android' ? { channelId: 'studyos' } : {}),
+        },
+      });
+    }
+    return 'scheduled';
+  } catch (error) {
+    console.warn('Could not schedule local notification:', error);
+    return 'unsupported';
   }
-  return 'scheduled';
 }
 
 export async function cancelLocalReminderNotifications(reminderId: string): Promise<void> {

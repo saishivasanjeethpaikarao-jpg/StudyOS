@@ -43,7 +43,17 @@ export async function openClockAlarm(
   timezone?: string,
   skipUi = false,
 ): Promise<ClockActionResult> {
-  const parts = clockParts(startAt, timezone);
+  const targetDate = typeof startAt === 'string' ? new Date(startAt) : startAt;
+  const now = Date.now();
+  if (!(targetDate instanceof Date) || Number.isNaN(targetDate.getTime()) || targetDate.getTime() <= now) {
+    return 'invalid-input';
+  }
+  // Android SET_ALARM intent only accepts hour & minute without a date parameter.
+  // If the target session is more than 20 hours away, delegate to local phone notification.
+  if (targetDate.getTime() - now > 20 * 60 * 60 * 1000) {
+    return 'unsupported';
+  }
+  const parts = clockParts(targetDate, timezone);
   if (!parts) return 'invalid-input';
   const { hour, minutes } = parts;
   return sendAndroidIntent('android.intent.action.SET_ALARM', [

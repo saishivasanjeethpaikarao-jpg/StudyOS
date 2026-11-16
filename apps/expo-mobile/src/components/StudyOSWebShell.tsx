@@ -110,7 +110,7 @@ function isAllowedNavigation(url: string): boolean {
       'https://cdn.jsdelivr.net',
       'https://datafa.st',
     ].map((origin) => new URL(origin).origin));
-    return parsed.protocol === 'https:' && (trustedOrigins.has(parsed.origin) || parsed.origin.endsWith('.onrender.com'));
+    return parsed.protocol === 'https:' && trustedOrigins.has(parsed.origin);
   } catch {
     return false;
   }
@@ -173,6 +173,22 @@ export function StudyOSWebShell() {
       const token = await exchangeMobileHandoff(code);
       setInitialToken(token);
       setError(null);
+      // Immediately hydrate the active WebView with the new authentication token
+      webViewRef.current?.injectJavaScript(`
+        (function() {
+          try {
+            var tok = ${JSON.stringify(token)};
+            localStorage.setItem('studyos_token', tok);
+            localStorage.setItem('studyos-auth-token', tok);
+            localStorage.setItem('open_sunsama_token', tok);
+            localStorage.setItem('open-sunsama-auth-token', tok);
+            if (window.location.pathname === '/login' || window.location.pathname === '/register' || window.location.pathname === '/') {
+              window.location.assign('${WEB_APP_URL}/app');
+            }
+          } catch(e) {}
+        })();
+        true;
+      `);
     } catch (callbackError) {
       const message = callbackError instanceof Error
         ? callbackError.message
@@ -358,6 +374,9 @@ export function StudyOSWebShell() {
       return;
     }
     if (data.type === 'SCHEDULE_NOTIFICATION') {
+      if (data.reminderId) {
+        await cancelLocalReminderNotifications(data.reminderId);
+      }
       const result = await scheduleLocalNotification({
         title: data.title || 'StudyOS reminder',
         body: data.body || '',
@@ -466,7 +485,7 @@ export function StudyOSWebShell() {
           mediaPlaybackRequiresUserAction={false}
           allowsInlineMediaPlayback
           mixedContentMode="never"
-          originWhitelist={['https://*', 'http://*', 'studyos://*', 'opensunsama://*', 'about:blank']}
+          originWhitelist={['https://*', 'studyos://*', 'opensunsama://*', 'about:blank']}
           userAgent="Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 StudyOSMobile/1.2.0"
           style={styles.webview}
         />
