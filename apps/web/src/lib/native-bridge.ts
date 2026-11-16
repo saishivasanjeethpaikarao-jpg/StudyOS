@@ -14,7 +14,7 @@ declare global {
       postMessage: (message: string) => void;
     };
     StudyOSNative?: {
-      setAlarm?: (startAt: Date | string, label: string, timezone?: string) => void;
+      setAlarm?: (startAt: Date | string, label: string, timezone?: string, skipUi?: boolean) => void;
       setTimer?: (minutes: number, label: string) => void;
       openClock?: () => void;
       scheduleNotification?: (title: string, body: string, date: Date | string, reminderId?: string) => void;
@@ -89,9 +89,11 @@ export function notifyNativeTokenChanged(token: string): void {
 export function triggerNativeAlarm(
   startAt: Date | string,
   label: string,
-  timezone?: string
+  timezone?: string,
+  skipUi = false
 ): boolean {
   if (typeof window === "undefined") return false;
+  const userTz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const scheduledAt =
     startAt instanceof Date
       ? Number.isNaN(startAt.getTime())
@@ -100,7 +102,7 @@ export function triggerNativeAlarm(
       : startAt;
   if (!scheduledAt) return false;
   if (window.StudyOSNative?.setAlarm) {
-    window.StudyOSNative.setAlarm(scheduledAt, label, timezone);
+    window.StudyOSNative.setAlarm(scheduledAt, label, userTz, skipUi);
     return true;
   }
   if (window.ReactNativeWebView?.postMessage) {
@@ -109,7 +111,8 @@ export function triggerNativeAlarm(
         type: "SET_ALARM",
         startAt: scheduledAt,
         label,
-        timezone,
+        timezone: userTz,
+        skipUi,
       })
     );
     return true;

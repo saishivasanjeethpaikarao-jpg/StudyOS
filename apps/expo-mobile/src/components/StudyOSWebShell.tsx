@@ -35,8 +35,8 @@ const INJECTED = `
     }
   }
   window.StudyOSNative = {
-    setAlarm: function (startAt, label, timezone) {
-      postMessage({ type: 'SET_ALARM', startAt: startAt, label: label, timezone: timezone });
+    setAlarm: function (startAt, label, timezone, skipUi) {
+      postMessage({ type: 'SET_ALARM', startAt: startAt, label: label, timezone: timezone, skipUi: Boolean(skipUi) });
     },
     setTimer: function (minutes, label) {
       postMessage({ type: 'SET_TIMER', minutes: minutes, label: label });
@@ -217,6 +217,7 @@ export function StudyOSWebShell() {
       startAt?: string;
       label?: string;
       timezone?: string;
+      skipUi?: boolean;
       minutes?: number;
       title?: string;
       body?: string;
@@ -274,10 +275,12 @@ export function StudyOSWebShell() {
 
     if (data.type === 'SET_ALARM') {
       const label = data.label || 'Study session';
+      const skipUi = Boolean(data.skipUi);
       const alarmResult = await openClockAlarm(
         data.startAt || '',
         label,
         data.timezone,
+        skipUi,
       );
       if (alarmResult === 'invalid-input') {
         showNotice('This alarm time or timezone is invalid, or the time has passed.');

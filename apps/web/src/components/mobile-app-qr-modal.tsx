@@ -20,9 +20,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export const ANDROID_APK_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/download/v1.2.0/StudyOS.apk";
+export const ANDROID_APK_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS/releases/latest/download/StudyOS.apk";
 export const ANDROID_APK_VERSION = "v1.2.0";
-export const ANDROID_APK_SHA256 = "aab264149fdd85278372174d264b6693c831c8b5655fc5301abf58dc228b32c6";
+export const ANDROID_APK_SHA256 = "dbcc2975dd6a71f6853169fc72803820f57be9a5e28b3637c540b9fcca83d821";
 
 interface MobileAppQrModalProps {
   open: boolean;

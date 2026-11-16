@@ -10,6 +10,7 @@ out
 release-*
 release_staging
 *.apk
+*.aab
 
 # Turbo
 .turbo
@@ -68,5 +69,6 @@ e2e/playwright-report/
 
 # Public binary downloads (>100MB distributed via GitHub Releases)
 apps/web/public/downloads/*.apk
+*.aab
 apps/web/public/downloads/*.exe
 recordings/

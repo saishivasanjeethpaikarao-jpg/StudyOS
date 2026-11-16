@@ -50,7 +50,12 @@ export function TodayStudySessions({
     });
     const upcoming = sessions.filter((s) => new Date(s.startAt).getTime() > Date.now());
     if (upcoming[0]) {
-      triggerNativeAlarm(new Date(upcoming[0].startAt), `Study Session (${upcoming[0].plannedMinutes}m)`);
+      triggerNativeAlarm(
+        new Date(upcoming[0].startAt),
+        `Study Session (${upcoming[0].plannedMinutes}m)`,
+        viewerTimezone,
+        false
+      );
     }
     toast({
       title: "Study Session Alarms Synced",

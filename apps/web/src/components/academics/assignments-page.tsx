@@ -134,7 +134,17 @@ export function AssignmentsPage() {
       (a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime()
     );
     if (sorted[0]) {
-      triggerNativeAlarm(new Date(sorted[0].dueAt), `StudyOS Due: ${sorted[0].title}`);
+      const dueDate = new Date(sorted[0].dueAt);
+      const dueHour = dueDate.getHours();
+      let alarmTime: Date;
+      if (dueHour >= 22 || dueHour < 7) {
+        const eveningAlarm = new Date(dueDate);
+        eveningAlarm.setHours(19, 0, 0, 0);
+        alarmTime = eveningAlarm.getTime() > Date.now() ? eveningAlarm : new Date(Math.max(Date.now() + 60000, dueDate.getTime() - 30 * 60 * 1000));
+      } else {
+        alarmTime = new Date(Math.max(Date.now() + 60000, dueDate.getTime() - 30 * 60 * 1000));
+      }
+      triggerNativeAlarm(alarmTime, `StudyOS Due: ${sorted[0].title}`, undefined, false);
     }
     toast({
       title: `Scheduled ${upcoming.length} Assignment Alarms & Alerts`,
@@ -344,8 +354,16 @@ export function AssignmentCard({
 
   const handleSetAlarm = () => {
     const dueDate = new Date(assignment.dueAt);
-    const alarmTime = dueDate.getTime() > Date.now() ? dueDate : new Date(Date.now() + 60 * 60 * 1000);
-    triggerNativeAlarm(alarmTime, `StudyOS: ${assignment.title}`);
+    const dueHour = dueDate.getHours();
+    let alarmTime: Date;
+    if (dueHour >= 22 || dueHour < 7) {
+      const eveningAlarm = new Date(dueDate);
+      eveningAlarm.setHours(19, 0, 0, 0);
+      alarmTime = eveningAlarm.getTime() > Date.now() ? eveningAlarm : new Date(Math.max(Date.now() + 60000, dueDate.getTime() - 30 * 60 * 1000));
+    } else {
+      alarmTime = dueDate.getTime() > Date.now() ? new Date(Math.max(Date.now() + 60000, dueDate.getTime() - 30 * 60 * 1000)) : new Date(Date.now() + 60 * 60 * 1000);
+    }
+    triggerNativeAlarm(alarmTime, `StudyOS: ${assignment.title}`, undefined, false);
     const notifyTime = new Date(Math.max(Date.now() + 5000, alarmTime.getTime() - 30 * 60 * 1000));
     scheduleNativeNotification(
       `Assignment Deadline: ${assignment.title}`,

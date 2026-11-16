@@ -1,13 +1,19 @@
 import * as React from "react";
-import { isToday } from "date-fns";
-import type { Task } from "@open-sunsama/types";
+import { format } from "date-fns";
+import type { Task, StudySession } from "@open-sunsama/types";
 import { useAssignments } from "@/hooks/useAssignments";
 import { useTasks } from "@/hooks/useTasks";
-import { triggerNativeAlarm, scheduleNativeNotification, isNativePlatform } from "@/lib/native-bridge";
+import { useStudySessions } from "@/hooks/useStudySessions";
+import {
+  triggerNativeAlarm,
+  scheduleNativeNotification,
+  isNativePlatform,
+} from "@/lib/native-bridge";
 import { formatAssignmentDue } from "@/components/academics/academic-utils";
 
 export const AUTO_ALARMS_STORAGE_KEY = "studyos_auto_alarms_enabled";
 export const LAST_SYNC_STORAGE_KEY = "studyos_auto_alarms_last_sync";
+export const LAST_SCHEDULED_ALARM_KEY = "studyos_last_scheduled_alarm_id";
 
 export function getAutoAlarmsEnabled(): boolean {
   if (typeof window === "undefined") return true;
@@ -23,30 +29,51 @@ export function setAutoAlarmsEnabled(enabled: boolean): void {
 /**
  * Hook that automatically synchronizes native phone alarms and high-priority
  * notifications for today's active study sessions and upcoming deadlines.
+ *
+ * Rules:
+ * - Respects Quiet / Sleep Hours (21:30 - 07:00): Never sets night/midnight alarms when opened late.
+ * - Hardware Clock Alarms are ONLY scheduled for real planned study sessions with daytime hours.
+ * - Assignment deadlines and task reminders are sent as gentle notifications, not waking Clock alarms.
+ * - Uses exact device timezone and background skipUi so the app is not disrupted.
  */
 export function useAutoAlarmsSync() {
   const isNative = React.useMemo(() => isNativePlatform(), []);
-  const todayStr = React.useMemo(() => new Date().toISOString().slice(0, 10), []);
+  // Format local date (never toISOString slice which is UTC)
+  const todayStr = React.useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
 
   const assignmentsQuery = useAssignments({ limit: 100 });
   const tasksQuery = useTasks({ scheduledDate: todayStr });
+  const studySessionsQuery = useStudySessions({ status: "planned", limit: 50 });
 
   React.useEffect(() => {
     if (!isNative) return;
     if (!getAutoAlarmsEnabled()) return;
-    if (assignmentsQuery.isLoading || tasksQuery.isLoading) return;
+    if (
+      assignmentsQuery.isLoading ||
+      tasksQuery.isLoading ||
+      studySessionsQuery.isLoading
+    ) {
+      return;
+    }
 
-    // Throttle auto-sync to at most once per 60 minutes unless manually triggered
-    const lastSync = localStorage.getItem(LAST_SYNC_STORAGE_KEY);
     const now = Date.now();
-    if (lastSync && now - parseInt(lastSync, 10) < 60 * 60 * 1000) {
+    const nowDate = new Date(now);
+    const localHour = nowDate.getHours();
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // Throttle auto-sync to at most once per 30 minutes
+    const lastSync = localStorage.getItem(LAST_SYNC_STORAGE_KEY);
+    if (lastSync && now - parseInt(lastSync, 10) < 30 * 60 * 1000) {
       return;
     }
 
     const assignments = assignmentsQuery.data?.data ?? [];
     const tasksList: Task[] = Array.isArray(tasksQuery.data) ? tasksQuery.data : [];
+    const studySessions: StudySession[] = studySessionsQuery.data?.data ?? [];
 
-    // 1. Schedule notifications for upcoming assignments due in next 48h
+    // =========================================================================
+    // 1. Assignment Deadline Reminders (Notifications, NOT waking Clock Alarms)
+    // =========================================================================
     const upcomingAssignments = assignments.filter((a) => {
       if (a.status === "completed" || a.status === "cancelled") return false;
       const due = new Date(a.dueAt).getTime();
@@ -55,51 +82,97 @@ export function useAutoAlarmsSync() {
 
     upcomingAssignments.forEach((a) => {
       const due = new Date(a.dueAt);
-      // 1 hour before deadline
-      const notifyTime = new Date(Math.max(now + 10000, due.getTime() - 60 * 60 * 1000));
+      const dueTime = due.getTime();
+      const dueHour = due.getHours();
+
+      // If assignment is due around midnight (22:00 - 02:00), schedule the reminder
+      // during the early evening (e.g. 7:00 PM / 19:00), so the student isn't disturbed in bed
+      let notifyTime: Date;
+      if (dueHour >= 22 || dueHour < 2) {
+        const eveningReminder = new Date(due);
+        eveningReminder.setHours(19, 0, 0, 0);
+        if (eveningReminder.getTime() > now) {
+          notifyTime = eveningReminder;
+        } else {
+          notifyTime = new Date(Math.max(now + 10000, dueTime - 60 * 60 * 1000));
+        }
+      } else {
+        // For daytime deadlines, notify 2 hours before
+        notifyTime = new Date(Math.max(now + 10000, dueTime - 2 * 60 * 60 * 1000));
+      }
+
       scheduleNativeNotification(
-        `Assignment Alert: ${a.title}`,
-        `Due ${formatAssignmentDue(a.dueAt)}. Make sure to complete and submit!`,
+        `Assignment Due: ${a.title}`,
+        `Due ${formatAssignmentDue(a.dueAt)}. Don't forget to submit on time!`,
         notifyTime,
         `auto-assign-${a.id}`
       );
     });
 
-    // 2. Schedule notifications for today's pending tasks
+    // =========================================================================
+    // 2. Pending Tasks Daytime Study Reminders (Notifications)
+    // =========================================================================
     const activeTasks = tasksList.filter(
       (t: Task) => !t.completedAt && t.scheduledDate === todayStr
     );
 
-    activeTasks.forEach((t: Task, idx: number) => {
-      // Space notifications for pending tasks every 60 mins during the day
-      const targetTime = new Date(now + (idx + 1) * 60 * 60 * 1000);
-      scheduleNativeNotification(
-        `Study Session: ${t.title}`,
-        `Estimated ${t.estimatedMins ?? 30} mins. Stay focused and keep up the momentum!`,
-        targetTime,
-        `auto-task-${t.id}`
-      );
+    // Only schedule study prompt notifications during daytime hours (09:00 - 20:00)
+    if (localHour >= 8 && localHour < 20) {
+      activeTasks.slice(0, 3).forEach((t: Task, idx: number) => {
+        const targetTime = new Date(now + (idx + 1) * 90 * 60 * 1000);
+        if (targetTime.getHours() < 21) {
+          scheduleNativeNotification(
+            `Study Task: ${t.title}`,
+            `Estimated ${t.estimatedMins ?? 30} mins. Stay focused on your goals!`,
+            targetTime,
+            `auto-task-${t.id}`
+          );
+        }
+      });
+    }
+
+    // =========================================================================
+    // 3. Hardware Phone Clock Alarm (SET_ALARM)
+    //    RULES:
+    //    - Only set for real, explicitly planned study sessions or scheduled blocks.
+    //    - Respect Quiet Hours (21:30 - 07:00): Never set an alarm for late night / midnight!
+    //    - Deduplicate: Do not repeatedly trigger the same alarm intent.
+    //    - Use skipUi: true so background auto-sync does not interrupt the app UI.
+    // =========================================================================
+    const isQuietHours = localHour >= 22 || localHour < 7;
+
+    // Sort planned sessions chronologically
+    const sortedSessions = [...studySessions]
+      .filter((s) => s.status === "planned")
+      .map((s) => ({ ...s, startDate: new Date(s.startAt) }))
+      .filter((s) => s.startDate.getTime() > now + 60 * 1000)
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+    // Find the next legitimate session to alarm:
+    // If during quiet hours, only accept sessions starting tomorrow morning after 7:00 AM
+    const nextSession = sortedSessions.find((s) => {
+      const sessionHour = s.startDate.getHours();
+      if (isQuietHours) {
+        // Only accept morning sessions starting between 7 AM and 12 PM
+        return (
+          sessionHour >= 7 &&
+          sessionHour < 12 &&
+          s.startDate.getTime() < now + 16 * 60 * 60 * 1000
+        );
+      }
+      // During daytime, accept sessions between 7 AM and 21:30 PM
+      return sessionHour >= 7 && sessionHour <= 21;
     });
 
-    // 3. Set the nearest phone clock alarm for today's highest-priority study item or deadline
-    const sortedAssignments = [...upcomingAssignments].sort(
-      (a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime()
-    );
+    if (nextSession) {
+      const lastScheduledAlarmId = localStorage.getItem(LAST_SCHEDULED_ALARM_KEY);
+      const sessionAlarmKey = `${nextSession.id}_${nextSession.startDate.getTime()}`;
 
-    const firstUpcoming = sortedAssignments[0];
-    if (firstUpcoming && isToday(new Date(firstUpcoming.dueAt))) {
-      const due = new Date(firstUpcoming.dueAt);
-      if (due.getTime() > now) {
-        // Set alarm for 30 minutes before due date with deadline note
-        const alarmDate = new Date(Math.max(now + 60000, due.getTime() - 30 * 60 * 1000));
-        triggerNativeAlarm(alarmDate, `Due: ${firstUpcoming.title}`);
-      }
-    } else if (activeTasks.length > 0) {
-      // Schedule study alarm for today's next active topic
-      const nextTask = activeTasks[0];
-      if (nextTask) {
-        const alarmDate = new Date(now + 30 * 60 * 1000);
-        triggerNativeAlarm(alarmDate, `Study: ${nextTask.title}`);
+      if (lastScheduledAlarmId !== sessionAlarmKey) {
+        const label = `Study: Study Session (${nextSession.plannedMinutes}m)`;
+        // Schedule exact hardware clock alarm with user's local timezone & skipUi: true
+        triggerNativeAlarm(nextSession.startDate, label, userTimezone, true);
+        localStorage.setItem(LAST_SCHEDULED_ALARM_KEY, sessionAlarmKey);
       }
     }
 
@@ -110,6 +183,8 @@ export function useAutoAlarmsSync() {
     assignmentsQuery.data,
     tasksQuery.isLoading,
     tasksQuery.data,
+    studySessionsQuery.isLoading,
+    studySessionsQuery.data,
     todayStr,
   ]);
 }

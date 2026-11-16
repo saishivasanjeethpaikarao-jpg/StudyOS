@@ -24,7 +24,7 @@ namespace StudyOS
             this.ForeColor = Color.White;
 
             Label titleLabel = new Label();
-            titleLabel.Text = "StudyOS Desktop Setup (v1.0.18)";
+            titleLabel.Text = "StudyOS Desktop Setup (v1.2.0)";
             titleLabel.Font = new Font("Segoe UI", 15, FontStyle.Bold);
             titleLabel.ForeColor = Color.FromArgb(249, 115, 22); // Orange primary
             titleLabel.Location = new Point(25, 22);

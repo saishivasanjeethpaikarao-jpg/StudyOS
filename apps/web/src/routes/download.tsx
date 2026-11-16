@@ -22,53 +22,54 @@ import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { useSEO, SEO_CONFIGS } from "@/hooks/useSEO";
 
 const CURRENT_VERSION = "v1.2.0";
-const RELEASE_DATE = "November 15, 2026";
+const RELEASE_DATE = "November 16, 2026";
 const GITHUB_REPO_URL = "https://github.com/saishivasanjeethpaikarao-jpg/StudyOS";
 const RELEASES_PAGE_URL = `${GITHUB_REPO_URL}/releases/tag/v1.2.0`;
 const WINDOWS_EXE_URL = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS_Setup.exe`;
 const WINDOWS_EXE_MIRROR = `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS_1.2.0_x64-setup.exe`;
-const ANDROID_APK_URL = `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS.apk`;
-const ANDROID_APK_DIRECT = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS.apk`;
+const WINDOWS_EXE_DIRECT = "/downloads/StudyOS_Setup.exe";
+const ANDROID_APK_URL = `${GITHUB_REPO_URL}/releases/latest/download/StudyOS.apk`;
+const ANDROID_APK_DIRECT = "/downloads/StudyOS.apk";
 const ANDROID_APK_MIRROR = `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS_1.2.0.apk`;
 
 const RELEASE_ASSETS = [
   {
     name: "StudyOS.apk",
     platform: "Android 8.0+ (Universal)",
-    size: "62.5 MB",
-    sha256: "aab264149fdd85278372174d264b6693c831c8b5655fc5301abf58dc228b32c6",
+    size: "74.9 MB",
+    sha256: "dbcc2975dd6a71f6853169fc72803820f57be9a5e28b3637c540b9fcca83d821",
     url: ANDROID_APK_URL,
-    description: "Universal Android package with native Clock alarms, FocusTube & Telegram integration",
+    description: "Universal Android package with quiet-hours aware Clock alarms, FocusTube & Telegram integration",
   },
   {
     name: "StudyOS_Setup.exe",
     platform: "Windows 10 / 11 (x64)",
-    size: "11.9 MB",
-    sha256: "cbb344f416e3381a42986888e273e40b2b8e26c27d4602a02c549d437c571b8a",
+    size: "11.5 MB",
+    sha256: "0ced3d911dd2febbe1a01c363204783a056a7b1d2786be980563ce6179fd4832",
     url: WINDOWS_EXE_URL,
-    description: "Desktop installer with system tray background daemon and global hotkeys",
+    description: "Desktop installer with system tray background daemon, cloud database connection and global hotkeys",
   },
   {
     name: "StudyOS_1.2.0.apk",
     platform: "Android (Versioned Mirror)",
-    size: "62.5 MB",
-    sha256: "aab264149fdd85278372174d264b6693c831c8b5655fc5301abf58dc228b32c6",
+    size: "74.9 MB",
+    sha256: "dbcc2975dd6a71f6853169fc72803820f57be9a5e28b3637c540b9fcca83d821",
     url: ANDROID_APK_MIRROR,
     description: "Pinned v1.2.0 release archive for Android",
   },
   {
     name: "StudyOS_1.2.0_x64-setup.exe",
     platform: "Windows (Versioned Mirror)",
-    size: "11.9 MB",
-    sha256: "cbb344f416e3381a42986888e273e40b2b8e26c27d4602a02c549d437c571b8a",
+    size: "11.5 MB",
+    sha256: "0ced3d911dd2febbe1a01c363204783a056a7b1d2786be980563ce6179fd4832",
     url: WINDOWS_EXE_MIRROR,
     description: "Pinned v1.2.0 release archive for Windows x64",
   },
   {
     name: "StudyOS_1.2.0_web.zip",
     platform: "Web / Static Build",
-    size: "5.8 MB",
-    sha256: "0bd67e8fcf01f13711cd5438e9ebe3603abffc79003d2f4d11c4a88fd2ae360c",
+    size: "48.9 MB",
+    sha256: "fbf3e5d96259cf4bdc56fb6704432d790825af6e4006ab2212c288db36f7a9dc",
     url: `${GITHUB_REPO_URL}/releases/download/v1.2.0/StudyOS_1.2.0_web.zip`,
     description: "Self-hostable static web distribution bundle",
   },

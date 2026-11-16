@@ -2,7 +2,7 @@
   "expo": {
     "name": "StudyOS",
     "slug": "studyos",
-    "version": "1.0.20",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "studyos",
@@ -33,7 +33,8 @@
         "POST_NOTIFICATIONS",
         "VIBRATE",
         "SCHEDULE_EXACT_ALARM",
-        "USE_EXACT_ALARM"
+        "USE_EXACT_ALARM",
+        "com.android.alarm.permission.SET_ALARM"
       ],
       "intentFilters": [
         {

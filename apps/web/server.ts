@@ -119,10 +119,10 @@ async function respond(req: Request) {
 }
 
 // Only the hosted site reports bots, so self-hosted copies send nothing
-const PUBLIC_HOST = "opensunsama.com";
+const PUBLIC_HOST = "studyos-web-8ruc.onrender.com";
 const BOT_TRACKING = {
   websiteId: "dfid_jPL5UjXncdpECKfScGiHQ",
-  // Railway reaches this server over http; the public site is https
+  // Service reaches this server over http; the public site is https
   publicOrigin: `https://${PUBLIC_HOST}`,
 };
 

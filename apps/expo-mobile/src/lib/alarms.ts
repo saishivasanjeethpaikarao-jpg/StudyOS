@@ -7,22 +7,20 @@ function clockParts(startAt: Date | string, timezone?: string): { hour: number; 
   if (!(date instanceof Date) || Number.isNaN(date.getTime()) || date.getTime() <= Date.now()) {
     return null;
   }
-  if (!timezone) {
-    return { hour: date.getHours(), minutes: date.getMinutes() };
-  }
+  const effectiveTimezone = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
   try {
     const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
+      timeZone: effectiveTimezone,
       hour: 'numeric',
       minute: 'numeric',
       hour12: false,
     }).formatToParts(date);
-    return {
-      hour: parseInt(parts.find((part) => part.type === 'hour')?.value ?? '0', 10) % 24,
-      minutes: parseInt(parts.find((part) => part.type === 'minute')?.value ?? '0', 10),
-    };
+    const rawHour = parseInt(parts.find((part) => part.type === 'hour')?.value ?? '0', 10);
+    const hour = rawHour === 24 ? 0 : rawHour % 24;
+    const minutes = parseInt(parts.find((part) => part.type === 'minute')?.value ?? '0', 10);
+    return { hour, minutes };
   } catch {
-    return null;
+    return { hour: date.getHours(), minutes: date.getMinutes() };
   }
 }
 
@@ -43,6 +41,7 @@ export async function openClockAlarm(
   startAt: Date | string,
   label: string,
   timezone?: string,
+  skipUi = false,
 ): Promise<ClockActionResult> {
   const parts = clockParts(startAt, timezone);
   if (!parts) return 'invalid-input';
@@ -51,7 +50,7 @@ export async function openClockAlarm(
     { key: 'android.intent.extra.alarm.HOUR', value: hour },
     { key: 'android.intent.extra.alarm.MINUTES', value: minutes },
     { key: 'android.intent.extra.alarm.MESSAGE', value: (label || 'Study session').slice(0, 100) },
-    { key: 'android.intent.extra.alarm.SKIP_UI', value: false },
+    { key: 'android.intent.extra.alarm.SKIP_UI', value: Boolean(skipUi) },
   ]);
 }
 
